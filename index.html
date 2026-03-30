@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vedic Astrology Chart Maker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Cinzel:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="stars" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">✦</span>
+        <span class="logo-text">Jyotish Chart</span>
+      </div>
+      <p class="subtitle">Sidereal Vedic Astrology · Lahiri Ayanamsa</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Input Form -->
+    <section class="form-section card" id="form-section">
+      <h2 class="section-title">Birth / Event Details</h2>
+      <form id="chart-form" novalidate>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="date">Date</label>
+            <input type="date" id="date" name="date" required value="2002-10-06" />
+          </div>
+          <div class="form-group">
+            <label for="time">Local Time</label>
+            <input type="time" id="time" name="time" required value="20:10" />
+          </div>
+          <div class="form-group">
+            <label for="tz">UTC Offset (hours)</label>
+            <select id="tz" name="tz">
+              <option value="-12">UTC-12</option>
+              <option value="-11">UTC-11</option>
+              <option value="-10">UTC-10</option>
+              <option value="-9.5">UTC-9:30</option>
+              <option value="-9">UTC-9</option>
+              <option value="-8">UTC-8</option>
+              <option value="-7">UTC-7</option>
+              <option value="-6">UTC-6</option>
+              <option value="-5">UTC-5</option>
+              <option value="-4.5">UTC-4:30</option>
+              <option value="-4">UTC-4</option>
+              <option value="-3.5">UTC-3:30</option>
+              <option value="-3">UTC-3</option>
+              <option value="-2">UTC-2</option>
+              <option value="-1">UTC-1</option>
+              <option value="0">UTC+0</option>
+              <option value="1">UTC+1</option>
+              <option value="2">UTC+2</option>
+              <option value="3" selected>UTC+3</option>
+              <option value="3.5">UTC+3:30</option>
+              <option value="4">UTC+4</option>
+              <option value="4.5">UTC+4:30</option>
+              <option value="5">UTC+5</option>
+              <option value="5.5">UTC+5:30</option>
+              <option value="5.75">UTC+5:45</option>
+              <option value="6">UTC+6</option>
+              <option value="6.5">UTC+6:30</option>
+              <option value="7">UTC+7</option>
+              <option value="8">UTC+8</option>
+              <option value="8.75">UTC+8:45</option>
+              <option value="9">UTC+9</option>
+              <option value="9.5">UTC+9:30</option>
+              <option value="10">UTC+10</option>
+              <option value="10.5">UTC+10:30</option>
+              <option value="11">UTC+11</option>
+              <option value="12">UTC+12</option>
+              <option value="12.75">UTC+12:45</option>
+              <option value="13">UTC+13</option>
+              <option value="14">UTC+14</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="lat">Latitude (°N positive)</label>
+            <input type="number" id="lat" name="lat" step="0.0001" min="-90" max="90"
+                   required placeholder="e.g. 40.3833" value="40.3833" />
+          </div>
+          <div class="form-group">
+            <label for="lon">Longitude (°E positive)</label>
+            <input type="number" id="lon" name="lon" step="0.0001" min="-180" max="180"
+                   required placeholder="e.g. 23.4333" value="23.4333" />
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn-generate">
+            <span class="btn-icon">✦</span> Generate Chart
+          </button>
+        </div>
+        <p id="form-error" class="form-error" role="alert" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <!-- Output (hidden until generated) -->
+    <div id="output" class="output hidden" aria-live="polite">
+
+      <!-- Chart Summary -->
+      <section class="card" id="chart-summary">
+        <h2 class="section-title">Chart Summary</h2>
+        <div class="summary-grid" id="summary-content"></div>
+      </section>
+
+      <!-- Planet Cards -->
+      <section class="card" id="planets-section">
+        <h2 class="section-title">Planetary Positions</h2>
+        <div class="planets-grid" id="planets-grid"></div>
+      </section>
+
+      <!-- Relationship Table -->
+      <section class="card" id="relationship-section">
+        <h2 class="section-title">Planet Relationship Table</h2>
+        <p class="table-note">Compound (Panchadha) relationships — Natural + Temporary</p>
+        <div class="table-scroll">
+          <table id="relationship-table" class="astro-table"></table>
+        </div>
+      </section>
+
+      <!-- Aspect Table -->
+      <section class="card" id="aspect-section">
+        <h2 class="section-title">Sphuta Drishti — Aspect Strengths (Virupas)</h2>
+        <p class="table-note">Rows = Aspector · Columns = Aspected</p>
+        <div class="table-scroll">
+          <table id="aspect-table" class="astro-table"></table>
+        </div>
+      </section>
+
+    </div><!-- /#output -->
+  </main>
+
+  <footer class="site-footer">
+    <p>Sidereal positions computed with simplified VSOP87-based JS algorithms · Lahiri Ayanamsa</p>
+    <p class="footer-note">For reference only — not a substitute for professional astrological software</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
