@@ -77,6 +77,14 @@ export interface ChartData {
   karakas: Partial<Record<PlanetName, string>>;
 }
 
+export interface ParivartanaYoga {
+  houseA: number;
+  houseB: number;
+  planetA: PlanetName;  // lord of houseA, placed in houseB
+  planetB: PlanetName;  // lord of houseB, placed in houseA
+  type: 'Dainya' | 'Khala' | 'Maha';
+}
+
 export interface OrbitalElements {
   N0: number; N1: number;
   i0: number; i1: number;

@@ -430,6 +430,60 @@ body {
 .asp-weak    { color: var(--text-dim); }
 .asp-none    { color: rgba(100,120,160,0.5); font-size: 0.75rem; }
 
+/* ---- Analysis Tab — Parivartana Yogas ---- */
+.analysis-tab { display: flex; flex-direction: column; gap: 0; }
+.analysis-empty {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  font-style: italic;
+  padding: 0.5rem 0;
+}
+.yoga-list { display: flex; flex-direction: column; gap: 0.75rem; }
+.yoga-card {
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+}
+.yoga-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-bottom: 0.55rem;
+}
+.yoga-badge { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.05em; }
+.yoga-badge-dainya {
+  background: rgba(220,60,60,0.15);
+  border: 1px solid rgba(220,60,60,0.4);
+  color: #e07070;
+}
+.yoga-badge-khala {
+  background: rgba(200,160,40,0.12);
+  border: 1px solid rgba(200,160,40,0.4);
+  color: #d4a847;
+}
+.yoga-badge-maha {
+  background: rgba(60,200,100,0.15);
+  border: 1px solid rgba(60,200,100,0.4);
+  color: #5ddb7a;
+}
+.yoga-houses {
+  font-size: 0.85rem;
+  color: var(--text-bright);
+  font-weight: 600;
+}
+.yoga-planets {
+  font-size: 0.85rem;
+  color: var(--gold);
+}
+.yoga-interpretation {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  line-height: 1.55;
+  font-style: italic;
+}
+
 /* ---- Footer ---- */
 .site-footer {
   position: relative;

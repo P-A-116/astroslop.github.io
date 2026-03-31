@@ -6,6 +6,7 @@ import ChartSummary from './ChartSummary';
 import PlanetsGrid from './PlanetsGrid';
 import RelationshipTable from './RelationshipTable';
 import AspectTable from './AspectTable';
+import AnalysisTab from './AnalysisTab';
 
 export default function App() {
   const [chartData, setChartData] = createSignal<ChartData | null>(null);
@@ -64,6 +65,11 @@ export default function App() {
                 <div class="table-scroll">
                   <AspectTable data={data()} />
                 </div>
+              </section>
+
+              <section class="card fade-in" id="analysis-section" style="animation-delay: 0.32s">
+                <h2 class="section-title">Analysis</h2>
+                <AnalysisTab data={data()} />
               </section>
             </div>
           )}
