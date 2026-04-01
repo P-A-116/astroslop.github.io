@@ -296,6 +296,20 @@ export function buildChartData({ year, month, day, hour, lat, lon }: BuildChartP
   };
 }
 
+/** Returns the ascendant sign for the given divisional chart */
+export function getAscSignForChart(data: ChartData, chart: DivisionalChart): number {
+  switch (chart) {
+    case 'D1':  return data.ascSign;
+    case 'D2':  return data.ascD2;
+    case 'D3':  return data.ascD3;
+    case 'D4':  return data.ascD4;
+    case 'D7':  return data.ascD7;
+    case 'D9':  return data.ascNavamsa;
+    case 'D10': return data.ascD10;
+    case 'D12': return data.ascD12;
+  }
+}
+
 /** Returns a map of planet → sign number for the given divisional chart */
 export function getDivisionalSigns(
   planets: PlanetData[],

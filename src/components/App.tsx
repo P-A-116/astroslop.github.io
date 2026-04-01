@@ -8,7 +8,7 @@ import RelationshipTable from './RelationshipTable';
 import AspectTable from './AspectTable';
 import AnalysisTab from './AnalysisTab';
 import DivisionalChartTabs from './DivisionalChartTabs';
-import { getDivisionalSigns, getDivisionalLongitudes } from '../astrology';
+import { getDivisionalSigns, getDivisionalLongitudes, getAscSignForChart } from '../astrology';
 
 export default function App() {
   const [chartData, setChartData] = createSignal<ChartData | null>(null);
@@ -50,18 +50,24 @@ export default function App() {
                 <ChartSummary data={data()} utcStr={utcStr()} lat={latVal()} lon={lonVal()} />
               </section>
 
-              <section class="card fade-in" id="planets-section" style="animation-delay: 0.08s">
-                <h2 class="section-title">Planetary Positions</h2>
-                <PlanetsGrid planets={data().planetData} />
-              </section>
-
-              <section class="card fade-in" id="divisional-tables-section" style="animation-delay: 0.16s">
-                <h2 class="section-title">Divisional Chart Tables</h2>
+              <div class="fade-in" style="animation-delay: 0.08s">
                 <DivisionalChartTabs
                   selected={selectedChart()}
                   onSelect={setSelectedChart}
                 />
-                <div id="divisional-tabpanel" role="tabpanel" aria-labelledby={`chart-tab-${selectedChart()}`}>
+              </div>
+
+              <div id="divisional-tabpanel" role="tabpanel" aria-labelledby={`chart-tab-${selectedChart()}`}>
+                <section class="card fade-in" id="planets-section" style="animation-delay: 0.12s">
+                  <h2 class="section-title">Planetary Positions</h2>
+                  <PlanetsGrid
+                    planets={data().planetData}
+                    divisionalSigns={getDivisionalSigns(data().planetData, selectedChart())}
+                    divAscSign={getAscSignForChart(data(), selectedChart())}
+                  />
+                </section>
+
+                <section class="card fade-in" id="divisional-tables-section" style="animation-delay: 0.16s">
                   <p class="table-note">Compound (Panchadha) relationships — Natural + Temporary</p>
                   <div class="table-scroll">
                     <RelationshipTable
@@ -76,13 +82,13 @@ export default function App() {
                       divisionalLongitudes={getDivisionalLongitudes(data().planetData, selectedChart())}
                     />
                   </div>
-                </div>
-              </section>
+                </section>
 
-              <section class="card fade-in" id="analysis-section" style="animation-delay: 0.24s">
-                <h2 class="section-title">Analysis</h2>
-                <AnalysisTab data={data()} />
-              </section>
+                <section class="card fade-in" id="analysis-section" style="animation-delay: 0.24s">
+                  <h2 class="section-title">Analysis</h2>
+                  <AnalysisTab data={data()} selectedChart={selectedChart()} />
+                </section>
+              </div>
             </div>
           )}
         </Show>
