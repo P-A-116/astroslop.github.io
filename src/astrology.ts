@@ -26,6 +26,7 @@ import type {
   MotionType,
   FunctionalRole,
   BuildChartParams,
+  DivisionalChart,
 } from './types';
 
 /** Degrees → { deg, minute, sec } */
@@ -293,4 +294,55 @@ export function buildChartData({ year, month, day, hour, lat, lon }: BuildChartP
     positions, planetData,
     karakas,
   };
+}
+
+/** Returns a map of planet → sign number for the given divisional chart */
+export function getDivisionalSigns(
+  planets: PlanetData[],
+  chart: DivisionalChart,
+): Record<PlanetName, number> {
+  const result = {} as Record<PlanetName, number>;
+  for (const p of planets) {
+    switch (chart) {
+      case 'D1':  result[p.name] = p.sign;         break;
+      case 'D2':  result[p.name] = p.d2Sign;       break;
+      case 'D3':  result[p.name] = p.d3Sign;       break;
+      case 'D4':  result[p.name] = p.d4Sign;       break;
+      case 'D7':  result[p.name] = p.d7Sign;       break;
+      case 'D9':  result[p.name] = p.navamsaSign;  break;
+      case 'D10': result[p.name] = p.d10Sign;      break;
+      case 'D12': result[p.name] = p.d12Sign;      break;
+    }
+  }
+  return result;
+}
+
+const DIVISOR: Record<DivisionalChart, number> = {
+  D1: 1, D2: 2, D3: 3, D4: 4, D7: 7, D9: 9, D10: 10, D12: 12,
+};
+
+/**
+ * Returns a map of planet → effective ecliptic longitude for the given
+ * divisional chart, suitable for Sphuta Drishti computation.
+ * Within-sign degree is scaled to fill the full 30° of the divisional sign.
+ */
+export function getDivisionalLongitudes(
+  planets: PlanetData[],
+  chart: DivisionalChart,
+): Record<PlanetName, number> {
+  const signs = getDivisionalSigns(planets, chart);
+  const result = {} as Record<PlanetName, number>;
+  for (const p of planets) {
+    if (chart === 'D1') {
+      result[p.name] = p.lon;
+    } else {
+      const divisor    = DIVISOR[chart];
+      const partSize   = 30 / divisor;
+      const withinPart = p.deg % partSize;
+      // Scale the within-part degree (0..partSize) to a full 0..30 range inside
+      // the divisional sign, so angular separations reflect the correct positions.
+      result[p.name] = (signs[p.name] - 1) * 30 + withinPart * divisor;
+    }
+  }
+  return result;
 }

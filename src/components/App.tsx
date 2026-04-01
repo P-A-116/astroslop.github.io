@@ -1,24 +1,28 @@
 import { createSignal } from 'solid-js';
 import { Show } from 'solid-js';
-import type { ChartData } from '../types';
+import type { ChartData, DivisionalChart } from '../types';
 import ChartForm from './ChartForm';
 import ChartSummary from './ChartSummary';
 import PlanetsGrid from './PlanetsGrid';
 import RelationshipTable from './RelationshipTable';
 import AspectTable from './AspectTable';
 import AnalysisTab from './AnalysisTab';
+import DivisionalChartTabs from './DivisionalChartTabs';
+import { getDivisionalSigns, getDivisionalLongitudes } from '../astrology';
 
 export default function App() {
   const [chartData, setChartData] = createSignal<ChartData | null>(null);
   const [utcStr, setUtcStr] = createSignal('');
   const [latVal, setLatVal] = createSignal(0);
   const [lonVal, setLonVal] = createSignal(0);
+  const [selectedChart, setSelectedChart] = createSignal<DivisionalChart>('D1');
 
   function handleChartGenerated(data: ChartData, utc: string, lat: number, lon: number) {
     setChartData(data);
     setUtcStr(utc);
     setLatVal(lat);
     setLonVal(lon);
+    setSelectedChart('D1');
   }
 
   return (
@@ -51,23 +55,31 @@ export default function App() {
                 <PlanetsGrid planets={data().planetData} />
               </section>
 
-              <section class="card fade-in" id="relationship-section" style="animation-delay: 0.16s">
-                <h2 class="section-title">Planet Relationship Table</h2>
-                <p class="table-note">Compound (Panchadha) relationships — Natural + Temporary</p>
-                <div class="table-scroll">
-                  <RelationshipTable data={data()} />
+              <section class="card fade-in" id="divisional-tables-section" style="animation-delay: 0.16s">
+                <h2 class="section-title">Divisional Chart Tables</h2>
+                <DivisionalChartTabs
+                  selected={selectedChart()}
+                  onSelect={setSelectedChart}
+                />
+                <div id="divisional-tabpanel" role="tabpanel" aria-labelledby={`chart-tab-${selectedChart()}`}>
+                  <p class="table-note">Compound (Panchadha) relationships — Natural + Temporary</p>
+                  <div class="table-scroll">
+                    <RelationshipTable
+                      data={data()}
+                      divisionalSigns={getDivisionalSigns(data().planetData, selectedChart())}
+                    />
+                  </div>
+                  <p class="table-note" style="margin-top: 1.5rem">Sphuta Drishti — Aspect Strengths (Virupas) · Rows = Aspector · Columns = Aspected</p>
+                  <div class="table-scroll">
+                    <AspectTable
+                      data={data()}
+                      divisionalLongitudes={getDivisionalLongitudes(data().planetData, selectedChart())}
+                    />
+                  </div>
                 </div>
               </section>
 
-              <section class="card fade-in" id="aspect-section" style="animation-delay: 0.24s">
-                <h2 class="section-title">Sphuta Drishti — Aspect Strengths (Virupas)</h2>
-                <p class="table-note">Rows = Aspector · Columns = Aspected</p>
-                <div class="table-scroll">
-                  <AspectTable data={data()} />
-                </div>
-              </section>
-
-              <section class="card fade-in" id="analysis-section" style="animation-delay: 0.32s">
+              <section class="card fade-in" id="analysis-section" style="animation-delay: 0.24s">
                 <h2 class="section-title">Analysis</h2>
                 <AnalysisTab data={data()} />
               </section>

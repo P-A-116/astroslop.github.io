@@ -8,6 +8,8 @@ export type PlanetName =
 
 export type SignNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 
+export type DivisionalChart = 'D1' | 'D2' | 'D3' | 'D4' | 'D7' | 'D9' | 'D10' | 'D12';
+
 export type RelationshipType = 'Friend' | 'Enemy' | 'Neutral';
 
 export type CompoundRelationship =
