@@ -71,6 +71,43 @@ export function getD7Sign(sign: number, deg: number): number {
     : ((sign + part + 6) % 12) + 1;
 }
 
+/** D2 (Hora) sign (1–12) */
+export function getD2Sign(sign: number, deg: number): number {
+  const half = Math.floor(deg / 15);
+  const isOdd = sign % 2 === 1;
+  // Odd signs: 0→Leo(5), 1→Cancer(4); Even signs: 0→Cancer(4), 1→Leo(5)
+  if (isOdd) return half === 0 ? 5 : 4;
+  return half === 0 ? 4 : 5;
+}
+
+/** D3 (Drekkana) sign (1–12) */
+export function getD3Sign(sign: number, deg: number): number {
+  const part = Math.floor(deg / 10);
+  const offsets = [0, 4, 8];
+  return ((sign - 1 + offsets[part]) % 12) + 1;
+}
+
+/** D4 (Chaturthamsa) sign (1–12) */
+export function getD4Sign(sign: number, deg: number): number {
+  const part = Math.floor(deg / 7.5);
+  const offsets = [0, 3, 6, 9];
+  return ((sign - 1 + offsets[part]) % 12) + 1;
+}
+
+/** D10 (Dasamsa) sign (1–12) */
+export function getD10Sign(sign: number, deg: number): number {
+  const part = Math.floor(deg / 3);
+  const isOdd = sign % 2 === 1;
+  if (isOdd) return ((sign - 1 + part) % 12) + 1;
+  return ((sign + 7 + part) % 12) + 1;
+}
+
+/** D12 (Dvadasamsa) sign (1–12) */
+export function getD12Sign(sign: number, deg: number): number {
+  const part = Math.floor(deg / 2.5);
+  return ((sign - 1 + part) % 12) + 1;
+}
+
 /** Is a planet combust? */
 export function isCombust(planet: PlanetName, sunLon: number, planetLon: number, motion: MotionType): boolean {
   if (!COMBUSTION_LIMITS[planet]) return false;
@@ -208,6 +245,11 @@ export function buildChartData({ year, month, day, hour, lat, lon }: BuildChartP
 
   const ascNavamsa = getNavamsaSign(ascSign, ascDeg);
   const ascD7      = getD7Sign(ascSign, ascDeg);
+  const ascD2      = getD2Sign(ascSign, ascDeg);
+  const ascD3      = getD3Sign(ascSign, ascDeg);
+  const ascD4      = getD4Sign(ascSign, ascDeg);
+  const ascD10     = getD10Sign(ascSign, ascDeg);
+  const ascD12     = getD12Sign(ascSign, ascDeg);
   const { nakshatra: ascNak, pada: ascPada } = getNakshatraPada(ascSid);
   const karakas    = getCharaKarakas(positions);
 
@@ -218,6 +260,13 @@ export function buildChartData({ year, month, day, hour, lat, lon }: BuildChartP
     const d7Sign        = getD7Sign(sign, deg);
     const navamsaHouse  = signToHouse(navamsaSign, ascNavamsa);
     const d7House       = signToHouse(d7Sign, ascD7);
+    const d2Sign        = getD2Sign(sign, deg);
+    const d3Sign        = getD3Sign(sign, deg);
+    const d4Sign        = getD4Sign(sign, deg);
+    const d10Sign       = getD10Sign(sign, deg);
+    const d12Sign       = getD12Sign(sign, deg);
+    const d10House      = signToHouse(d10Sign, ascD10);
+    const d12House      = signToHouse(d12Sign, ascD12);
     const house         = signToHouse(sign, ascSign);
     const lordships     = getLordships(name, ascSign);
     const role          = getFunctionalRole(name, ascSign);
@@ -231,13 +280,16 @@ export function buildChartData({ year, month, day, hour, lat, lon }: BuildChartP
     return {
       name, lon: pLon, sign, deg, motion, house,
       navamsaSign, navamsaHouse, d7Sign, d7House,
+      d2Sign, d3Sign, d4Sign, d10Sign, d10House, d12Sign, d12House,
       lordships, role, combust, nakshatra, pada, nakLord, signLord, karaka,
     };
   });
 
   return {
     jd, lat, lon, ayanamsa,
-    ascSid, ascSign, ascDeg, ascNavamsa, ascD7, ascNak, ascPada,
+    ascSid, ascSign, ascDeg, ascNavamsa, ascD7,
+    ascD2, ascD3, ascD4, ascD10, ascD12,
+    ascNak, ascPada,
     positions, planetData,
     karakas,
   };
