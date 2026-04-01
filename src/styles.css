@@ -497,6 +497,40 @@ body {
 }
 .footer-note { font-size: 0.72rem; opacity: 0.6; }
 
+/* ---- Divisional Chart Tabs ---- */
+.chart-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+.chart-tab {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  padding: 0.4rem 0.85rem;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+  white-space: nowrap;
+}
+.chart-tab:hover {
+  border-color: var(--gold-dim);
+  color: var(--text-bright);
+}
+.chart-tab.active {
+  border-color: var(--gold);
+  border-bottom: 2px solid var(--gold);
+  color: var(--gold-light);
+  font-weight: 600;
+  background: rgba(212,168,71,0.08);
+}
+
 /* ---- Responsive ---- */
 @media (max-width: 640px) {
   .logo-text { font-size: 1.4rem; }
@@ -505,6 +539,7 @@ body {
   .card { padding: 1.25rem; }
   .astro-table { font-size: 0.72rem; }
   .astro-table th, .astro-table td { padding: 0.35rem 0.4rem; }
+  .chart-tab { font-size: 0.72rem; padding: 0.35rem 0.6rem; }
 }
 @media (max-width: 400px) {
   .form-grid { grid-template-columns: 1fr; }

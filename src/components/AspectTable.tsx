@@ -1,10 +1,11 @@
 import { For } from 'solid-js';
-import type { ChartData } from '../types';
+import type { ChartData, PlanetName } from '../types';
 import { PLANET_LIST, PLANET_ICONS } from '../constants';
 import { sphutaDrishti } from '../astrology';
 
 interface Props {
   data: ChartData;
+  divisionalLongitudes?: Record<PlanetName, number>;
 }
 
 function aspectColor(val: number | null): string {
@@ -43,8 +44,12 @@ export default function AspectTable(props: Props) {
               <For each={PLANET_LIST}>
                 {(aspected) => {
                   if (asp === aspected) return <td class="self">—</td>;
-                  const aspLon      = props.data.positions[asp].lon;
-                  const aspectedLon = props.data.positions[aspected].lon;
+                  const aspLon      = props.divisionalLongitudes
+                    ? props.divisionalLongitudes[asp as PlanetName]
+                    : props.data.positions[asp].lon;
+                  const aspectedLon = props.divisionalLongitudes
+                    ? props.divisionalLongitudes[aspected as PlanetName]
+                    : props.data.positions[aspected].lon;
                   const val = sphutaDrishti(asp, aspected, aspLon, aspectedLon);
                   const display = val === null ? '·' : Math.round(val * 10) / 10;
                   const bg  = aspectColor(val);

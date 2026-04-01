@@ -1,5 +1,5 @@
 import { For } from 'solid-js';
-import type { ChartData } from '../types';
+import type { ChartData, PlanetName } from '../types';
 import { PLANET_LIST, PLANET_ICONS, REL_CSS, REL_ABBR } from '../constants';
 import {
   getNaturalRelationship,
@@ -9,10 +9,12 @@ import {
 
 interface Props {
   data: ChartData;
+  divisionalSigns?: Record<PlanetName, number>;
 }
 
 export default function RelationshipTable(props: Props) {
   const signs = () => {
+    if (props.divisionalSigns) return props.divisionalSigns;
     const s: Record<string, number> = {};
     PLANET_LIST.forEach(p => { s[p] = props.data.positions[p].sign; });
     return s;
