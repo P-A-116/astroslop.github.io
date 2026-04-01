@@ -1,6 +1,6 @@
-import { createSignal } from 'solid-js';
+import { createSignal, createMemo } from 'solid-js';
 import { Show } from 'solid-js';
-import type { ChartData, DivisionalChart } from '../types';
+import type { ChartData, DivisionalChart, PlanetName } from '../types';
 import ChartForm from './ChartForm';
 import ChartSummary from './ChartSummary';
 import PlanetsGrid from './PlanetsGrid';
@@ -8,7 +8,7 @@ import RelationshipTable from './RelationshipTable';
 import AspectTable from './AspectTable';
 import AnalysisTab from './AnalysisTab';
 import DivisionalChartTabs from './DivisionalChartTabs';
-import { getDivisionalSigns, getDivisionalLongitudes, getAscSignForChart } from '../astrology';
+import { getDivisionalSigns, getDivisionalLongitudes, getAscSignForChart, getCharaKarakasFromLongitudes } from '../astrology';
 
 export default function App() {
   const [chartData, setChartData] = createSignal<ChartData | null>(null);
@@ -16,6 +16,12 @@ export default function App() {
   const [latVal, setLatVal] = createSignal(0);
   const [lonVal, setLonVal] = createSignal(0);
   const [selectedChart, setSelectedChart] = createSignal<DivisionalChart>('D1');
+
+  const divLons = createMemo((): Record<PlanetName, number> => {
+    const d = chartData();
+    if (!d) return {} as Record<PlanetName, number>;
+    return getDivisionalLongitudes(d.planetData, selectedChart());
+  });
 
   function handleChartGenerated(data: ChartData, utc: string, lat: number, lon: number) {
     setChartData(data);
@@ -64,6 +70,8 @@ export default function App() {
                     planets={data().planetData}
                     divisionalSigns={getDivisionalSigns(data().planetData, selectedChart())}
                     divAscSign={getAscSignForChart(data(), selectedChart())}
+                    divisionalLongitudes={divLons()}
+                    divKarakas={getCharaKarakasFromLongitudes(divLons())}
                   />
                 </section>
 
@@ -79,7 +87,7 @@ export default function App() {
                   <div class="table-scroll">
                     <AspectTable
                       data={data()}
-                      divisionalLongitudes={getDivisionalLongitudes(data().planetData, selectedChart())}
+                      divisionalLongitudes={divLons()}
                     />
                   </div>
                 </section>

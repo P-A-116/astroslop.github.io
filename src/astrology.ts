@@ -178,6 +178,26 @@ export function getCharaKarakas(positions: Record<PlanetName, PlanetPosition>): 
 }
 
 /**
+ * Jaimini Chara Karakas computed from divisional longitudes.
+ * Ranking is by degree within sign (lon % 30), descending — highest degree = AK.
+ */
+export function getCharaKarakasFromLongitudes(
+  lons: Record<PlanetName, number>,
+): Partial<Record<PlanetName, string>> {
+  const candidates = PLANET_LIST
+    .filter(p => p !== 'Rahu' && p !== 'Ketu')
+    .map(p => ({ planet: p, degInSign: lons[p] % 30 }))
+    .sort((a, b) => b.degInSign - a.degInSign);
+  const names = ['Atmakaraka', 'Amatyakaraka', 'Bhratrikaraka',
+                 'Matrikaraka', 'Putrakaraka', 'Gnatikaraka', 'Darakaraka'];
+  const result: Partial<Record<PlanetName, string>> = {};
+  candidates.forEach((c, i) => {
+    if (i < names.length) result[c.planet] = names[i];
+  });
+  return result;
+}
+
+/**
  * Sphuta Drishti (aspect strength in virupas).
  * Returns a number or null ("-" in original).
  */
