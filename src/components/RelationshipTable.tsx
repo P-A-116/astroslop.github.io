@@ -38,14 +38,14 @@ export default function RelationshipTable(props: Props) {
               <For each={PLANET_LIST}>
                 {(b) => {
                   if (a === b) return <td class="self">—</td>;
-                  const nat  = getNaturalRelationship(a, b);
-                  const temp = getTemporaryRelationship(signs()[a], signs()[b]);
-                  const comp = getCompoundRelationship(nat, temp);
-                  const cls  = REL_CSS[comp] || 'rel-nu';
-                  const abbr = REL_ABBR[comp] || comp;
+                  const nat  = () => getNaturalRelationship(a, b);
+                  const temp = () => getTemporaryRelationship(signs()[a], signs()[b]);
+                  const comp = () => getCompoundRelationship(nat(), temp());
+                  const cls  = () => REL_CSS[comp()] || 'rel-nu';
+                  const abbr = () => REL_ABBR[comp()] || comp();
                   return (
-                    <td class={cls} title={`${comp} (nat: ${nat}, temp: ${temp})`}>
-                      {abbr}
+                    <td class={cls()} title={`${comp()} (nat: ${nat()}, temp: ${temp()})`}>
+                      {abbr()}
                     </td>
                   );
                 }}

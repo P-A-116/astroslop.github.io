@@ -44,23 +44,25 @@ export default function AspectTable(props: Props) {
               <For each={PLANET_LIST}>
                 {(aspected) => {
                   if (asp === aspected) return <td class="self">—</td>;
-                  const aspLon      = props.divisionalLongitudes
-                    ? props.divisionalLongitudes[asp as PlanetName]
-                    : props.data.positions[asp].lon;
-                  const aspectedLon = props.divisionalLongitudes
-                    ? props.divisionalLongitudes[aspected as PlanetName]
-                    : props.data.positions[aspected].lon;
-                  const val = sphutaDrishti(asp, aspected, aspLon, aspectedLon);
-                  const display = val === null ? '·' : Math.round(val * 10) / 10;
-                  const bg  = aspectColor(val);
-                  const cls = aspectClass(val);
+                  const val = () => {
+                    const aspLon = props.divisionalLongitudes
+                      ? props.divisionalLongitudes[asp as PlanetName]
+                      : props.data.positions[asp].lon;
+                    const aspectedLon = props.divisionalLongitudes
+                      ? props.divisionalLongitudes[aspected as PlanetName]
+                      : props.data.positions[aspected].lon;
+                    return sphutaDrishti(asp, aspected, aspLon, aspectedLon);
+                  };
+                  const display = () => val() === null ? '·' : Math.round(val()! * 10) / 10;
+                  const bg  = () => aspectColor(val());
+                  const cls = () => aspectClass(val());
                   return (
                     <td
-                      class={cls}
-                      style={`background:${bg}`}
-                      title={`${asp}→${aspected}: ${val === null ? 'n/a' : display} virupas`}
+                      class={cls()}
+                      style={`background:${bg()}`}
+                      title={`${asp}→${aspected}: ${val() === null ? 'n/a' : display()} virupas`}
                     >
-                      {display}
+                      {display()}
                     </td>
                   );
                 }}
