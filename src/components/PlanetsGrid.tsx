@@ -6,6 +6,8 @@ interface Props {
   planets: PlanetData[];
   divisionalSigns: Record<PlanetName, number>;
   divAscSign: number;
+  divisionalLongitudes: Record<PlanetName, number>;
+  divKarakas: Partial<Record<PlanetName, string>>;
 }
 
 export default function PlanetsGrid(props: Props) {
@@ -17,6 +19,8 @@ export default function PlanetsGrid(props: Props) {
             planet={planet}
             divSign={props.divisionalSigns[planet.name]}
             divAscSign={props.divAscSign}
+            divLon={props.divisionalLongitudes[planet.name]}
+            divKaraka={props.divKarakas[planet.name] ?? null}
           />
         )}
       </For>

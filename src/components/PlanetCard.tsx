@@ -1,12 +1,14 @@
 import { For } from 'solid-js';
 import type { PlanetData } from '../types';
-import { PLANET_ICONS, SIGN_NAMES, SIGN_LORDS } from '../constants';
-import { formatDms, signToHouse } from '../astrology';
+import { PLANET_ICONS, SIGN_NAMES, SIGN_LORDS, NAKSHATRA_LORDS } from '../constants';
+import { formatDms, signToHouse, getNakshatraPada, getLordships, getFunctionalRole } from '../astrology';
 
 interface Props {
   planet: PlanetData;
   divSign: number;
   divAscSign: number;
+  divLon: number;
+  divKaraka: string | null;
 }
 
 export default function PlanetCard(props: Props) {
@@ -16,9 +18,16 @@ export default function PlanetCard(props: Props) {
   const divSignName  = () => SIGN_NAMES[props.divSign - 1];
   const divHouse     = () => signToHouse(props.divSign, props.divAscSign);
   const divSignLord  = () => SIGN_LORDS[props.divSign - 1];
-  const lordStr      = () => p().lordships.length ? p().lordships.map(h => `H${h}`).join(', ') : '—';
 
-  const roleBadge   = () => `badge badge-${p().role.toLowerCase()}`;
+  const divNakPada   = () => getNakshatraPada(props.divLon);
+  const divNakLord   = () => NAKSHATRA_LORDS[divNakPada().nakshatra] || '—';
+
+  const divLordships = () => getLordships(p().name, props.divAscSign);
+  const divRole      = () => getFunctionalRole(p().name, props.divAscSign);
+
+  const lordStr      = () => divLordships().length ? divLordships().map(h => `H${h}`).join(', ') : '—';
+
+  const roleBadge   = () => `badge badge-${divRole().toLowerCase()}`;
   const motionBadge = () => p().motion === 'Retrograde'
     ? { cls: 'badge badge-retro', txt: '℞ Retro' }
     : { cls: 'badge badge-direct', txt: 'Direct' };
@@ -27,8 +36,8 @@ export default function PlanetCard(props: Props) {
     ['Degree',       formatDms(p().deg)],
     ['Sign / House', `${divSignName()} / House ${divHouse()}`],
     ['Sign Lord',    divSignLord()],
-    ['Nakshatra',    `${p().nakshatra} Pada ${p().pada}`],
-    ['Nak. Lord',    p().nakLord],
+    ['Nakshatra',    `${divNakPada().nakshatra} Pada ${divNakPada().pada}`],
+    ['Nak. Lord',    divNakLord()],
     ['Lords Houses', lordStr()],
     ['Func. Role',   null],   // rendered specially
     ['Motion',       null],   // rendered specially
@@ -52,14 +61,14 @@ export default function PlanetCard(props: Props) {
               <span class="planet-row-label">{lbl}</span>
               <span class="planet-row-value">
                 {i() === 6 && (
-                  <span class={roleBadge()}>{p().role}</span>
+                  <span class={roleBadge()}>{divRole()}</span>
                 )}
                 {i() === 7 && (
                   <span class={motionBadge().cls}>{motionBadge().txt}</span>
                 )}
                 {i() === 8 && (
-                  p().karaka
-                    ? <span class="badge badge-karaka">{p().karaka}</span>
+                  props.divKaraka
+                    ? <span class="badge badge-karaka">{props.divKaraka}</span>
                     : '—'
                 )}
                 {i() < 6 && val}
