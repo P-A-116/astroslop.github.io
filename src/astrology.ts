@@ -356,6 +356,24 @@ const DIVISOR: Record<DivisionalChart, number> = {
 };
 
 /**
+ * Returns a map of planet → combust boolean for the given divisional chart,
+ * using the divisional longitudes to compute angular distance from the Sun.
+ */
+export function getDivisionalCombustion(
+  planets: PlanetData[],
+  divisionalLongitudes: Record<PlanetName, number>,
+): Record<PlanetName, boolean> {
+  const sunLon = divisionalLongitudes['Sun' as PlanetName];
+  const result = {} as Record<PlanetName, boolean>;
+  for (const p of planets) {
+    result[p.name] = (p.name !== 'Sun' && COMBUSTION_LIMITS[p.name])
+      ? isCombust(p.name, sunLon, divisionalLongitudes[p.name], p.motion)
+      : false;
+  }
+  return result;
+}
+
+/**
  * Returns a map of planet → effective ecliptic longitude for the given
  * divisional chart, suitable for Sphuta Drishti computation.
  * Within-sign degree is scaled to fill the full 30° of the divisional sign.

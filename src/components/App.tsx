@@ -8,7 +8,7 @@ import RelationshipTable from './RelationshipTable';
 import AspectTable from './AspectTable';
 import AnalysisTab from './AnalysisTab';
 import DivisionalChartTabs from './DivisionalChartTabs';
-import { getDivisionalSigns, getDivisionalLongitudes, getAscSignForChart, getCharaKarakasFromLongitudes } from '../astrology';
+import { getDivisionalSigns, getDivisionalLongitudes, getDivisionalCombustion, getAscSignForChart, getCharaKarakasFromLongitudes } from '../astrology';
 
 export default function App() {
   const [chartData, setChartData] = createSignal<ChartData | null>(null);
@@ -72,6 +72,7 @@ export default function App() {
                     divAscSign={getAscSignForChart(data(), selectedChart())}
                     divisionalLongitudes={divLons()}
                     divKarakas={getCharaKarakasFromLongitudes(divLons())}
+                    divCombustion={getDivisionalCombustion(data().planetData, divLons())}
                   />
                 </section>
 

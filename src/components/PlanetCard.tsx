@@ -9,6 +9,7 @@ interface Props {
   divAscSign: number;
   divLon: number;
   divKaraka: string | null;
+  divCombust: boolean;
 }
 
 export default function PlanetCard(props: Props) {
@@ -52,7 +53,7 @@ export default function PlanetCard(props: Props) {
           <div class="planet-name">{p().name}</div>
           <div class="planet-position">{formatDms(p().deg)} {divSignName()}</div>
         </div>
-        {p().combust && <span class="planet-combust">🔥 Combust</span>}
+        {props.divCombust === true && <span class="planet-combust">🔥 Combust</span>}
       </div>
       <div class="planet-card-body">
         <For each={rows()}>
