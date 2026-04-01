@@ -19,6 +19,11 @@ export default function ChartSummary(props: Props) {
     ['Asc Nakshatra', `${props.data.ascNak} Pada ${props.data.ascPada}`],
     ['Asc Navamsa', SIGN_NAMES[props.data.ascNavamsa - 1]],
     ['Asc D7', SIGN_NAMES[props.data.ascD7 - 1]],
+    ['Asc D2 (Hora)', SIGN_NAMES[props.data.ascD2 - 1]],
+    ['Asc D3', SIGN_NAMES[props.data.ascD3 - 1]],
+    ['Asc D4', SIGN_NAMES[props.data.ascD4 - 1]],
+    ['Asc D10', SIGN_NAMES[props.data.ascD10 - 1]],
+    ['Asc D12', SIGN_NAMES[props.data.ascD12 - 1]],
     ['Asc House', '1st (Whole Sign)'],
   ] as [string, string][];
 

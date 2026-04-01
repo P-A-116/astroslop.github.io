@@ -50,6 +50,13 @@ export interface PlanetData {
   navamsaHouse: number;
   d7Sign: number;
   d7House: number;
+  d2Sign: number;
+  d3Sign: number;
+  d4Sign: number;
+  d10Sign: number;
+  d10House: number;
+  d12Sign: number;
+  d12House: number;
   lordships: number[];
   role: FunctionalRole;
   combust: boolean;
@@ -70,6 +77,11 @@ export interface ChartData {
   ascDeg: number;
   ascNavamsa: number;
   ascD7: number;
+  ascD2: number;
+  ascD3: number;
+  ascD4: number;
+  ascD10: number;
+  ascD12: number;
   ascNak: string;
   ascPada: number;
   positions: Record<PlanetName, PlanetPosition>;
