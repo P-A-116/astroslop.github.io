@@ -1,5 +1,5 @@
 import { For, Show } from 'solid-js';
-import type { ChartData } from '../types';
+import type { ChartData, DivisionalChart } from '../types';
 import { findParivartanaYogas } from '../analysis';
 
 const YOGA_INTERPRETATIONS = {
@@ -13,10 +13,11 @@ const YOGA_INTERPRETATIONS = {
 
 interface Props {
   data: ChartData;
+  selectedChart: DivisionalChart;
 }
 
 export default function AnalysisTab(props: Props) {
-  const yogas = () => findParivartanaYogas(props.data);
+  const yogas = () => findParivartanaYogas(props.data, props.selectedChart);
 
   return (
     <div class="analysis-tab">

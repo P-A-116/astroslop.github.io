@@ -2,8 +2,9 @@
 //  Analysis logic — Parivartana Yoga detection
 // ============================================================
 
-import type { ChartData, PlanetName, ParivartanaYoga } from './types';
+import type { ChartData, PlanetName, ParivartanaYoga, DivisionalChart } from './types';
 import { SIGN_LORDS } from './constants';
+import { getDivisionalSigns, getAscSignForChart, signToHouse } from './astrology';
 
 /**
  * Given the ascendant sign (1-12), return the sign on the cusp of house N (1-12).
@@ -28,14 +29,20 @@ function classifyYoga(houseA: number, houseB: number): 'Dainya' | 'Khala' | 'Mah
  * A Parivartana occurs when the lord of house i is placed in house j
  * AND the lord of house j is placed in house i (i ≠ j, different planets).
  * Only the traditional seven planets (via SIGN_LORDS) are used as sign lords.
+ * When a divisional chart is supplied, uses divisional ascendant and divisional signs.
  */
-export function findParivartanaYogas(chartData: ChartData): ParivartanaYoga[] {
-  const { ascSign, planetData } = chartData;
+export function findParivartanaYogas(
+  chartData: ChartData,
+  chart: DivisionalChart = 'D1',
+): ParivartanaYoga[] {
+  const { planetData } = chartData;
+  const ascSign = getAscSignForChart(chartData, chart);
+  const divSigns = getDivisionalSigns(planetData, chart);
 
   // Build a map from planet name to its house number for quick lookup
   const planetHouse: Partial<Record<PlanetName, number>> = {};
   for (const pd of planetData) {
-    planetHouse[pd.name] = pd.house;
+    planetHouse[pd.name] = signToHouse(divSigns[pd.name], ascSign);
   }
 
   // For each house (1-12), determine the sign on its cusp and its lord
