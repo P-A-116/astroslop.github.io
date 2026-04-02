@@ -8,12 +8,15 @@ interface Props {
   utcStr: string;
   lat: number;
   lon: number;
+  cityName?: string;
 }
 
 export default function ChartSummary(props: Props) {
   const items = () => [
     ['UTC Date/Time', props.utcStr],
-    ['Location', `${props.lat}° N, ${props.lon}° E`],
+    ['Location', props.cityName
+      ? `${props.cityName} (${props.lat}° N, ${props.lon}° E)`
+      : `${props.lat}° N, ${props.lon}° E`],
     ['Ayanamsa', `${props.data.ayanamsa.toFixed(4)}° Lahiri`],
     ['Ascendant', `<span class="highlight">${SIGN_NAMES[props.data.ascSign - 1]}</span> ${formatDms(props.data.ascDeg)}`],
     ['Asc Nakshatra', `${props.data.ascNak} Pada ${props.data.ascPada}`],
