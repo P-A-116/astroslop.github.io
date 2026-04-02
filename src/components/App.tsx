@@ -15,6 +15,7 @@ export default function App() {
   const [utcStr, setUtcStr] = createSignal('');
   const [latVal, setLatVal] = createSignal(0);
   const [lonVal, setLonVal] = createSignal(0);
+  const [cityName, setCityName] = createSignal('');
   const [selectedChart, setSelectedChart] = createSignal<DivisionalChart>('D1');
 
   const divLons = createMemo((): Record<PlanetName, number> => {
@@ -23,11 +24,12 @@ export default function App() {
     return getDivisionalLongitudes(d.planetData, selectedChart());
   });
 
-  function handleChartGenerated(data: ChartData, utc: string, lat: number, lon: number) {
+  function handleChartGenerated(data: ChartData, utc: string, lat: number, lon: number, city: string) {
     setChartData(data);
     setUtcStr(utc);
     setLatVal(lat);
     setLonVal(lon);
+    setCityName(city);
     setSelectedChart('D1');
   }
 
@@ -53,7 +55,7 @@ export default function App() {
             <div id="output" class="output" aria-live="polite">
               <section class="card fade-in" id="chart-summary" style="animation-delay: 0s">
                 <h2 class="section-title">Chart Summary</h2>
-                <ChartSummary data={data()} utcStr={utcStr()} lat={latVal()} lon={lonVal()} />
+                <ChartSummary data={data()} utcStr={utcStr()} lat={latVal()} lon={lonVal()} cityName={cityName()} />
               </section>
 
               <div class="fade-in" style="animation-delay: 0.08s">
