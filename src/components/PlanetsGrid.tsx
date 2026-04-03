@@ -1,5 +1,5 @@
 import { For } from 'solid-js';
-import type { PlanetData, PlanetName } from '../types';
+import type { PlanetData, PlanetName, DivisionalChart } from '../types';
 import PlanetCard from './PlanetCard';
 
 interface Props {
@@ -9,6 +9,7 @@ interface Props {
   divisionalLongitudes: Record<PlanetName, number>;
   divKarakas: Partial<Record<PlanetName, string>>;
   divCombustion: Record<PlanetName, boolean>;
+  selectedChart: DivisionalChart;
 }
 
 export default function PlanetsGrid(props: Props) {
@@ -23,6 +24,7 @@ export default function PlanetsGrid(props: Props) {
             divLon={props.divisionalLongitudes[planet.name]}
             divKaraka={props.divKarakas[planet.name] ?? null}
             divCombust={props.divCombustion[planet.name]}
+            selectedChart={props.selectedChart}
           />
         )}
       </For>

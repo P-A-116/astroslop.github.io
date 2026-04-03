@@ -75,6 +75,7 @@ export default function App() {
                     divisionalLongitudes={divLons()}
                     divKarakas={getCharaKarakasFromLongitudes(divLons())}
                     divCombustion={getDivisionalCombustion(data().planetData, divLons())}
+                    selectedChart={selectedChart()}
                   />
                 </section>
 
