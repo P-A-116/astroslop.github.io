@@ -19,6 +19,7 @@ const TABS: Tab[] = [
   { key: 'D20', label: 'D20 (Vimsamsa)'   },
   { key: 'D27', label: 'D27 (Bhamsa)'     },
   { key: 'D30', label: 'D30 (Trimsamsa)'  },
+  { key: 'D40', label: 'D40 (Khavedamsa)' },
 ];
 
 interface Props {
