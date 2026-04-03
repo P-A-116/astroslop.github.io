@@ -136,3 +136,74 @@ export const REL_ABBR: Record<CompoundRelationship, string> = {
 
 // Re-export types used in component files for convenience
 export type { RelationshipType, CompoundRelationship, FunctionalRole };
+
+export interface ShashtiamsaEntry {
+  number: number;
+  name: string;
+  nature: 'B' | 'M';
+  description: string;
+}
+
+/** The 60 Shashtiamsa divisions (ordered 1–60 for odd signs; reversed for even signs) */
+export const SHASHTIAMSA_DATA: ShashtiamsaEntry[] = [
+  { number:  1, name: 'Ghora',          nature: 'M', description: 'awful, violent' },
+  { number:  2, name: 'Rakshasa',        nature: 'M', description: 'demoniacal' },
+  { number:  3, name: 'Deva',            nature: 'B', description: 'divine, spiritual side' },
+  { number:  4, name: 'Kubera',          nature: 'B', description: 'celestial treasurer' },
+  { number:  5, name: 'Yaksha',          nature: 'B', description: 'celestial singer' },
+  { number:  6, name: 'Kinnara',         nature: 'B', description: 'a mythical being with a human head in the form of a horse; a bad or deformed man' },
+  { number:  7, name: 'Bhrashta',        nature: 'M', description: 'fallen, vicious' },
+  { number:  8, name: 'Kulaghna',        nature: 'M', description: 'ruining a family' },
+  { number:  9, name: 'Garala',          nature: 'M', description: 'poison or venom' },
+  { number: 10, name: 'Vahni',           nature: 'M', description: 'fire, gastric fluid, digestive faculty, appetite' },
+  { number: 11, name: 'Maya',            nature: 'M', description: 'deceit, jugglery' },
+  { number: 12, name: 'Purishaka',       nature: 'M', description: 'dirt' },
+  { number: 13, name: 'Apampathi',       nature: 'B', description: 'the ocean, Varuna (the rain god)' },
+  { number: 14, name: 'Marut',           nature: 'B', description: 'the wind god' },
+  { number: 15, name: 'Kala',            nature: 'M', description: 'dark blue colour, weather, Time, a distiller of liquor, Saturn, Siva, personification of the destructive principle' },
+  { number: 16, name: 'Sarpa',           nature: 'M', description: 'snake' },
+  { number: 17, name: 'Amrita',          nature: 'B', description: 'immortal, nectar' },
+  { number: 18, name: 'Indu',            nature: 'B', description: 'Moon, number 1, camphor' },
+  { number: 19, name: 'Mridu',           nature: 'B', description: 'moderate, soft' },
+  { number: 20, name: 'Komala',          nature: 'B', description: 'tender, agreeable' },
+  { number: 21, name: 'Heramba',         nature: 'B', description: 'Ganesa (elephant-faced god), a boastful hero' },
+  { number: 22, name: 'Brahma',          nature: 'B', description: 'the Universal Father, sacred knowledge' },
+  { number: 23, name: 'Vishnu',          nature: 'B', description: 'second deity of the sacred Triad; also Agni; lawgiver; a pious man' },
+  { number: 24, name: 'Maheswara',       nature: 'B', description: 'third deity of the Triad, lord of destruction; also name of Vishnu; great sovereign' },
+  { number: 25, name: 'Deva',            nature: 'B', description: 'divine, spiritual side' },
+  { number: 26, name: 'Ardra',           nature: 'B', description: 'moist' },
+  { number: 27, name: 'Kalinasa',        nature: 'B', description: 'destruction of strife' },
+  { number: 28, name: 'Kshiteesa',       nature: 'B', description: 'ruler of the earth' },
+  { number: 29, name: 'Kamalakara',      nature: 'B', description: 'a lake full of lotuses' },
+  { number: 30, name: 'Gulika',          nature: 'M', description: "Saturn's son" },
+  { number: 31, name: 'Mrithyu',         nature: 'M', description: 'son of Mars; death' },
+  { number: 32, name: 'Kala',            nature: 'M', description: 'dark blue colour, weather, Time, a distiller of liquor, Saturn, Siva, personification of the destructive principle' },
+  { number: 33, name: 'Davagni',         nature: 'M', description: 'a forest conflagration' },
+  { number: 34, name: 'Ghora',           nature: 'M', description: 'awful, violent' },
+  { number: 35, name: 'Yama',            nature: 'M', description: 'death personified' },
+  { number: 36, name: 'Kantaka',         nature: 'M', description: 'thorn; troublemaker; enemy of order and government' },
+  { number: 37, name: 'Sudha',           nature: 'B', description: 'nectar, ambrosia, name of the Ganges' },
+  { number: 38, name: 'Amrita',          nature: 'B', description: 'immortal, nectar' },
+  { number: 39, name: 'Poornachandra',   nature: 'B', description: 'Full Moon' },
+  { number: 40, name: 'Vishadagdha',     nature: 'M', description: 'destroyed by poison, consumed by grief' },
+  { number: 41, name: 'Kulanasa',        nature: 'M', description: 'ruining a family' },
+  { number: 42, name: 'Vamshakshaya',    nature: 'M', description: 'lineage ceasing to grow' },
+  { number: 43, name: 'Utpata',          nature: 'M', description: 'portent, calamity (eclipse, earthquake, etc.)' },
+  { number: 44, name: 'Kala',            nature: 'M', description: 'dark blue colour, weather, Time, a distiller of liquor, Saturn, Siva, personification of the destructive principle' },
+  { number: 45, name: 'Saumya',          nature: 'B', description: 'relating to the Moon, handsome, auspicious' },
+  { number: 46, name: 'Komala',          nature: 'B', description: 'tender, agreeable' },
+  { number: 47, name: 'Sheetala',        nature: 'B', description: 'cold, Moon, camphor, sandal' },
+  { number: 48, name: 'Karaladamshtra',  nature: 'M', description: 'frightful-toothed' },
+  { number: 49, name: 'Chandramukhi',    nature: 'B', description: 'moon-faced beauty' },
+  { number: 50, name: 'Praveena',        nature: 'B', description: 'clever, skilled' },
+  { number: 51, name: 'Kalapavaka',      nature: 'M', description: 'destructive fire at end of the world' },
+  { number: 52, name: 'Dandayudha',      nature: 'M', description: 'staff of an ascetic or Brahmin' },
+  { number: 53, name: 'Nirmala',         nature: 'B', description: 'pure, spotless, virtuous' },
+  { number: 54, name: 'Saumya',          nature: 'B', description: 'relating to the Moon, handsome, auspicious' },
+  { number: 55, name: 'Krura',           nature: 'M', description: 'cruel, mischievous, terrible' },
+  { number: 56, name: 'Atishita',        nature: 'B', description: 'very cold' },
+  { number: 57, name: 'Amrita',          nature: 'B', description: 'immortal, nectar' },
+  { number: 58, name: 'Payodhi',         nature: 'B', description: 'ocean' },
+  { number: 59, name: 'Bhramana',        nature: 'M', description: 'wandering' },
+  { number: 60, name: 'Chandra Rekha',   nature: 'B', description: 'digit or streak of the Moon' },
+];

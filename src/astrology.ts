@@ -12,6 +12,7 @@ import {
   RULERSHIPS,
   FUNCTIONAL_ROLES,
   NATURAL_RELATIONSHIPS,
+  SHASHTIAMSA_DATA,
 } from './constants';
 import { julianDay, computeAllPositions } from './astronomy';
 import type {
@@ -27,6 +28,7 @@ import type {
   FunctionalRole,
   BuildChartParams,
   DivisionalChart,
+  ShashtiamsaInfo,
 } from './types';
 
 /** Degrees → { deg, minute, sec } */
@@ -187,6 +189,17 @@ export function getD60Sign(sign: number, deg: number): number {
   const r = d % 12;
   const shift = r + 1;
   return ((sign - 1 + shift) % 12) + 1;
+}
+
+/** D60 (Shashtiamsa) name/nature/description for a planet's rasi sign + in-sign degree */
+export function getD60Shashtiamsa(sign: number, deg: number): ShashtiamsaInfo {
+  const index = Math.floor(deg / 0.5);
+  const clampedIndex = Math.min(index, 59);
+  const isOdd = sign % 2 === 1;
+  const entry = isOdd
+    ? SHASHTIAMSA_DATA[clampedIndex]
+    : SHASHTIAMSA_DATA[59 - clampedIndex];
+  return { number: entry.number, name: entry.name, nature: entry.nature, description: entry.description };
 }
 
 /** Is a planet combust? */
@@ -389,6 +402,7 @@ export function buildChartData({ year, month, day, hour, lat, lon }: BuildChartP
     const d40House      = signToHouse(d40Sign, ascD40);
     const d45House      = signToHouse(d45Sign, ascD45);
     const d60House      = signToHouse(d60Sign, ascD60);
+    const d60Shashtiamsa = getD60Shashtiamsa(sign, deg);
     const house         = signToHouse(sign, ascSign);
     const lordships     = getLordships(name, ascSign);
     const role          = getFunctionalRole(name, ascSign);
@@ -403,6 +417,7 @@ export function buildChartData({ year, month, day, hour, lat, lon }: BuildChartP
       name, lon: pLon, sign, deg, motion, house,
       navamsaSign, navamsaHouse, d7Sign, d7House,
       d2Sign, d3Sign, d4Sign, d10Sign, d10House, d12Sign, d12House, d16Sign, d16House, d20Sign, d20House, d27Sign, d27House, d30Sign, d30House, d40Sign, d40House, d45Sign, d45House, d60Sign, d60House,
+      d60Shashtiamsa,
       lordships, role, combust, nakshatra, pada, nakLord, signLord, karaka,
     };
   });

@@ -1,5 +1,5 @@
 import { For } from 'solid-js';
-import type { PlanetData } from '../types';
+import type { PlanetData, DivisionalChart } from '../types';
 import { PLANET_ICONS, SIGN_NAMES, SIGN_LORDS, NAKSHATRA_LORDS } from '../constants';
 import { formatDms, signToHouse, getNakshatraPada, getLordships, getFunctionalRole } from '../astrology';
 
@@ -10,6 +10,7 @@ interface Props {
   divLon: number;
   divKaraka: string | null;
   divCombust: boolean;
+  selectedChart: DivisionalChart;
 }
 
 export default function PlanetCard(props: Props) {
@@ -32,6 +33,11 @@ export default function PlanetCard(props: Props) {
   const motionBadge = () => p().motion === 'Retrograde'
     ? { cls: 'badge badge-retro', txt: '℞ Retro' }
     : { cls: 'badge badge-direct', txt: 'Direct' };
+
+  const showShashtiamsa = () => props.selectedChart === 'D1' || props.selectedChart === 'D60';
+  const shashtiamsa     = () => p().d60Shashtiamsa;
+  const shashtiamsaBadge = () => shashtiamsa().nature === 'B' ? 'badge badge-benefic' : 'badge badge-malefic';
+  const shashtiamsaNatureLabel = () => shashtiamsa().nature === 'B' ? 'Benefic' : 'Malefic';
 
   const rows = (): [string, string | null][] => [
     ['Degree',       formatDms(p().deg)],
@@ -77,6 +83,16 @@ export default function PlanetCard(props: Props) {
             </div>
           )}
         </For>
+        {showShashtiamsa() && (
+          <div class="planet-row shashtiamsa-row">
+            <span class="planet-row-label">Shashtiamsa</span>
+            <span class="planet-row-value shashtiamsa-value">
+              <span class="shashtiamsa-name">{shashtiamsa().name}</span>
+              <span class={shashtiamsaBadge()}>{shashtiamsaNatureLabel()}</span>
+              <span class="shashtiamsa-desc">{shashtiamsa().description}</span>
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

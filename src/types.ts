@@ -41,6 +41,13 @@ export interface PlanetPosition {
   motion: MotionType;
 }
 
+export interface ShashtiamsaInfo {
+  number: number;
+  name: string;
+  nature: 'B' | 'M';
+  description: string;
+}
+
 export interface PlanetData {
   name: PlanetName;
   lon: number;
@@ -73,6 +80,7 @@ export interface PlanetData {
   d45House: number;
   d60Sign: number;
   d60House: number;
+  d60Shashtiamsa: ShashtiamsaInfo;
   lordships: number[];
   role: FunctionalRole;
   combust: boolean;
