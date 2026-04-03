@@ -162,6 +162,13 @@ export function getD30Sign(sign: number, deg: number): number {
   }
 }
 
+/** D40 (Khavedamsa) sign (1–12) */
+export function getD40Sign(sign: number, deg: number): number {
+  const part = Math.floor(deg / (30 / 40));  // 0..39
+  const start = sign % 2 === 1 ? 1 : 7;     // Odd→Aries, Even→Libra
+  return ((start - 1 + part) % 12) + 1;
+}
+
 /** Is a planet combust? */
 export function isCombust(planet: PlanetName, sunLon: number, planetLon: number, motion: MotionType): boolean {
   if (!COMBUSTION_LIMITS[planet]) return false;
@@ -328,6 +335,7 @@ export function buildChartData({ year, month, day, hour, lat, lon }: BuildChartP
   const ascD20     = getD20Sign(ascSign, ascDeg);
   const ascD27     = getD27Sign(ascSign, ascDeg);
   const ascD30     = getD30Sign(ascSign, ascDeg);
+  const ascD40     = getD40Sign(ascSign, ascDeg);
   const { nakshatra: ascNak, pada: ascPada } = getNakshatraPada(ascSid);
   const karakas    = getCharaKarakas(positions);
 
@@ -347,12 +355,14 @@ export function buildChartData({ year, month, day, hour, lat, lon }: BuildChartP
     const d20Sign       = getD20Sign(sign, deg);
     const d27Sign       = getD27Sign(sign, deg);
     const d30Sign       = getD30Sign(sign, deg);
+    const d40Sign       = getD40Sign(sign, deg);
     const d10House      = signToHouse(d10Sign, ascD10);
     const d12House      = signToHouse(d12Sign, ascD12);
     const d16House      = signToHouse(d16Sign, ascD16);
     const d20House      = signToHouse(d20Sign, ascD20);
     const d27House      = signToHouse(d27Sign, ascD27);
     const d30House      = signToHouse(d30Sign, ascD30);
+    const d40House      = signToHouse(d40Sign, ascD40);
     const house         = signToHouse(sign, ascSign);
     const lordships     = getLordships(name, ascSign);
     const role          = getFunctionalRole(name, ascSign);
@@ -366,7 +376,7 @@ export function buildChartData({ year, month, day, hour, lat, lon }: BuildChartP
     return {
       name, lon: pLon, sign, deg, motion, house,
       navamsaSign, navamsaHouse, d7Sign, d7House,
-      d2Sign, d3Sign, d4Sign, d10Sign, d10House, d12Sign, d12House, d16Sign, d16House, d20Sign, d20House, d27Sign, d27House, d30Sign, d30House,
+      d2Sign, d3Sign, d4Sign, d10Sign, d10House, d12Sign, d12House, d16Sign, d16House, d20Sign, d20House, d27Sign, d27House, d30Sign, d30House, d40Sign, d40House,
       lordships, role, combust, nakshatra, pada, nakLord, signLord, karaka,
     };
   });
@@ -374,7 +384,7 @@ export function buildChartData({ year, month, day, hour, lat, lon }: BuildChartP
   return {
     jd, lat, lon, ayanamsa,
     ascSid, ascSign, ascDeg, ascNavamsa, ascD7,
-    ascD2, ascD3, ascD4, ascD10, ascD12, ascD16, ascD20, ascD27, ascD30,
+    ascD2, ascD3, ascD4, ascD10, ascD12, ascD16, ascD20, ascD27, ascD30, ascD40,
     ascNak, ascPada,
     positions, planetData,
     karakas,
@@ -396,6 +406,7 @@ export function getAscSignForChart(data: ChartData, chart: DivisionalChart): num
     case 'D20': return data.ascD20;
     case 'D27': return data.ascD27;
     case 'D30': return data.ascD30;
+    case 'D40': return data.ascD40;
   }
 }
 
@@ -419,13 +430,14 @@ export function getDivisionalSigns(
       case 'D20': result[p.name] = p.d20Sign;      break;
       case 'D27': result[p.name] = p.d27Sign;      break;
       case 'D30': result[p.name] = p.d30Sign;      break;
+      case 'D40': result[p.name] = p.d40Sign;      break;
     }
   }
   return result;
 }
 
 const DIVISOR: Record<DivisionalChart, number> = {
-  D1: 1, D2: 2, D3: 3, D4: 4, D7: 7, D9: 9, D10: 10, D12: 12, D16: 16, D20: 20, D27: 27, D30: 30,
+  D1: 1, D2: 2, D3: 3, D4: 4, D7: 7, D9: 9, D10: 10, D12: 12, D16: 16, D20: 20, D27: 27, D30: 30, D40: 40,
 };
 
 /**
