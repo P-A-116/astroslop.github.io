@@ -29,6 +29,7 @@ export default function ChartSummary(props: Props) {
     ['Asc D12', SIGN_NAMES[props.data.ascD12 - 1]],
     ['Asc D16', SIGN_NAMES[props.data.ascD16 - 1]],
     ['Asc D20', SIGN_NAMES[props.data.ascD20 - 1]],
+    ['Asc D24', SIGN_NAMES[props.data.ascD24 - 1]],
     ['Asc House', '1st (Whole Sign)'],
   ] as [string, string][];
 

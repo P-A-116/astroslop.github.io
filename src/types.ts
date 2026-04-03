@@ -8,7 +8,7 @@ export type PlanetName =
 
 export type SignNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 
-export type DivisionalChart = 'D1' | 'D2' | 'D3' | 'D4' | 'D7' | 'D9' | 'D10' | 'D12' | 'D16' | 'D20';
+export type DivisionalChart = 'D1' | 'D2' | 'D3' | 'D4' | 'D7' | 'D9' | 'D10' | 'D12' | 'D16' | 'D20' | 'D24';
 
 export type RelationshipType = 'Friend' | 'Enemy' | 'Neutral';
 
@@ -63,6 +63,8 @@ export interface PlanetData {
   d16House: number;
   d20Sign: number;
   d20House: number;
+  d24Sign: number;
+  d24House: number;
   lordships: number[];
   role: FunctionalRole;
   combust: boolean;
@@ -90,6 +92,7 @@ export interface ChartData {
   ascD12: number;
   ascD16: number;
   ascD20: number;
+  ascD24: number;
   ascNak: string;
   ascPada: number;
   positions: Record<PlanetName, PlanetPosition>;
