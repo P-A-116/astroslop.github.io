@@ -1,4 +1,4 @@
-﻿import {
+import {
   PLANET_LIST,
   SIGN_LORDS,
   NAKSHATRA_LIST,
@@ -399,7 +399,7 @@ export function sphutaDrishti(
     return (300 - a) / 2;
   }
   if (a >= 270 && a < 300) return asp === 'Saturn' ? 2 * (300 - a) : (300 - a) / 2;
-  if (a >= 300 && a < 330) return (300 - a) / 2;
+  if (a >= 300 && a < 330) return 0;
   if (a >= 330 && a < 360) return 0;
   return 0;
 }
