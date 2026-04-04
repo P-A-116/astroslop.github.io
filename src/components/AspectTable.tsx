@@ -1,69 +1,36 @@
-import { For } from 'solid-js';
-import type { ChartData } from '../types';
-import { PLANET_LIST, PLANET_ICONS } from '../constants';
 import { sphutaDrishti } from '../astrology';
+import type { ChartData } from '../types';
+import PlanetMatrix from './PlanetMatrix';
 
 interface Props {
   data: ChartData;
 }
 
-function aspectColor(val: number | null): string {
-  if (val === null) return '#2a3a5a';
-  if (val >= 50)    return '#d4a847';
-  if (val >= 30)    return '#7ab0e0';
-  if (val >= 15)    return '#5a7898';
-  if (val > 0)      return '#3a5070';
-  return '#1e2a40';
-}
+const aspectColor = (val: number | null) =>
+  val === null ? '#2a3a5a' : val >= 50 ? '#d4a847' : val >= 30 ? '#7ab0e0' : val >= 15 ? '#5a7898' : val > 0 ? '#3a5070' : '#1e2a40';
 
-function aspectClass(val: number | null): string {
-  if (val === null) return 'asp-none';
-  if (val >= 50)    return 'asp-strong';
-  if (val >= 25)    return 'asp-medium';
-  if (val > 0)      return 'asp-weak';
-  return 'asp-none';
-}
+const aspectClass = (val: number | null) =>
+  val === null ? 'asp-none' : val >= 50 ? 'asp-strong' : val >= 25 ? 'asp-medium' : val > 0 ? 'asp-weak' : 'asp-none';
 
 export default function AspectTable(props: Props) {
+  const { positions } = props.data;
+
   return (
-    <table id="aspect-table" class="astro-table">
-      <thead>
-        <tr>
-          <th></th>
-          <For each={PLANET_LIST}>
-            {(p) => <th title={p}>{PLANET_ICONS[p]} {p}</th>}
-          </For>
-        </tr>
-      </thead>
-      <tbody>
-        <For each={PLANET_LIST}>
-          {(asp) => (
-            <tr>
-              <td>{PLANET_ICONS[asp]} {asp}</td>
-              <For each={PLANET_LIST}>
-                {(aspected) => {
-                  if (asp === aspected) return <td class="self">—</td>;
-                  const aspLon      = props.data.positions[asp].lon;
-                  const aspectedLon = props.data.positions[aspected].lon;
-                  const val = sphutaDrishti(asp, aspected, aspLon, aspectedLon);
-                  const display = val === null ? '·' : Math.round(val * 10) / 10;
-                  const bg  = aspectColor(val);
-                  const cls = aspectClass(val);
-                  return (
-                    <td
-                      class={cls}
-                      style={`background:${bg}`}
-                      title={`${asp}→${aspected}: ${val === null ? 'n/a' : display} virupas`}
-                    >
-                      {display}
-                    </td>
-                  );
-                }}
-              </For>
-            </tr>
-          )}
-        </For>
-      </tbody>
-    </table>
+    <PlanetMatrix
+      id="aspect-table"
+      cell={(asp, aspected) => {
+        const val = sphutaDrishti(asp, aspected, positions[asp].lon, positions[aspected].lon);
+        const display = val === null ? '·' : Math.round(val * 10) / 10;
+        return (
+          <td
+            class={aspectClass(val)}
+            style={`background:${aspectColor(val)}`}
+            title={`${asp}→${aspected}: ${val === null ? 'n/a' : display} virupas`}
+          >
+            {display}
+          </td>
+        );
+      }}
+    />
   );
 }

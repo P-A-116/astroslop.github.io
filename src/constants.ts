@@ -1,16 +1,10 @@
-// ============================================================
-//  All constants — typed
-// ============================================================
-
 import type {
   PlanetName,
-  RelationshipType,
   CompoundRelationship,
   OrbitalElements,
-  FunctionalRole,
 } from './types';
 
-export const SIGN_NAMES: string[] = [
+export const SIGN_NAMES = [
   'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
   'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces',
 ];
@@ -51,19 +45,18 @@ export const PLANET_ICONS: Record<PlanetName, string> = {
 interface NaturalRelationshipEntry {
   friends: PlanetName[];
   enemies: PlanetName[];
-  equals: PlanetName[];
 }
 
 export const NATURAL_RELATIONSHIPS: Record<PlanetName, NaturalRelationshipEntry> = {
-  Sun:     { friends: ['Moon', 'Mars', 'Jupiter'],       enemies: ['Venus', 'Saturn'],        equals: ['Mercury'] },
-  Moon:    { friends: ['Sun', 'Mercury'],                enemies: [],                          equals: ['Mars', 'Jupiter', 'Venus', 'Saturn'] },
-  Mars:    { friends: ['Sun', 'Moon', 'Jupiter'],        enemies: ['Mercury'],                 equals: ['Venus', 'Saturn'] },
-  Mercury: { friends: ['Sun', 'Venus'],                  enemies: ['Moon'],                    equals: ['Mars', 'Jupiter', 'Saturn'] },
-  Jupiter: { friends: ['Sun', 'Moon', 'Mars'],           enemies: ['Mercury', 'Venus'],        equals: ['Saturn'] },
-  Venus:   { friends: ['Mercury', 'Saturn'],             enemies: ['Moon', 'Sun'],             equals: ['Mars', 'Jupiter'] },
-  Saturn:  { friends: ['Mercury', 'Venus'],              enemies: ['Sun', 'Moon', 'Mars'],     equals: ['Jupiter'] },
-  Rahu:    { friends: ['Jupiter', 'Venus', 'Saturn'],   enemies: ['Sun', 'Moon', 'Mars'],     equals: ['Mercury'] },
-  Ketu:    { friends: ['Mars', 'Venus', 'Saturn'],       enemies: ['Sun', 'Moon'],             equals: ['Mercury', 'Jupiter'] },
+  Sun: { friends: ['Moon', 'Mars', 'Jupiter'], enemies: ['Venus', 'Saturn'] },
+  Moon: { friends: ['Sun', 'Mercury'], enemies: [] },
+  Mars: { friends: ['Sun', 'Moon', 'Jupiter'], enemies: ['Mercury'] },
+  Mercury: { friends: ['Sun', 'Venus'], enemies: ['Moon'] },
+  Jupiter: { friends: ['Sun', 'Moon', 'Mars'], enemies: ['Mercury', 'Venus'] },
+  Venus: { friends: ['Mercury', 'Saturn'], enemies: ['Moon', 'Sun'] },
+  Saturn: { friends: ['Mercury', 'Venus'], enemies: ['Sun', 'Moon', 'Mars'] },
+  Rahu: { friends: ['Jupiter', 'Venus', 'Saturn'], enemies: ['Sun', 'Moon', 'Mars'] },
+  Ketu: { friends: ['Mars', 'Venus', 'Saturn'], enemies: ['Sun', 'Moon'] },
 };
 
 interface CombustionEntry {
@@ -80,7 +73,6 @@ export const COMBUSTION_LIMITS: Partial<Record<PlanetName, CombustionEntry>> = {
   Saturn:  { direct: 16,  retro: 16 },
 };
 
-// Rulerships use sign numbers 1–12 (not house numbers)
 export const RULERSHIPS: Partial<Record<PlanetName, number[]>> = {
   Sun: [5], Moon: [4], Mercury: [3, 6], Venus: [2, 7], Mars: [1, 8],
   Jupiter: [9, 12], Saturn: [10, 11], Rahu: [11], Ketu: [8],
@@ -107,7 +99,6 @@ export const FUNCTIONAL_ROLES: Record<number, FunctionalRoleEntry> = {
   12: { benefics: ['Moon', 'Mars', 'Jupiter'],  malefics: ['Mercury', 'Saturn', 'Venus', 'Sun'], neutrals: [] },
 };
 
-// Navamsa start sign (1-based) for each sign 1–12
 export const NAVAMSA_START_SIGNS: number[] = [1, 10, 7, 4, 1, 10, 7, 4, 1, 10, 7, 4];
 
 export const ORBITAL_ELEMENTS: Record<string, OrbitalElements> = {
@@ -133,6 +124,3 @@ export const REL_ABBR: Record<CompoundRelationship, string> = {
   'Enmity':             'En',
   'Extreme Enmity':     'E.En',
 };
-
-// Re-export types used in component files for convenience
-export type { RelationshipType, CompoundRelationship, FunctionalRole };

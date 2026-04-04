@@ -1,36 +1,12 @@
-// ============================================================
-//  Shared TypeScript interfaces and type definitions
-// ============================================================
-
 export type PlanetName =
-  | 'Sun' | 'Moon' | 'Mars' | 'Mercury' | 'Jupiter'
-  | 'Venus' | 'Saturn' | 'Rahu' | 'Ketu';
-
-export type SignNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
-
+  | 'Sun' | 'Moon' | 'Mars' | 'Mercury' | 'Jupiter' | 'Venus' | 'Saturn' | 'Rahu' | 'Ketu';
 export type RelationshipType = 'Friend' | 'Enemy' | 'Neutral';
-
 export type CompoundRelationship =
-  | 'Extreme Friendship'
-  | 'Friendship'
-  | 'Neutral'
-  | 'Enmity'
-  | 'Extreme Enmity';
-
+  | 'Extreme Friendship' | 'Friendship' | 'Neutral' | 'Enmity' | 'Extreme Enmity';
 export type MotionType = 'Direct' | 'Retrograde';
-
 export type FunctionalRole = 'Benefic' | 'Malefic' | 'Neutral' | 'Unknown';
 
-export interface DMS {
-  deg: number;
-  minute: number;
-  sec: number;
-}
-
-export interface NakshatraPada {
-  nakshatra: string;
-  pada: number;
-}
+export interface NakshatraPada { nakshatra: string; pada: number; }
 
 export interface PlanetPosition {
   lon: number;
@@ -80,18 +56,23 @@ export interface ChartData {
 export interface ParivartanaYoga {
   houseA: number;
   houseB: number;
-  planetA: PlanetName;  // lord of houseA, placed in houseB
-  planetB: PlanetName;  // lord of houseB, placed in houseA
+  planetA: PlanetName;
+  planetB: PlanetName;
   type: 'Dainya' | 'Khala' | 'Maha';
 }
 
 export interface OrbitalElements {
-  N0: number; N1: number;
-  i0: number; i1: number;
-  w0: number; w1: number;
+  N0: number;
+  N1: number;
+  i0: number;
+  i1: number;
+  w0: number;
+  w1: number;
   a: number;
-  e0: number; e1: number;
-  M0: number; M1: number;
+  e0: number;
+  e1: number;
+  M0: number;
+  M1: number;
 }
 
 export interface BuildChartParams {

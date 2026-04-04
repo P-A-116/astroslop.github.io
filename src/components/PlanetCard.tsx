@@ -1,70 +1,52 @@
-import { For } from 'solid-js';
-import type { PlanetData } from '../types';
-import { PLANET_ICONS, SIGN_NAMES } from '../constants';
+import { For, type JSX } from 'solid-js';
 import { formatDms } from '../astrology';
+import { PLANET_ICONS, SIGN_NAMES } from '../constants';
+import type { PlanetData } from '../types';
 
 interface Props {
   planet: PlanetData;
 }
 
-export default function PlanetCard(props: Props) {
-  const p = () => props.planet;
+function Row(props: { label: string; value: JSX.Element }) {
+  return (
+    <div class="planet-row">
+      <span class="planet-row-label">{props.label}</span>
+      <span class="planet-row-value">{props.value}</span>
+    </div>
+  );
+}
 
-  const icon      = () => PLANET_ICONS[p().name] || '●';
-  const signName  = () => SIGN_NAMES[p().sign - 1];
-  const lordStr   = () => p().lordships.length ? p().lordships.map(h => `H${h}`).join(', ') : '—';
-
-  const roleBadge   = () => `badge badge-${p().role.toLowerCase()}`;
-  const motionBadge = () => p().motion === 'Retrograde'
-    ? { cls: 'badge badge-retro', txt: '℞ Retro' }
-    : { cls: 'badge badge-direct', txt: 'Direct' };
-
-  const rows = (): [string, string | null][] => [
-    ['Degree',       formatDms(p().deg)],
-    ['Sign / House', `${signName()} / House ${p().house}`],
-    ['Sign Lord',    p().signLord],
-    ['Nakshatra',    `${p().nakshatra} Pada ${p().pada}`],
-    ['Nak. Lord',    p().nakLord],
-    ['Navamsa',      `${SIGN_NAMES[p().navamsaSign - 1]} (H${p().navamsaHouse})`],
-    ['D7',           `${SIGN_NAMES[p().d7Sign - 1]} (H${p().d7House})`],
-    ['Lords Houses', lordStr()],
-    ['Func. Role',   null],   // rendered specially
-    ['Motion',       null],   // rendered specially
-    ['Karaka',       null],   // rendered specially
+export default function PlanetCard({ planet }: Props) {
+  const sign = SIGN_NAMES[planet.sign - 1];
+  const motion = planet.motion === 'Retrograde'
+    ? ['badge badge-retro', '℞ Retro']
+    : ['badge badge-direct', 'Direct'];
+  const rows: [string, JSX.Element][] = [
+    ['Degree', formatDms(planet.deg)],
+    ['Sign / House', `${sign} / House ${planet.house}`],
+    ['Sign Lord', planet.signLord],
+    ['Nakshatra', `${planet.nakshatra} Pada ${planet.pada}`],
+    ['Nak. Lord', planet.nakLord],
+    ['Navamsa', `${SIGN_NAMES[planet.navamsaSign - 1]} (H${planet.navamsaHouse})`],
+    ['D7', `${SIGN_NAMES[planet.d7Sign - 1]} (H${planet.d7House})`],
+    ['Lords Houses', planet.lordships.map((h) => `H${h}`).join(', ') || '—'],
+    ['Func. Role', <span class={`badge badge-${planet.role.toLowerCase()}`}>{planet.role}</span>],
+    ['Motion', <span class={motion[0]}>{motion[1]}</span>],
+    ['Karaka', planet.karaka ? <span class="badge badge-karaka">{planet.karaka}</span> : '—'],
   ];
 
   return (
     <div class="planet-card">
       <div class="planet-card-header">
-        <span class="planet-icon">{icon()}</span>
+        <span class="planet-icon">{PLANET_ICONS[planet.name] ?? '●'}</span>
         <div>
-          <div class="planet-name">{p().name}</div>
-          <div class="planet-position">{formatDms(p().deg)} {signName()}</div>
+          <div class="planet-name">{planet.name}</div>
+          <div class="planet-position">{formatDms(planet.deg)} {sign}</div>
         </div>
-        {p().combust && <span class="planet-combust">🔥 Combust</span>}
+        {planet.combust && <span class="planet-combust">🔥 Combust</span>}
       </div>
       <div class="planet-card-body">
-        <For each={rows()}>
-          {([lbl, val], i) => (
-            <div class="planet-row">
-              <span class="planet-row-label">{lbl}</span>
-              <span class="planet-row-value">
-                {i() === 8 && (
-                  <span class={roleBadge()}>{p().role}</span>
-                )}
-                {i() === 9 && (
-                  <span class={motionBadge().cls}>{motionBadge().txt}</span>
-                )}
-                {i() === 10 && (
-                  p().karaka
-                    ? <span class="badge badge-karaka">{p().karaka}</span>
-                    : '—'
-                )}
-                {i() < 8 && val}
-              </span>
-            </div>
-          )}
-        </For>
+        <For each={rows}>{([label, value]) => <Row label={label} value={value} />}</For>
       </div>
     </div>
   );

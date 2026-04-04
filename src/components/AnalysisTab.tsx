@@ -1,6 +1,6 @@
-import { For, Show } from 'solid-js';
-import type { ChartData } from '../types';
+import { For } from 'solid-js';
 import { findParivartanaYogas } from '../analysis';
+import type { ChartData } from '../types';
 
 const YOGA_INTERPRETATIONS = {
   Dainya:
@@ -16,39 +16,25 @@ interface Props {
 }
 
 export default function AnalysisTab(props: Props) {
-  const yogas = () => findParivartanaYogas(props.data);
-
+  const yogas = findParivartanaYogas(props.data);
   return (
     <div class="analysis-tab">
-      <Show
-        when={yogas().length > 0}
-        fallback={
-          <p class="analysis-empty">No Parivartana Yogas found in this chart.</p>
-        }
-      >
+      {yogas.length ? (
         <div class="yoga-list">
-          <For each={yogas()}>
+          <For each={yogas}>
             {(yoga) => (
               <div class="yoga-card">
                 <div class="yoga-header">
-                  <span class={`badge yoga-badge yoga-badge-${yoga.type.toLowerCase()}`}>
-                    {yoga.type} Yoga
-                  </span>
-                  <span class="yoga-houses">
-                    Houses {yoga.houseA} ↔ {yoga.houseB}
-                  </span>
-                  <span class="yoga-planets">
-                    {yoga.planetA} ↔ {yoga.planetB}
-                  </span>
+                  <span class={`badge yoga-badge yoga-badge-${yoga.type.toLowerCase()}`}>{yoga.type} Yoga</span>
+                  <span class="yoga-houses">Houses {yoga.houseA} ↔ {yoga.houseB}</span>
+                  <span class="yoga-planets">{yoga.planetA} ↔ {yoga.planetB}</span>
                 </div>
-                <p class="yoga-interpretation">
-                  {YOGA_INTERPRETATIONS[yoga.type]}
-                </p>
+                <p class="yoga-interpretation">{YOGA_INTERPRETATIONS[yoga.type]}</p>
               </div>
             )}
           </For>
         </div>
-      </Show>
+      ) : <p class="analysis-empty">No Parivartana Yogas found in this chart.</p>}
     </div>
   );
 }

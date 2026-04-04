@@ -1,52 +1,28 @@
-import { createSignal } from 'solid-js';
-import type { ChartData } from '../types';
+import { createSignal, type JSX } from 'solid-js';
 import { buildChartData } from '../astrology';
+import type { ChartData } from '../types';
 
 interface Props {
   onGenerate: (data: ChartData, utcStr: string, lat: number, lon: number) => void;
 }
 
 const TZ_OPTIONS = [
-  { value: '-12',   label: 'UTC-12' },
-  { value: '-11',   label: 'UTC-11' },
-  { value: '-10',   label: 'UTC-10' },
-  { value: '-9.5',  label: 'UTC-9:30' },
-  { value: '-9',    label: 'UTC-9' },
-  { value: '-8',    label: 'UTC-8' },
-  { value: '-7',    label: 'UTC-7' },
-  { value: '-6',    label: 'UTC-6' },
-  { value: '-5',    label: 'UTC-5' },
-  { value: '-4.5',  label: 'UTC-4:30' },
-  { value: '-4',    label: 'UTC-4' },
-  { value: '-3.5',  label: 'UTC-3:30' },
-  { value: '-3',    label: 'UTC-3' },
-  { value: '-2',    label: 'UTC-2' },
-  { value: '-1',    label: 'UTC-1' },
-  { value: '0',     label: 'UTC+0' },
-  { value: '1',     label: 'UTC+1' },
-  { value: '2',     label: 'UTC+2' },
-  { value: '3',     label: 'UTC+3' },
-  { value: '3.5',   label: 'UTC+3:30' },
-  { value: '4',     label: 'UTC+4' },
-  { value: '4.5',   label: 'UTC+4:30' },
-  { value: '5',     label: 'UTC+5' },
-  { value: '5.5',   label: 'UTC+5:30' },
-  { value: '5.75',  label: 'UTC+5:45' },
-  { value: '6',     label: 'UTC+6' },
-  { value: '6.5',   label: 'UTC+6:30' },
-  { value: '7',     label: 'UTC+7' },
-  { value: '8',     label: 'UTC+8' },
-  { value: '8.75',  label: 'UTC+8:45' },
-  { value: '9',     label: 'UTC+9' },
-  { value: '9.5',   label: 'UTC+9:30' },
-  { value: '10',    label: 'UTC+10' },
-  { value: '10.5',  label: 'UTC+10:30' },
-  { value: '11',    label: 'UTC+11' },
-  { value: '12',    label: 'UTC+12' },
-  { value: '12.75', label: 'UTC+12:45' },
-  { value: '13',    label: 'UTC+13' },
-  { value: '14',    label: 'UTC+14' },
-];
+  ...Array.from({ length: 27 }, (_, i) => i - 12),
+  -9.5, -4.5, -3.5, 3.5, 4.5, 5.5, 5.75, 6.5, 8.75, 9.5, 10.5, 12.75,
+].sort((a, b) => a - b).map(String);
+
+const pad2 = (n: number) => String(n).padStart(2, '0');
+const onValue = (set: (value: string) => void) => (e: Event & { currentTarget: { value: string } }) => set(e.currentTarget.value);
+const Field = (props: { id: string; label: string; children: JSX.Element }) => (
+  <div class="form-group">
+    <label for={props.id}>{props.label}</label>
+    {props.children}
+  </div>
+);
+const tzLabel = (value: string) => {
+  const n = Number(value), abs = Math.abs(n), hour = Math.trunc(abs), min = Math.round((abs - hour) * 60);
+  return `UTC${n >= 0 ? '+' : '-'}${hour}${min ? `:${pad2(min)}` : ''}`;
+};
 
 export default function ChartForm(props: Props) {
   const [date, setDate] = createSignal('2002-10-06');
@@ -60,54 +36,23 @@ export default function ChartForm(props: Props) {
     e.preventDefault();
     setError('');
 
-    const dateVal = date();
-    const timeVal = time();
-    const tzVal   = parseFloat(tz());
-    const latVal  = parseFloat(lat());
-    const lonVal  = parseFloat(lon());
+    const dateVal = date(), timeVal = time(), tzVal = Number(tz()), latVal = Number(lat()), lonVal = Number(lon());
+    if (!dateVal || !timeVal) return void setError('Please enter a valid date and time.');
+    if (Number.isNaN(latVal) || latVal < -90 || latVal > 90) return void setError('Latitude must be between −90 and +90.');
+    if (Number.isNaN(lonVal) || lonVal < -180 || lonVal > 180) return void setError('Longitude must be between −180 and +180.');
+    if (Number.isNaN(tzVal)) return void setError('Please select a valid UTC offset.');
 
-    if (!dateVal || !timeVal) {
-      setError('Please enter a valid date and time.');
-      return;
-    }
-    if (isNaN(latVal) || latVal < -90 || latVal > 90) {
-      setError('Latitude must be between −90 and +90.');
-      return;
-    }
-    if (isNaN(lonVal) || lonVal < -180 || lonVal > 180) {
-      setError('Longitude must be between −180 and +180.');
-      return;
-    }
-    if (isNaN(tzVal)) {
-      setError('Please select a valid UTC offset.');
-      return;
-    }
-
-    const [yearStr, monStr, dayStr] = dateVal.split('-');
-    const [hrStr, minStr]           = timeVal.split(':');
-    const localHour = parseInt(hrStr) + parseInt(minStr) / 60;
-
-    const localDate = new Date(Date.UTC(
-      parseInt(yearStr), parseInt(monStr) - 1, parseInt(dayStr),
-      Math.floor(localHour), parseInt(minStr),
-    ));
-    const utcDate = new Date(localDate.getTime() - tzVal * 3600000);
-
-    const year  = utcDate.getUTCFullYear();
-    const month = utcDate.getUTCMonth() + 1;
-    const day   = utcDate.getUTCDate();
-    const hour  = utcDate.getUTCHours() + utcDate.getUTCMinutes() / 60;
-
-    const utcStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')} `
-                 + `${String(utcDate.getUTCHours()).padStart(2, '0')}:`
-                 + `${String(utcDate.getUTCMinutes()).padStart(2, '0')} UTC`;
+    const [year, month, day] = dateVal.split('-').map(Number);
+    const [hours, minutes] = timeVal.split(':').map(Number);
+    const utcDate = new Date(Date.UTC(year, month - 1, day, hours, minutes) - tzVal * 3600000);
+    const utcYear = utcDate.getUTCFullYear(), utcMonth = utcDate.getUTCMonth() + 1, utcDay = utcDate.getUTCDate();
+    const hour = utcDate.getUTCHours() + utcDate.getUTCMinutes() / 60;
+    const utcStr = `${utcYear}-${pad2(utcMonth)}-${pad2(utcDay)} ${pad2(utcDate.getUTCHours())}:${pad2(utcDate.getUTCMinutes())} UTC`;
 
     try {
-      const data = buildChartData({ year, month, day, hour, lat: latVal, lon: lonVal });
-      props.onGenerate(data, utcStr, latVal, lonVal);
+      props.onGenerate(buildChartData({ year: utcYear, month: utcMonth, day: utcDay, hour, lat: latVal, lon: lonVal }), utcStr, latVal, lonVal);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      setError(`Calculation error: ${msg}`);
+      setError(`Calculation error: ${err instanceof Error ? err.message : String(err)}`);
       console.error(err);
     }
   }
@@ -117,55 +62,36 @@ export default function ChartForm(props: Props) {
       <h2 class="section-title">Birth / Event Details</h2>
       <form id="chart-form" novalidate onSubmit={handleSubmit}>
         <div class="form-grid">
-          <div class="form-group">
-            <label for="date">Date</label>
-            <input
-              type="date" id="date" name="date" required
-              value={date()} onInput={(e) => setDate(e.currentTarget.value)}
-            />
-          </div>
-          <div class="form-group">
-            <label for="time">Local Time</label>
-            <input
-              type="time" id="time" name="time" required
-              value={time()} onInput={(e) => setTime(e.currentTarget.value)}
-            />
-          </div>
-          <div class="form-group">
-            <label for="tz">UTC Offset (hours)</label>
-            <select id="tz" name="tz" value={tz()} onChange={(e) => setTz(e.currentTarget.value)}>
-              {TZ_OPTIONS.map(opt => (
-                <option value={opt.value} selected={opt.value === tz()}>
-                  {opt.label}
-                </option>
-              ))}
+          <Field id="date" label="Date">
+            <input type="date" id="date" name="date" required value={date()} onInput={onValue(setDate)} />
+          </Field>
+          <Field id="time" label="Local Time">
+            <input type="time" id="time" name="time" required value={time()} onInput={onValue(setTime)} />
+          </Field>
+          <Field id="tz" label="UTC Offset (hours)">
+            <select id="tz" name="tz" value={tz()} onChange={onValue(setTz)}>
+              {TZ_OPTIONS.map((value) => <option value={value} selected={value === tz()}>{tzLabel(value)}</option>)}
             </select>
-          </div>
-          <div class="form-group">
-            <label for="lat">Latitude (°N positive)</label>
+          </Field>
+          <Field id="lat" label="Latitude (°N positive)">
             <input
-              type="number" id="lat" name="lat" step="0.0001" min="-90" max="90"
-              required placeholder="e.g. 40.3833"
-              value={lat()} onInput={(e) => setLat(e.currentTarget.value)}
+              type="number" id="lat" name="lat" step="0.0001" min="-90" max="90" required placeholder="e.g. 40.3833"
+              value={lat()} onInput={onValue(setLat)}
             />
-          </div>
-          <div class="form-group">
-            <label for="lon">Longitude (°E positive)</label>
+          </Field>
+          <Field id="lon" label="Longitude (°E positive)">
             <input
-              type="number" id="lon" name="lon" step="0.0001" min="-180" max="180"
-              required placeholder="e.g. 23.4333"
-              value={lon()} onInput={(e) => setLon(e.currentTarget.value)}
+              type="number" id="lon" name="lon" step="0.0001" min="-180" max="180" required placeholder="e.g. 23.4333"
+              value={lon()} onInput={onValue(setLon)}
             />
-          </div>
+          </Field>
         </div>
         <div class="form-actions">
           <button type="submit" class="btn-generate">
             <span class="btn-icon">✦</span> Generate Chart
           </button>
         </div>
-        <p id="form-error" class="form-error" role="alert" aria-live="polite">
-          {error()}
-        </p>
+        <p id="form-error" class="form-error" role="alert" aria-live="polite">{error()}</p>
       </form>
     </section>
   );

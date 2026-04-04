@@ -1,25 +1,38 @@
-import { createSignal } from 'solid-js';
-import { Show } from 'solid-js';
+import { For, Show, createSignal, type JSX } from 'solid-js';
 import type { ChartData } from '../types';
+import AnalysisTab from './AnalysisTab';
+import AspectTable from './AspectTable';
 import ChartForm from './ChartForm';
 import ChartSummary from './ChartSummary';
-import PlanetsGrid from './PlanetsGrid';
+import PlanetCard from './PlanetCard';
 import RelationshipTable from './RelationshipTable';
-import AspectTable from './AspectTable';
-import AnalysisTab from './AnalysisTab';
+
+interface Result {
+  data: ChartData;
+  utcStr: string;
+  lat: number;
+  lon: number;
+}
+
+function Section(props: {
+  id: string;
+  title: string;
+  delay: string;
+  note?: string;
+  scroll?: boolean;
+  children: JSX.Element;
+}) {
+  return (
+    <section class="card fade-in" id={props.id} style={`animation-delay:${props.delay}`}>
+      <h2 class="section-title">{props.title}</h2>
+      {props.note && <p class="table-note">{props.note}</p>}
+      {props.scroll ? <div class="table-scroll">{props.children}</div> : props.children}
+    </section>
+  );
+}
 
 export default function App() {
-  const [chartData, setChartData] = createSignal<ChartData | null>(null);
-  const [utcStr, setUtcStr] = createSignal('');
-  const [latVal, setLatVal] = createSignal(0);
-  const [lonVal, setLonVal] = createSignal(0);
-
-  function handleChartGenerated(data: ChartData, utc: string, lat: number, lon: number) {
-    setChartData(data);
-    setUtcStr(utc);
-    setLatVal(lat);
-    setLonVal(lon);
-  }
+  const [result, setResult] = createSignal<Result | null>(null);
 
   return (
     <>
@@ -36,43 +49,49 @@ export default function App() {
       </header>
 
       <main class="container">
-        <ChartForm onGenerate={handleChartGenerated} />
+        <ChartForm onGenerate={(data, utcStr, lat, lon) => setResult({ data, utcStr, lat, lon })} />
 
-        <Show when={chartData()}>
-          {(data) => (
-            <div id="output" class="output" aria-live="polite">
-              <section class="card fade-in" id="chart-summary" style="animation-delay: 0s">
-                <h2 class="section-title">Chart Summary</h2>
-                <ChartSummary data={data()} utcStr={utcStr()} lat={latVal()} lon={lonVal()} />
-              </section>
+        <Show when={result()}>
+          {(result) => {
+            const { data, utcStr, lat, lon } = result();
+            return (
+              <div id="output" class="output" aria-live="polite">
+                <Section id="chart-summary" title="Chart Summary" delay="0s">
+                  <ChartSummary data={data} utcStr={utcStr} lat={lat} lon={lon} />
+                </Section>
 
-              <section class="card fade-in" id="planets-section" style="animation-delay: 0.08s">
-                <h2 class="section-title">Planetary Positions</h2>
-                <PlanetsGrid planets={data().planetData} />
-              </section>
+                <Section id="planets-section" title="Planetary Positions" delay="0.08s">
+                  <div class="planets-grid" id="planets-grid">
+                    <For each={data.planetData}>{(planet) => <PlanetCard planet={planet} />}</For>
+                  </div>
+                </Section>
 
-              <section class="card fade-in" id="relationship-section" style="animation-delay: 0.16s">
-                <h2 class="section-title">Planet Relationship Table</h2>
-                <p class="table-note">Compound (Panchadha) relationships — Natural + Temporary</p>
-                <div class="table-scroll">
-                  <RelationshipTable data={data()} />
-                </div>
-              </section>
+                <Section
+                  id="relationship-section"
+                  title="Planet Relationship Table"
+                  delay="0.16s"
+                  note="Compound (Panchadha) relationships — Natural + Temporary"
+                  scroll
+                >
+                  <RelationshipTable data={data} />
+                </Section>
 
-              <section class="card fade-in" id="aspect-section" style="animation-delay: 0.24s">
-                <h2 class="section-title">Sphuta Drishti — Aspect Strengths (Virupas)</h2>
-                <p class="table-note">Rows = Aspector · Columns = Aspected</p>
-                <div class="table-scroll">
-                  <AspectTable data={data()} />
-                </div>
-              </section>
+                <Section
+                  id="aspect-section"
+                  title="Sphuta Drishti — Aspect Strengths (Virupas)"
+                  delay="0.24s"
+                  note="Rows = Aspector · Columns = Aspected"
+                  scroll
+                >
+                  <AspectTable data={data} />
+                </Section>
 
-              <section class="card fade-in" id="analysis-section" style="animation-delay: 0.32s">
-                <h2 class="section-title">Analysis</h2>
-                <AnalysisTab data={data()} />
-              </section>
-            </div>
-          )}
+                <Section id="analysis-section" title="Analysis" delay="0.32s">
+                  <AnalysisTab data={data} />
+                </Section>
+              </div>
+            );
+          }}
         </Show>
       </main>
 
