@@ -1,26 +1,14 @@
-// ============================================================
-//  Shared TypeScript interfaces and type definitions
-// ============================================================
-
 export type PlanetName =
   | 'Sun' | 'Moon' | 'Mars' | 'Mercury' | 'Jupiter'
   | 'Venus' | 'Saturn' | 'Rahu' | 'Ketu';
 
-export type SignNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
-
-export type DivisionalChart = 'D1' | 'D2' | 'D3' | 'D4' | 'D7' | 'D9' | 'D10' | 'D12' | 'D16' | 'D20' | 'D27' | 'D30' | 'D40' | 'D45' | 'D60';
+export type DivisionalChart =
+  | 'D1' | 'D2' | 'D3' | 'D4' | 'D7' | 'D9' | 'D10' | 'D12'
+  | 'D16' | 'D20' | 'D27' | 'D30' | 'D40' | 'D45' | 'D60';
 
 export type RelationshipType = 'Friend' | 'Enemy' | 'Neutral';
-
-export type CompoundRelationship =
-  | 'Extreme Friendship'
-  | 'Friendship'
-  | 'Neutral'
-  | 'Enmity'
-  | 'Extreme Enmity';
-
+export type CompoundRelationship = 'Extreme Friendship' | 'Friendship' | 'Neutral' | 'Enmity' | 'Extreme Enmity';
 export type MotionType = 'Direct' | 'Retrograde';
-
 export type FunctionalRole = 'Benefic' | 'Malefic' | 'Neutral' | 'Unknown';
 
 export interface DMS {
@@ -123,8 +111,8 @@ export interface ChartData {
 export interface ParivartanaYoga {
   houseA: number;
   houseB: number;
-  planetA: PlanetName;  // lord of houseA, placed in houseB
-  planetB: PlanetName;  // lord of houseB, placed in houseA
+  planetA: PlanetName;
+  planetB: PlanetName;
   type: 'Dainya' | 'Khala' | 'Maha';
 }
 

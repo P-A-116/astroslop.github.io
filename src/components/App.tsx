@@ -1,14 +1,19 @@
-import { createSignal, createMemo } from 'solid-js';
-import { Show } from 'solid-js';
-import type { ChartData, DivisionalChart, PlanetName } from '../types';
+import { createMemo, createSignal, For, Show } from 'solid-js';
+import type { ChartData, DivisionalChart } from '../types';
 import ChartForm from './ChartForm';
 import ChartSummary from './ChartSummary';
-import PlanetsGrid from './PlanetsGrid';
 import RelationshipTable from './RelationshipTable';
 import AspectTable from './AspectTable';
 import AnalysisTab from './AnalysisTab';
 import DivisionalChartTabs from './DivisionalChartTabs';
-import { getDivisionalSigns, getDivisionalLongitudes, getDivisionalCombustion, getAscSignForChart, getCharaKarakasFromLongitudes } from '../astrology';
+import PlanetCard from './PlanetCard';
+import {
+  getDivisionalSigns,
+  getDivisionalLongitudes,
+  getDivisionalCombustion,
+  getAscSignForChart,
+  getCharaKarakasFromLongitudes,
+} from '../astrology';
 
 export default function App() {
   const [chartData, setChartData] = createSignal<ChartData | null>(null);
@@ -18,13 +23,31 @@ export default function App() {
   const [cityName, setCityName] = createSignal('');
   const [selectedChart, setSelectedChart] = createSignal<DivisionalChart>('D1');
 
-  const divLons = createMemo((): Record<PlanetName, number> => {
-    const d = chartData();
-    if (!d) return {} as Record<PlanetName, number>;
-    return getDivisionalLongitudes(d.planetData, selectedChart());
+  const divisionalData = createMemo(() => {
+    const data = chartData();
+    if (!data) return null;
+
+    const chart = selectedChart();
+    const signs = getDivisionalSigns(data.planetData, chart);
+    const longitudes = getDivisionalLongitudes(data.planetData, chart);
+    return {
+      chart,
+      data,
+      signs,
+      longitudes,
+      ascSign: getAscSignForChart(data, chart),
+      karakas: getCharaKarakasFromLongitudes(longitudes),
+      combustion: getDivisionalCombustion(data.planetData, longitudes),
+    };
   });
 
-  function handleChartGenerated(data: ChartData, utc: string, lat: number, lon: number, city: string) {
+  function handleChartGenerated(
+    data: ChartData,
+    utc: string,
+    lat: number,
+    lon: number,
+    city: string,
+  ) {
     setChartData(data);
     setUtcStr(utc);
     setLatVal(lat);
@@ -40,65 +63,71 @@ export default function App() {
       <header class="site-header">
         <div class="header-inner">
           <div class="logo">
-            <span class="logo-icon">✦</span>
+            <span class="logo-icon">âœ¦</span>
             <span class="logo-text">Jyotish Chart</span>
           </div>
-          <p class="subtitle">Sidereal Vedic Astrology · Lahiri Ayanamsa</p>
+          <p class="subtitle">Sidereal Vedic Astrology Â· Lahiri Ayanamsa</p>
         </div>
       </header>
 
       <main class="container">
         <ChartForm onGenerate={handleChartGenerated} />
 
-        <Show when={chartData()}>
-          {(data) => (
+        <Show when={divisionalData()}>
+          {(view) => (
             <div id="output" class="output" aria-live="polite">
               <section class="card fade-in" id="chart-summary" style="animation-delay: 0s">
                 <h2 class="section-title">Chart Summary</h2>
-                <ChartSummary data={data()} utcStr={utcStr()} lat={latVal()} lon={lonVal()} cityName={cityName()} />
+                <ChartSummary
+                  data={view().data}
+                  utcStr={utcStr()}
+                  lat={latVal()}
+                  lon={lonVal()}
+                  cityName={cityName()}
+                />
               </section>
 
               <div class="fade-in" style="animation-delay: 0.08s">
                 <DivisionalChartTabs
-                  selected={selectedChart()}
+                  selected={view().chart}
                   onSelect={setSelectedChart}
                 />
               </div>
 
-              <div id="divisional-tabpanel" role="tabpanel" aria-labelledby={`chart-tab-${selectedChart()}`}>
+              <div id="divisional-tabpanel" role="tabpanel" aria-labelledby={`chart-tab-${view().chart}`}>
                 <section class="card fade-in" id="planets-section" style="animation-delay: 0.12s">
                   <h2 class="section-title">Planetary Positions</h2>
-                  <PlanetsGrid
-                    planets={data().planetData}
-                    divisionalSigns={getDivisionalSigns(data().planetData, selectedChart())}
-                    divAscSign={getAscSignForChart(data(), selectedChart())}
-                    divisionalLongitudes={divLons()}
-                    divKarakas={getCharaKarakasFromLongitudes(divLons())}
-                    divCombustion={getDivisionalCombustion(data().planetData, divLons())}
-                    selectedChart={selectedChart()}
-                  />
+                  <div class="planets-grid" id="planets-grid">
+                    <For each={view().data.planetData}>
+                      {(planet) => (
+                        <PlanetCard
+                          planet={planet}
+                          divSign={view().signs[planet.name]}
+                          divAscSign={view().ascSign}
+                          divLon={view().longitudes[planet.name]}
+                          divKaraka={view().karakas[planet.name] ?? null}
+                          divCombust={view().combustion[planet.name]}
+                          selectedChart={view().chart}
+                        />
+                      )}
+                    </For>
+                  </div>
                 </section>
 
                 <section class="card fade-in" id="divisional-tables-section" style="animation-delay: 0.16s">
-                  <p class="table-note">Compound (Panchadha) relationships — Natural + Temporary</p>
+                  <p class="table-note">Compound (Panchadha) relationships â€” Natural + Temporary</p>
                   <div class="table-scroll">
-                    <RelationshipTable
-                      data={data()}
-                      divisionalSigns={getDivisionalSigns(data().planetData, selectedChart())}
-                    />
+                    <RelationshipTable signs={view().signs} />
                   </div>
-                  <p class="table-note" style="margin-top: 1.5rem">Sphuta Drishti — Aspect Strengths (Virupas) · Rows = Aspector · Columns = Aspected</p>
+                  <p class="table-note" style="margin-top: 1.5rem">Sphuta Drishti â€” Aspect Strengths (Virupas) Â· Rows = Aspector Â· Columns = Aspected</p>
                   <div class="table-scroll">
-                    <AspectTable
-                      data={data()}
-                      divisionalLongitudes={divLons()}
-                    />
+                    <AspectTable longitudes={view().longitudes} />
                   </div>
                 </section>
 
                 <section class="card fade-in" id="analysis-section" style="animation-delay: 0.24s">
                   <h2 class="section-title">Analysis</h2>
-                  <AnalysisTab data={data()} selectedChart={selectedChart()} />
+                  <AnalysisTab data={view().data} selectedChart={view().chart} />
                 </section>
               </div>
             </div>
@@ -107,8 +136,8 @@ export default function App() {
       </main>
 
       <footer class="site-footer">
-        <p>Sidereal positions computed with simplified VSOP87-based JS algorithms · Lahiri Ayanamsa</p>
-        <p class="footer-note">For reference only — not a substitute for professional astrological software</p>
+        <p>Sidereal positions computed with simplified VSOP87-based JS algorithms Â· Lahiri Ayanamsa</p>
+        <p class="footer-note">For reference only â€” not a substitute for professional astrological software</p>
       </footer>
     </>
   );

@@ -3,6 +3,23 @@ import type { ChartData } from '../types';
 import { SIGN_NAMES } from '../constants';
 import { formatDms } from '../astrology';
 
+const ASC_ITEMS = [
+  ['Asc Navamsa', 'ascNavamsa'],
+  ['Asc D7', 'ascD7'],
+  ['Asc D2 (Hora)', 'ascD2'],
+  ['Asc D3', 'ascD3'],
+  ['Asc D4', 'ascD4'],
+  ['Asc D10', 'ascD10'],
+  ['Asc D12', 'ascD12'],
+  ['Asc D16', 'ascD16'],
+  ['Asc D20', 'ascD20'],
+  ['Asc D27', 'ascD27'],
+  ['Asc D30', 'ascD30'],
+  ['Asc D40', 'ascD40'],
+  ['Asc D45', 'ascD45'],
+  ['Asc D60', 'ascD60'],
+] as const;
+
 interface Props {
   data: ChartData;
   utcStr: string;
@@ -15,25 +32,12 @@ export default function ChartSummary(props: Props) {
   const items = () => [
     ['UTC Date/Time', props.utcStr],
     ['Location', props.cityName
-      ? `${props.cityName} (${props.lat}° N, ${props.lon}° E)`
-      : `${props.lat}° N, ${props.lon}° E`],
-    ['Ayanamsa', `${props.data.ayanamsa.toFixed(4)}° Lahiri`],
+      ? `${props.cityName} (${props.lat}Â° N, ${props.lon}Â° E)`
+      : `${props.lat}Â° N, ${props.lon}Â° E`],
+    ['Ayanamsa', `${props.data.ayanamsa.toFixed(4)}Â° Lahiri`],
     ['Ascendant', `<span class="highlight">${SIGN_NAMES[props.data.ascSign - 1]}</span> ${formatDms(props.data.ascDeg)}`],
     ['Asc Nakshatra', `${props.data.ascNak} Pada ${props.data.ascPada}`],
-    ['Asc Navamsa', SIGN_NAMES[props.data.ascNavamsa - 1]],
-    ['Asc D7', SIGN_NAMES[props.data.ascD7 - 1]],
-    ['Asc D2 (Hora)', SIGN_NAMES[props.data.ascD2 - 1]],
-    ['Asc D3', SIGN_NAMES[props.data.ascD3 - 1]],
-    ['Asc D4', SIGN_NAMES[props.data.ascD4 - 1]],
-    ['Asc D10', SIGN_NAMES[props.data.ascD10 - 1]],
-    ['Asc D12', SIGN_NAMES[props.data.ascD12 - 1]],
-    ['Asc D16', SIGN_NAMES[props.data.ascD16 - 1]],
-    ['Asc D20', SIGN_NAMES[props.data.ascD20 - 1]],
-    ['Asc D27', SIGN_NAMES[props.data.ascD27 - 1]],
-    ['Asc D30', SIGN_NAMES[props.data.ascD30 - 1]],
-    ['Asc D40', SIGN_NAMES[props.data.ascD40 - 1]],
-    ['Asc D45', SIGN_NAMES[props.data.ascD45 - 1]],
-    ['Asc D60', SIGN_NAMES[props.data.ascD60 - 1]],
+    ...ASC_ITEMS.map(([label, key]) => [label, SIGN_NAMES[props.data[key] - 1]] as [string, string]),
     ['Asc House', '1st (Whole Sign)'],
   ] as [string, string][];
 

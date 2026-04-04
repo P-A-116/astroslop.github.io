@@ -1,4 +1,4 @@
-import { createSignal, Show, For } from 'solid-js';
+import { createSignal, For, Show, type JSX } from 'solid-js';
 import type { ChartData } from '../types';
 import { buildChartData } from '../astrology';
 
@@ -12,56 +12,65 @@ interface NominatimResult {
   lon: string;
 }
 
-const TZ_OPTIONS = [
-  { value: '-12',   label: 'UTC-12' },
-  { value: '-11',   label: 'UTC-11' },
-  { value: '-10',   label: 'UTC-10' },
-  { value: '-9.5',  label: 'UTC-9:30' },
-  { value: '-9',    label: 'UTC-9' },
-  { value: '-8',    label: 'UTC-8' },
-  { value: '-7',    label: 'UTC-7' },
-  { value: '-6',    label: 'UTC-6' },
-  { value: '-5',    label: 'UTC-5' },
-  { value: '-4.5',  label: 'UTC-4:30' },
-  { value: '-4',    label: 'UTC-4' },
-  { value: '-3.5',  label: 'UTC-3:30' },
-  { value: '-3',    label: 'UTC-3' },
-  { value: '-2',    label: 'UTC-2' },
-  { value: '-1',    label: 'UTC-1' },
-  { value: '0',     label: 'UTC+0' },
-  { value: '1',     label: 'UTC+1' },
-  { value: '2',     label: 'UTC+2' },
-  { value: '3',     label: 'UTC+3' },
-  { value: '3.5',   label: 'UTC+3:30' },
-  { value: '4',     label: 'UTC+4' },
-  { value: '4.5',   label: 'UTC+4:30' },
-  { value: '5',     label: 'UTC+5' },
-  { value: '5.5',   label: 'UTC+5:30' },
-  { value: '5.75',  label: 'UTC+5:45' },
-  { value: '6',     label: 'UTC+6' },
-  { value: '6.5',   label: 'UTC+6:30' },
-  { value: '7',     label: 'UTC+7' },
-  { value: '8',     label: 'UTC+8' },
-  { value: '8.75',  label: 'UTC+8:45' },
-  { value: '9',     label: 'UTC+9' },
-  { value: '9.5',   label: 'UTC+9:30' },
-  { value: '10',    label: 'UTC+10' },
-  { value: '10.5',  label: 'UTC+10:30' },
-  { value: '11',    label: 'UTC+11' },
-  { value: '12',    label: 'UTC+12' },
-  { value: '12.75', label: 'UTC+12:45' },
-  { value: '13',    label: 'UTC+13' },
-  { value: '14',    label: 'UTC+14' },
-];
+type ValueTarget = HTMLInputElement | HTMLSelectElement;
+
+function Field(props: { id: string; label: string; children: JSX.Element }) {
+  return (
+    <div class="form-group">
+      <label for={props.id}>{props.label}</label>
+      {props.children}
+    </div>
+  );
+}
 
 function snapToTzOption(offset: number): string {
   let best = TZ_OPTIONS[0];
-  let minDiff = Math.abs(parseFloat(TZ_OPTIONS[0].value) - offset);
+  let minDiff = Math.abs(parseFloat(best.value) - offset);
   for (const opt of TZ_OPTIONS) {
     const diff = Math.abs(parseFloat(opt.value) - offset);
-    if (diff < minDiff) { minDiff = diff; best = opt; }
+    if (diff < minDiff) {
+      best = opt;
+      minDiff = diff;
+    }
   }
   return best.value;
+}
+
+function formatTzLabel(value: string) {
+  const offset = Math.abs(parseFloat(value));
+  const hours = Math.floor(offset);
+  const minutes = Math.round((offset - hours) * 60);
+  return `UTC${value.startsWith('-') ? '-' : '+'}${hours}${minutes ? `:${String(minutes).padStart(2, '0')}` : ''}`;
+}
+
+const TZ_OPTIONS = '-12 -11 -10 -9.5 -9 -8 -7 -6 -5 -4.5 -4 -3.5 -3 -2 -1 0 1 2 3 3.5 4 4.5 5 5.5 5.75 6 6.5 7 8 8.75 9 9.5 10 10.5 11 12 12.75 13 14'
+  .split(' ')
+  .map((value) => ({ value, label: formatTzLabel(value) }));
+
+function toUtcDetails(dateVal: string, timeVal: string, tzVal: number) {
+  const [yearStr, monStr, dayStr] = dateVal.split('-');
+  const [hrStr, minStr, secStr = '0'] = timeVal.split(':');
+  const year = parseInt(yearStr);
+  const month = parseInt(monStr);
+  const day = parseInt(dayStr);
+  const hours = parseInt(hrStr);
+  const minutes = parseInt(minStr);
+  const seconds = parseInt(secStr);
+  const utcDate = new Date(
+    Date.UTC(year, month - 1, day, hours, minutes, seconds) - tzVal * 3600000,
+  );
+
+  return {
+    year: utcDate.getUTCFullYear(),
+    month: utcDate.getUTCMonth() + 1,
+    day: utcDate.getUTCDate(),
+    hour: utcDate.getUTCHours() + utcDate.getUTCMinutes() / 60 + utcDate.getUTCSeconds() / 3600,
+    utcStr:
+      `${utcDate.getUTCFullYear()}-${String(utcDate.getUTCMonth() + 1).padStart(2, '0')}-${String(utcDate.getUTCDate()).padStart(2, '0')} `
+      + `${String(utcDate.getUTCHours()).padStart(2, '0')}:`
+      + `${String(utcDate.getUTCMinutes()).padStart(2, '0')}:`
+      + `${String(utcDate.getUTCSeconds()).padStart(2, '0')} UTC`,
+  };
 }
 
 export default function ChartForm(props: Props) {
@@ -71,25 +80,29 @@ export default function ChartForm(props: Props) {
   const [lat, setLat] = createSignal('40.3833');
   const [lon, setLon] = createSignal('23.4333');
   const [error, setError] = createSignal('');
-
-  // City lookup state
   const [manualMode, setManualMode] = createSignal(false);
   const [city, setCity] = createSignal('');
   const [cityResults, setCityResults] = createSignal<NominatimResult[]>([]);
   const [isSearching, setIsSearching] = createSignal(false);
   const [selectedCity, setSelectedCity] = createSignal('');
 
+  const bindValue = (setter: (value: string) => void) =>
+    (e: Event & { currentTarget: ValueTarget }) => setter(e.currentTarget.value);
+
   let debounceTimer: ReturnType<typeof setTimeout> | undefined;
 
   async function lookupCity(query: string) {
-    if (!query.trim()) { setCityResults([]); return; }
+    if (!query.trim()) {
+      setCityResults([]);
+      return;
+    }
+
     setIsSearching(true);
     try {
       const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5&email=astroslop%40example.com`;
       const res = await fetch(url, { headers: { 'User-Agent': 'AstroSlop/1.0' } });
       if (!res.ok) throw new Error('Geocoding request failed');
-      const results: NominatimResult[] = await res.json();
-      setCityResults(results);
+      setCityResults(await res.json());
     } catch {
       setCityResults([]);
     } finally {
@@ -107,10 +120,9 @@ export default function ChartForm(props: Props) {
   function selectCityResult(result: NominatimResult) {
     const latNum = parseFloat(result.lat);
     const lonNum = parseFloat(result.lon);
-    const tzOffset = Math.round(lonNum / 15);
     setLat(latNum.toFixed(4));
     setLon(lonNum.toFixed(4));
-    setTz(snapToTzOption(tzOffset));
+    setTz(snapToTzOption(Math.round(lonNum / 15)));
     setSelectedCity(result.display_name);
     setCity(result.display_name);
     setCityResults([]);
@@ -122,20 +134,20 @@ export default function ChartForm(props: Props) {
 
     const dateVal = date();
     const timeVal = time();
-    const tzVal   = parseFloat(tz());
-    const latVal  = parseFloat(lat());
-    const lonVal  = parseFloat(lon());
+    const tzVal = parseFloat(tz());
+    const latVal = parseFloat(lat());
+    const lonVal = parseFloat(lon());
 
     if (!dateVal || !timeVal) {
       setError('Please enter a valid date and time.');
       return;
     }
     if (isNaN(latVal) || latVal < -90 || latVal > 90) {
-      setError('Latitude must be between −90 and +90.');
+      setError('Latitude must be between âˆ’90 and +90.');
       return;
     }
     if (isNaN(lonVal) || lonVal < -180 || lonVal > 180) {
-      setError('Longitude must be between −180 and +180.');
+      setError('Longitude must be between âˆ’180 and +180.');
       return;
     }
     if (isNaN(tzVal)) {
@@ -143,30 +155,10 @@ export default function ChartForm(props: Props) {
       return;
     }
 
-    const [yearStr, monStr, dayStr] = dateVal.split('-');
-    const [hrStr, minStr, secStr]   = timeVal.split(':');
-    const seconds = secStr ? parseInt(secStr) : 0;
-    const localHour = parseInt(hrStr) + parseInt(minStr) / 60 + seconds / 3600;
-
-    const localDate = new Date(Date.UTC(
-      parseInt(yearStr), parseInt(monStr) - 1, parseInt(dayStr),
-      Math.floor(localHour), parseInt(minStr), seconds,
-    ));
-    const utcDate = new Date(localDate.getTime() - tzVal * 3600000);
-
-    const year  = utcDate.getUTCFullYear();
-    const month = utcDate.getUTCMonth() + 1;
-    const day   = utcDate.getUTCDate();
-    const hour  = utcDate.getUTCHours() + utcDate.getUTCMinutes() / 60 + utcDate.getUTCSeconds() / 3600;
-
-    const utcStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')} `
-                 + `${String(utcDate.getUTCHours()).padStart(2, '0')}:`
-                 + `${String(utcDate.getUTCMinutes()).padStart(2, '0')}:`
-                 + `${String(utcDate.getUTCSeconds()).padStart(2, '0')} UTC`;
-
     try {
-      const data = buildChartData({ year, month, day, hour, lat: latVal, lon: lonVal });
-      props.onGenerate(data, utcStr, latVal, lonVal, manualMode() ? '' : selectedCity());
+      const utc = toUtcDetails(dateVal, timeVal, tzVal);
+      const data = buildChartData({ ...utc, lat: latVal, lon: lonVal });
+      props.onGenerate(data, utc.utcStr, latVal, lonVal, manualMode() ? '' : selectedCity());
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       setError(`Calculation error: ${msg}`);
@@ -182,38 +174,43 @@ export default function ChartForm(props: Props) {
           <button
             type="button"
             class={`toggle-btn${!manualMode() ? ' active' : ''}`}
-            onClick={() => { setManualMode(false); }}
+            onClick={() => setManualMode(false)}
             aria-pressed={!manualMode()}
           >
-            🔍 City Lookup
+            ðŸ” City Lookup
           </button>
           <button
             type="button"
             class={`toggle-btn${manualMode() ? ' active' : ''}`}
-            onClick={() => { setManualMode(true); setCityResults([]); }}
+            onClick={() => {
+              setManualMode(true);
+              setCityResults([]);
+            }}
             aria-pressed={manualMode()}
           >
-            ✎ Manual Coords
+            âœŽ Manual Coords
           </button>
         </div>
 
         <Show when={!manualMode()}>
           <div class="city-search">
-            <div class="form-group">
-              <label for="city">City / Location</label>
+            <Field id="city" label="City / Location">
               <div class="city-input-row">
                 <input
-                  type="text" id="city" name="city"
+                  type="text"
+                  id="city"
+                  name="city"
                   placeholder="e.g. Athens, Greece"
                   value={city()}
                   onInput={(e) => handleCityInput(e.currentTarget.value)}
                   autocomplete="off"
                 />
                 <Show when={isSearching()}>
-                  <span class="city-searching">…</span>
+                  <span class="city-searching">â€¦</span>
                 </Show>
               </div>
-            </div>
+            </Field>
+
             <Show when={cityResults().length > 0}>
               <ul class="city-results" role="listbox">
                 <For each={cityResults()}>
@@ -229,64 +226,87 @@ export default function ChartForm(props: Props) {
                 </For>
               </ul>
             </Show>
+
             <Show when={selectedCity() !== ''}>
               <div class="coords-display">
                 <span class="coords-label">Coordinates:</span>
-                {' '}{lat()}° N, {lon()}° E — <span class="coords-tz">UTC{parseFloat(tz()) >= 0 ? '+' : ''}{tz()}</span>
+                {' '}{lat()}Â° N, {lon()}Â° E â€” <span class="coords-tz">UTC{parseFloat(tz()) >= 0 ? '+' : ''}{tz()}</span>
               </div>
             </Show>
           </div>
         </Show>
 
         <div class="form-grid">
-          <div class="form-group">
-            <label for="date">Date</label>
+          <Field id="date" label="Date">
             <input
-              type="date" id="date" name="date" required
-              value={date()} onInput={(e) => setDate(e.currentTarget.value)}
+              type="date"
+              id="date"
+              name="date"
+              required
+              value={date()}
+              onInput={bindValue(setDate)}
             />
-          </div>
-          <div class="form-group">
-            <label for="time">Local Time</label>
+          </Field>
+
+          <Field id="time" label="Local Time">
             <input
-              type="time" id="time" name="time" required step="1"
-              value={time()} onInput={(e) => setTime(e.currentTarget.value)}
+              type="time"
+              id="time"
+              name="time"
+              required
+              step="1"
+              value={time()}
+              onInput={bindValue(setTime)}
             />
-          </div>
-          <div class="form-group">
-            <label for="tz">UTC Offset (hours)</label>
-            <select id="tz" name="tz" value={tz()} onChange={(e) => setTz(e.currentTarget.value)}>
-              {TZ_OPTIONS.map(opt => (
-                <option value={opt.value} selected={opt.value === tz()}>
-                  {opt.label}
-                </option>
-              ))}
+          </Field>
+
+          <Field id="tz" label="UTC Offset (hours)">
+            <select id="tz" name="tz" value={tz()} onChange={bindValue(setTz)}>
+              <For each={TZ_OPTIONS}>
+                {(opt) => <option value={opt.value}>{opt.label}</option>}
+              </For>
             </select>
-          </div>
+          </Field>
+
           <Show when={manualMode()}>
-            <div class="form-group">
-              <label for="lat">Latitude (°N positive)</label>
+            <Field id="lat" label="Latitude (Â°N positive)">
               <input
-                type="number" id="lat" name="lat" step="0.0001" min="-90" max="90"
-                required placeholder="e.g. 40.3833"
-                value={lat()} onInput={(e) => setLat(e.currentTarget.value)}
+                type="number"
+                id="lat"
+                name="lat"
+                step="0.0001"
+                min="-90"
+                max="90"
+                required
+                placeholder="e.g. 40.3833"
+                value={lat()}
+                onInput={bindValue(setLat)}
               />
-            </div>
-            <div class="form-group">
-              <label for="lon">Longitude (°E positive)</label>
+            </Field>
+
+            <Field id="lon" label="Longitude (Â°E positive)">
               <input
-                type="number" id="lon" name="lon" step="0.0001" min="-180" max="180"
-                required placeholder="e.g. 23.4333"
-                value={lon()} onInput={(e) => setLon(e.currentTarget.value)}
+                type="number"
+                id="lon"
+                name="lon"
+                step="0.0001"
+                min="-180"
+                max="180"
+                required
+                placeholder="e.g. 23.4333"
+                value={lon()}
+                onInput={bindValue(setLon)}
               />
-            </div>
+            </Field>
           </Show>
         </div>
+
         <div class="form-actions">
           <button type="submit" class="btn-generate">
-            <span class="btn-icon">✦</span> Generate Chart
+            <span class="btn-icon">âœ¦</span> Generate Chart
           </button>
         </div>
+
         <p id="form-error" class="form-error" role="alert" aria-live="polite">
           {error()}
         </p>
