@@ -63,10 +63,10 @@ export default function App() {
       <header class="site-header">
         <div class="header-inner">
           <div class="logo">
-            <span class="logo-icon">âœ¦</span>
+            <span class="logo-icon">{'\u2726'}</span>
             <span class="logo-text">Jyotish Chart</span>
           </div>
-          <p class="subtitle">Sidereal Vedic Astrology Â· Lahiri Ayanamsa</p>
+          <p class="subtitle">{`Sidereal Vedic Astrology \u00B7 Lahiri Ayanamsa`}</p>
         </div>
       </header>
 
@@ -115,11 +115,11 @@ export default function App() {
                 </section>
 
                 <section class="card fade-in" id="divisional-tables-section" style="animation-delay: 0.16s">
-                  <p class="table-note">Compound (Panchadha) relationships â€” Natural + Temporary</p>
+                  <p class="table-note">{`Compound (Panchadha) relationships \u2014 Natural + Temporary`}</p>
                   <div class="table-scroll">
                     <RelationshipTable signs={view().signs} />
                   </div>
-                  <p class="table-note" style="margin-top: 1.5rem">Sphuta Drishti â€” Aspect Strengths (Virupas) Â· Rows = Aspector Â· Columns = Aspected</p>
+                  <p class="table-note" style="margin-top: 1.5rem">{`Sphuta Drishti \u2014 Aspect Strengths (Virupas) \u00B7 Rows = Aspector \u00B7 Columns = Aspected`}</p>
                   <div class="table-scroll">
                     <AspectTable longitudes={view().longitudes} />
                   </div>
@@ -136,8 +136,8 @@ export default function App() {
       </main>
 
       <footer class="site-footer">
-        <p>Sidereal positions computed with simplified VSOP87-based JS algorithms Â· Lahiri Ayanamsa</p>
-        <p class="footer-note">For reference only â€” not a substitute for professional astrological software</p>
+        <p>{`Sidereal positions computed with simplified VSOP87-based JS algorithms \u00B7 Lahiri Ayanamsa`}</p>
+        <p class="footer-note">{`For reference only \u2014 not a substitute for professional astrological software`}</p>
       </footer>
     </>
   );
