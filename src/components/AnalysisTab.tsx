@@ -1,6 +1,6 @@
-import { For } from 'solid-js';
+import { For, Show } from 'solid-js';
+import type { ChartData, DivisionalChart } from '../types';
 import { findParivartanaYogas } from '../analysis';
-import type { ChartData } from '../types';
 
 const YOGA_INTERPRETATIONS = {
   Dainya:
@@ -13,28 +13,43 @@ const YOGA_INTERPRETATIONS = {
 
 interface Props {
   data: ChartData;
+  selectedChart: DivisionalChart;
 }
 
 export default function AnalysisTab(props: Props) {
-  const yogas = findParivartanaYogas(props.data);
+  const yogas = () => findParivartanaYogas(props.data, props.selectedChart);
+
   return (
     <div class="analysis-tab">
-      {yogas.length ? (
+      <Show
+        when={yogas().length > 0}
+        fallback={
+          <p class="analysis-empty">No Parivartana Yogas found in this chart.</p>
+        }
+      >
         <div class="yoga-list">
-          <For each={yogas}>
+          <For each={yogas()}>
             {(yoga) => (
               <div class="yoga-card">
                 <div class="yoga-header">
-                  <span class={`badge yoga-badge yoga-badge-${yoga.type.toLowerCase()}`}>{yoga.type} Yoga</span>
-                  <span class="yoga-houses">Houses {yoga.houseA} ↔ {yoga.houseB}</span>
-                  <span class="yoga-planets">{yoga.planetA} ↔ {yoga.planetB}</span>
+                  <span class={`badge yoga-badge yoga-badge-${yoga.type.toLowerCase()}`}>
+                    {yoga.type} Yoga
+                  </span>
+                  <span class="yoga-houses">
+                    Houses {yoga.houseA} ↔ {yoga.houseB}
+                  </span>
+                  <span class="yoga-planets">
+                    {yoga.planetA} ↔ {yoga.planetB}
+                  </span>
                 </div>
-                <p class="yoga-interpretation">{YOGA_INTERPRETATIONS[yoga.type]}</p>
+                <p class="yoga-interpretation">
+                  {YOGA_INTERPRETATIONS[yoga.type]}
+                </p>
               </div>
             )}
           </For>
         </div>
-      ) : <p class="analysis-empty">No Parivartana Yogas found in this chart.</p>}
+      </Show>
     </div>
   );
 }

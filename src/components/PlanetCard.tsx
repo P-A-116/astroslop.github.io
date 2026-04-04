@@ -1,52 +1,98 @@
-import { For, type JSX } from 'solid-js';
-import { formatDms } from '../astrology';
-import { PLANET_ICONS, SIGN_NAMES } from '../constants';
-import type { PlanetData } from '../types';
+import { For } from 'solid-js';
+import type { PlanetData, DivisionalChart } from '../types';
+import { PLANET_ICONS, SIGN_NAMES, SIGN_LORDS, NAKSHATRA_LORDS } from '../constants';
+import { formatDms, signToHouse, getNakshatraPada, getLordships, getFunctionalRole } from '../astrology';
 
 interface Props {
   planet: PlanetData;
+  divSign: number;
+  divAscSign: number;
+  divLon: number;
+  divKaraka: string | null;
+  divCombust: boolean;
+  selectedChart: DivisionalChart;
 }
 
-function Row(props: { label: string; value: JSX.Element }) {
-  return (
-    <div class="planet-row">
-      <span class="planet-row-label">{props.label}</span>
-      <span class="planet-row-value">{props.value}</span>
-    </div>
-  );
-}
+export default function PlanetCard(props: Props) {
+  const p = () => props.planet;
 
-export default function PlanetCard({ planet }: Props) {
-  const sign = SIGN_NAMES[planet.sign - 1];
-  const motion = planet.motion === 'Retrograde'
-    ? ['badge badge-retro', '℞ Retro']
-    : ['badge badge-direct', 'Direct'];
-  const rows: [string, JSX.Element][] = [
-    ['Degree', formatDms(planet.deg)],
-    ['Sign / House', `${sign} / House ${planet.house}`],
-    ['Sign Lord', planet.signLord],
-    ['Nakshatra', `${planet.nakshatra} Pada ${planet.pada}`],
-    ['Nak. Lord', planet.nakLord],
-    ['Navamsa', `${SIGN_NAMES[planet.navamsaSign - 1]} (H${planet.navamsaHouse})`],
-    ['D7', `${SIGN_NAMES[planet.d7Sign - 1]} (H${planet.d7House})`],
-    ['Lords Houses', planet.lordships.map((h) => `H${h}`).join(', ') || '—'],
-    ['Func. Role', <span class={`badge badge-${planet.role.toLowerCase()}`}>{planet.role}</span>],
-    ['Motion', <span class={motion[0]}>{motion[1]}</span>],
-    ['Karaka', planet.karaka ? <span class="badge badge-karaka">{planet.karaka}</span> : '—'],
+  const icon         = () => PLANET_ICONS[p().name] || '●';
+  const divSignName  = () => SIGN_NAMES[props.divSign - 1];
+  const divHouse     = () => signToHouse(props.divSign, props.divAscSign);
+  const divSignLord  = () => SIGN_LORDS[props.divSign - 1];
+
+  const divNakPada   = () => getNakshatraPada(props.divLon);
+  const divNakLord   = () => NAKSHATRA_LORDS[divNakPada().nakshatra] || '—';
+
+  const divLordships = () => getLordships(p().name, props.divAscSign);
+  const divRole      = () => getFunctionalRole(p().name, props.divAscSign);
+
+  const lordStr      = () => divLordships().length ? divLordships().map(h => `H${h}`).join(', ') : '—';
+
+  const roleBadge   = () => `badge badge-${divRole().toLowerCase()}`;
+  const motionBadge = () => p().motion === 'Retrograde'
+    ? { cls: 'badge badge-retro', txt: '℞ Retro' }
+    : { cls: 'badge badge-direct', txt: 'Direct' };
+
+  const showShashtiamsa = () => props.selectedChart === 'D1' || props.selectedChart === 'D60';
+  const shashtiamsa     = () => p().d60Shashtiamsa;
+  const shashtiamsaBadge = () => shashtiamsa().nature === 'B' ? 'badge badge-benefic' : 'badge badge-malefic';
+  const shashtiamsaNatureLabel = () => shashtiamsa().nature === 'B' ? 'Benefic' : 'Malefic';
+
+  const rows = (): [string, string | null][] => [
+    ['Degree',       formatDms(p().deg)],
+    ['Sign / House', `${divSignName()} / House ${divHouse()}`],
+    ['Sign Lord',    divSignLord()],
+    ['Nakshatra',    `${divNakPada().nakshatra} Pada ${divNakPada().pada}`],
+    ['Nak. Lord',    divNakLord()],
+    ['Lords Houses', lordStr()],
+    ['Func. Role',   null],   // rendered specially
+    ['Motion',       null],   // rendered specially
+    ['Karaka',       null],   // rendered specially
   ];
 
   return (
     <div class="planet-card">
       <div class="planet-card-header">
-        <span class="planet-icon">{PLANET_ICONS[planet.name] ?? '●'}</span>
+        <span class="planet-icon">{icon()}</span>
         <div>
-          <div class="planet-name">{planet.name}</div>
-          <div class="planet-position">{formatDms(planet.deg)} {sign}</div>
+          <div class="planet-name">{p().name}</div>
+          <div class="planet-position">{formatDms(p().deg)} {divSignName()}</div>
         </div>
-        {planet.combust && <span class="planet-combust">🔥 Combust</span>}
+        {props.divCombust === true && <span class="planet-combust">🔥 Combust</span>}
       </div>
       <div class="planet-card-body">
-        <For each={rows}>{([label, value]) => <Row label={label} value={value} />}</For>
+        <For each={rows()}>
+          {([lbl, val], i) => (
+            <div class="planet-row">
+              <span class="planet-row-label">{lbl}</span>
+              <span class="planet-row-value">
+                {i() === 6 && (
+                  <span class={roleBadge()}>{divRole()}</span>
+                )}
+                {i() === 7 && (
+                  <span class={motionBadge().cls}>{motionBadge().txt}</span>
+                )}
+                {i() === 8 && (
+                  props.divKaraka
+                    ? <span class="badge badge-karaka">{props.divKaraka}</span>
+                    : '—'
+                )}
+                {i() < 6 && val}
+              </span>
+            </div>
+          )}
+        </For>
+        {showShashtiamsa() && (
+          <div class="planet-row shashtiamsa-row">
+            <span class="planet-row-label">Shashtiamsa</span>
+            <span class="planet-row-value shashtiamsa-value">
+              <span class="shashtiamsa-name">{shashtiamsa().name}</span>
+              <span class={shashtiamsaBadge()}>{shashtiamsaNatureLabel()}</span>
+              <span class="shashtiamsa-desc">{shashtiamsa().description}</span>
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );
