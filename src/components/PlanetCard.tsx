@@ -1,4 +1,4 @@
-import { For } from 'solid-js';
+import { For, type JSX } from 'solid-js';
 import type { PlanetData, DivisionalChart } from '../types';
 import { PLANET_ICONS, SIGN_NAMES, SIGN_LORDS, NAKSHATRA_LORDS } from '../constants';
 import { formatDms, signToHouse, getNakshatraPada, getLordships, getFunctionalRole } from '../astrology';
@@ -13,86 +13,68 @@ interface Props {
   selectedChart: DivisionalChart;
 }
 
+const DASH = '\u2014';
+
 export default function PlanetCard(props: Props) {
-  const p = () => props.planet;
-
-  const icon         = () => PLANET_ICONS[p().name] || '●';
-  const divSignName  = () => SIGN_NAMES[props.divSign - 1];
-  const divHouse     = () => signToHouse(props.divSign, props.divAscSign);
-  const divSignLord  = () => SIGN_LORDS[props.divSign - 1];
-
-  const divNakPada   = () => getNakshatraPada(props.divLon);
-  const divNakLord   = () => NAKSHATRA_LORDS[divNakPada().nakshatra] || '—';
-
-  const divLordships = () => getLordships(p().name, props.divAscSign);
-  const divRole      = () => getFunctionalRole(p().name, props.divAscSign);
-
-  const lordStr      = () => divLordships().length ? divLordships().map(h => `H${h}`).join(', ') : '—';
-
-  const roleBadge   = () => `badge badge-${divRole().toLowerCase()}`;
-  const motionBadge = () => p().motion === 'Retrograde'
-    ? { cls: 'badge badge-retro', txt: '℞ Retro' }
-    : { cls: 'badge badge-direct', txt: 'Direct' };
-
   const showShashtiamsa = () => props.selectedChart === 'D1' || props.selectedChart === 'D60';
-  const shashtiamsa     = () => p().d60Shashtiamsa;
-  const shashtiamsaBadge = () => shashtiamsa().nature === 'B' ? 'badge badge-benefic' : 'badge badge-malefic';
-  const shashtiamsaNatureLabel = () => shashtiamsa().nature === 'B' ? 'Benefic' : 'Malefic';
 
-  const rows = (): [string, string | null][] => [
-    ['Degree',       formatDms(p().deg)],
-    ['Sign / House', `${divSignName()} / House ${divHouse()}`],
-    ['Sign Lord',    divSignLord()],
-    ['Nakshatra',    `${divNakPada().nakshatra} Pada ${divNakPada().pada}`],
-    ['Nak. Lord',    divNakLord()],
-    ['Lords Houses', lordStr()],
-    ['Func. Role',   null],   // rendered specially
-    ['Motion',       null],   // rendered specially
-    ['Karaka',       null],   // rendered specially
-  ];
+  const rows = (): [string, JSX.Element | string][] => {
+    const { planet, divSign, divAscSign, divLon, divKaraka } = props;
+    const nak = getNakshatraPada(divLon);
+    const lordships = getLordships(planet.name, divAscSign);
+    const role = getFunctionalRole(planet.name, divAscSign);
+    const motion = planet.motion === 'Retrograde'
+      ? { cls: 'badge badge-retro', txt: '\u211E Retro' }
+      : { cls: 'badge badge-direct', txt: 'Direct' };
+
+    return [
+      ['Degree', formatDms(planet.deg)],
+      ['Sign / House', `${SIGN_NAMES[divSign - 1]} / House ${signToHouse(divSign, divAscSign)}`],
+      ['Sign Lord', SIGN_LORDS[divSign - 1]],
+      ['Nakshatra', `${nak.nakshatra} Pada ${nak.pada}`],
+      ['Nak. Lord', NAKSHATRA_LORDS[nak.nakshatra] || DASH],
+      ['Lords Houses', lordships.length ? lordships.map((house) => `H${house}`).join(', ') : DASH],
+      ['Func. Role', <span class={`badge badge-${role.toLowerCase()}`}>{role}</span>],
+      ['Motion', <span class={motion.cls}>{motion.txt}</span>],
+      ['Karaka', divKaraka ? <span class="badge badge-karaka">{divKaraka}</span> : DASH],
+    ];
+  };
+
+  const shashtiamsa = () => props.planet.d60Shashtiamsa;
+  const shashtiamsaNatureLabel = () => shashtiamsa().nature === 'B' ? 'Benefic' : 'Malefic';
+  const shashtiamsaBadge = () => shashtiamsa().nature === 'B' ? 'badge badge-benefic' : 'badge badge-malefic';
 
   return (
     <div class="planet-card">
       <div class="planet-card-header">
-        <span class="planet-icon">{icon()}</span>
+        <span class="planet-icon">{PLANET_ICONS[props.planet.name] || '\u25CF'}</span>
         <div>
-          <div class="planet-name">{p().name}</div>
-          <div class="planet-position">{formatDms(p().deg)} {divSignName()}</div>
+          <div class="planet-name">{props.planet.name}</div>
+          <div class="planet-position">{formatDms(props.planet.deg)} {SIGN_NAMES[props.divSign - 1]}</div>
         </div>
-        {props.divCombust === true && <span class="planet-combust">🔥 Combust</span>}
+        {props.divCombust && <span class="planet-combust">{'\uD83D\uDD25'} Combust</span>}
       </div>
       <div class="planet-card-body">
         <For each={rows()}>
-          {([lbl, val], i) => (
+          {([label, value]) => (
             <div class="planet-row">
-              <span class="planet-row-label">{lbl}</span>
-              <span class="planet-row-value">
-                {i() === 6 && (
-                  <span class={roleBadge()}>{divRole()}</span>
-                )}
-                {i() === 7 && (
-                  <span class={motionBadge().cls}>{motionBadge().txt}</span>
-                )}
-                {i() === 8 && (
-                  props.divKaraka
-                    ? <span class="badge badge-karaka">{props.divKaraka}</span>
-                    : '—'
-                )}
-                {i() < 6 && val}
+              <span class="planet-row-label">{label}</span>
+              <span class="planet-row-value">{value}</span>
+            </div>
+          )}
+        </For>
+        <For each={showShashtiamsa() ? [shashtiamsa()] : []}>
+          {(entry) => (
+            <div class="planet-row shashtiamsa-row">
+              <span class="planet-row-label">Shashtiamsa</span>
+              <span class="planet-row-value shashtiamsa-value">
+                <span class="shashtiamsa-name">{entry.name}</span>
+                <span class={shashtiamsaBadge()}>{shashtiamsaNatureLabel()}</span>
+                <span class="shashtiamsa-desc">{entry.description}</span>
               </span>
             </div>
           )}
         </For>
-        {showShashtiamsa() && (
-          <div class="planet-row shashtiamsa-row">
-            <span class="planet-row-label">Shashtiamsa</span>
-            <span class="planet-row-value shashtiamsa-value">
-              <span class="shashtiamsa-name">{shashtiamsa().name}</span>
-              <span class={shashtiamsaBadge()}>{shashtiamsaNatureLabel()}</span>
-              <span class="shashtiamsa-desc">{shashtiamsa().description}</span>
-            </span>
-          </div>
-        )}
       </div>
     </div>
   );

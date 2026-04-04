@@ -32,9 +32,9 @@ export default function ChartSummary(props: Props) {
   const items = () => [
     ['UTC Date/Time', props.utcStr],
     ['Location', props.cityName
-      ? `${props.cityName} (${props.lat}Â° N, ${props.lon}Â° E)`
-      : `${props.lat}Â° N, ${props.lon}Â° E`],
-    ['Ayanamsa', `${props.data.ayanamsa.toFixed(4)}Â° Lahiri`],
+      ? `${props.cityName} (${props.lat}\u00B0 N, ${props.lon}\u00B0 E)`
+      : `${props.lat}\u00B0 N, ${props.lon}\u00B0 E`],
+    ['Ayanamsa', `${props.data.ayanamsa.toFixed(4)}\u00B0 Lahiri`],
     ['Ascendant', `<span class="highlight">${SIGN_NAMES[props.data.ascSign - 1]}</span> ${formatDms(props.data.ascDeg)}`],
     ['Asc Nakshatra', `${props.data.ascNak} Pada ${props.data.ascPada}`],
     ...ASC_ITEMS.map(([label, key]) => [label, SIGN_NAMES[props.data[key] - 1]] as [string, string]),

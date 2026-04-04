@@ -7,7 +7,7 @@ interface Props {
 }
 
 function aspectMeta(val: number | null) {
-  if (val === null) return { cls: 'asp-none', color: '#2a3a5a', display: 'Â·' };
+  if (val === null) return { cls: 'asp-none', color: '#2a3a5a', display: '\u00B7' };
   if (val >= 50) return { cls: 'asp-strong', color: '#d4a847', display: Math.round(val * 10) / 10 };
   if (val >= 25) return { cls: 'asp-medium', color: '#7ab0e0', display: Math.round(val * 10) / 10 };
   if (val > 0) return { cls: 'asp-weak', color: '#3a5070', display: Math.round(val * 10) / 10 };
@@ -30,7 +30,7 @@ export default function AspectTable(props: Props) {
           <td
             class={meta.cls}
             style={`background:${meta.color}`}
-            title={`${asp}â†’${aspected}: ${value === null ? 'n/a' : meta.display} virupas`}
+            title={`${asp}\u2192${aspected}: ${value === null ? 'n/a' : meta.display} virupas`}
           >
             {meta.display}
           </td>

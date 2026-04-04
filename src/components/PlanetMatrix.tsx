@@ -24,7 +24,7 @@ export default function PlanetMatrix(props: Props) {
             <tr>
               <td>{PLANET_ICONS[row]} {row}</td>
               <For each={PLANET_LIST}>
-                {(col) => row === col ? <td class="self">—</td> : props.cell(row, col)}
+                {(col) => row === col ? <td class="self">{'\u2014'}</td> : props.cell(row, col)}
               </For>
             </tr>
           )}

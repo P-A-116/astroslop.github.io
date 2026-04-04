@@ -1,4 +1,4 @@
-import {
+﻿import {
   PLANET_LIST,
   SIGN_LORDS,
   NAKSHATRA_LIST,
@@ -166,7 +166,7 @@ export function dms(degFloat: number): DMS {
 
 export function formatDms(degFloat: number): string {
   const { deg, minute, sec } = dms(degFloat);
-  return `${deg}Â° ${minute}' ${sec}"`;
+  return `${deg}\u00B0 ${minute}' ${sec}"`;
 }
 
 export function getNakshatraName(longitude: number): string {
@@ -440,7 +440,7 @@ export function buildChartData({
       combust: name !== 'Sun' && !!COMBUSTION_LIMITS[name] && isCombust(name, sunLon, pLon, motion),
       nakshatra,
       pada,
-      nakLord: NAKSHATRA_LORDS[nakshatra] || 'â€”',
+      nakLord: NAKSHATRA_LORDS[nakshatra] || '\u2014',
       signLord: SIGN_LORDS[sign - 1],
       karaka: karakas[name] || null,
     } as PlanetData;

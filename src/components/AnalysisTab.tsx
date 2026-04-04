@@ -23,9 +23,7 @@ export default function AnalysisTab(props: Props) {
     <div class="analysis-tab">
       <Show
         when={yogas().length > 0}
-        fallback={
-          <p class="analysis-empty">No Parivartana Yogas found in this chart.</p>
-        }
+        fallback={<p class="analysis-empty">No Parivartana Yogas found in this chart.</p>}
       >
         <div class="yoga-list">
           <For each={yogas()}>
@@ -35,16 +33,10 @@ export default function AnalysisTab(props: Props) {
                   <span class={`badge yoga-badge yoga-badge-${yoga.type.toLowerCase()}`}>
                     {yoga.type} Yoga
                   </span>
-                  <span class="yoga-houses">
-                    Houses {yoga.houseA} ↔ {yoga.houseB}
-                  </span>
-                  <span class="yoga-planets">
-                    {yoga.planetA} ↔ {yoga.planetB}
-                  </span>
+                  <span class="yoga-houses">{`Houses ${yoga.houseA} \u2194 ${yoga.houseB}`}</span>
+                  <span class="yoga-planets">{`${yoga.planetA} \u2194 ${yoga.planetB}`}</span>
                 </div>
-                <p class="yoga-interpretation">
-                  {YOGA_INTERPRETATIONS[yoga.type]}
-                </p>
+                <p class="yoga-interpretation">{YOGA_INTERPRETATIONS[yoga.type]}</p>
               </div>
             )}
           </For>
