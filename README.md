@@ -92,32 +92,33 @@ src/analysis.ts            Yoga detection
 
 ```
 .
-??? index.html                 Entry HTML
-??? package.json               NPM config and scripts
-??? tsconfig.json              TypeScript config (SolidJS JSX)
-??? vite.config.ts             Vite + vite-plugin-solid
-??? src/
-?   ??? index.tsx              SolidJS mount point
-?   ??? types.ts               TypeScript interfaces and type aliases
-?   ??? constants.ts           Domain data tables (planets, signs, nakshatras)
-?   ??? astronomy.ts           Positional astronomy (Julian Day, Kepler, longitudes)
-?   ??? astrology.ts           Chart-building logic and Vedic rules engine
-?   ??? analysis.ts            Yoga detection (Parivartana)
-?   ??? styles.css             Application styles
-?   ??? components/
-?       ??? App.tsx             Root component - state and layout
-?       ??? ChartForm.tsx       Date/time/location input form
-?       ??? ChartSummary.tsx    Header summary panel
-?       ??? DivisionalChartTabs.tsx  D1-D60 tab bar
-?       ??? VedicChartView.tsx  Visual South-Indian chart
-?       ??? PlanetCard.tsx      Individual planet detail card
-?       ??? PlanetMatrix.tsx    Planet grid helper
-?       ??? RelationshipTable.tsx  Compound relationship matrix
-?       ??? AspectTable.tsx     Sphuta Drishti matrix
-?       ??? AnalysisTab.tsx     Parivartana yoga and analysis
-??? tests/
-    ??? astronomy.test.ts      Unit tests for astronomy functions
-    ??? astrology.test.ts      Unit tests for astrology functions
+├── index.html                 Entry HTML
+├── package.json               NPM config and scripts
+├── tsconfig.json              TypeScript config (SolidJS JSX)
+├── vite.config.ts             Vite + vite-plugin-solid
+├── src/
+│   ├── index.tsx              SolidJS mount point
+│   ├── types.ts               TypeScript interfaces and type aliases
+│   ├── constants.ts           Domain data tables (planets, signs, nakshatras)
+│   ├── astronomy.ts           Positional astronomy (Julian Day, Kepler, longitudes)
+│   ├── astrology.ts           Chart-building logic and Vedic rules engine
+│   ├── analysis.ts            Yoga detection (Parivartana)
+│   ├── styles.css             Application styles
+│   └── components/
+│       ├── App.tsx             Root component - state and layout
+│       ├── ChartForm.tsx       Date/time/location input form
+│       ├── ChartSummary.tsx    Header summary panel
+│       ├── DivisionalChartTabs.tsx  D1-D60 tab bar
+│       ├── VedicChartView.tsx  Visual South-Indian chart
+│       ├── PlanetCard.tsx      Individual planet detail card
+│       ├── PlanetMatrix.tsx    Planet grid helper
+│       ├── RelationshipTable.tsx  Compound relationship matrix
+│       ├── AspectTable.tsx     Sphuta Drishti matrix
+│       └── AnalysisTab.tsx     Parivartana yoga and analysis
+├── tests/
+│   ├── astronomy.test.ts      Unit tests for astronomy functions
+│   └── astrology.test.ts      Unit tests for astrology functions
+└── LICENSE
 ```
 
 ---
@@ -173,4 +174,4 @@ npx vitest         # watch mode
 
 ## License
 
-This project is provided as-is for educational purposes.
+MIT — see [LICENSE](LICENSE) for details.

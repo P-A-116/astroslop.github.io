@@ -4,12 +4,14 @@ import type { PlanetName } from '../types';
 
 interface Props {
   id: string;
+  caption?: string;
   cell: (row: PlanetName, col: PlanetName) => JSX.Element;
 }
 
 export default function PlanetMatrix(props: Props) {
   return (
     <table id={props.id} class="astro-table">
+      {props.caption && <caption>{props.caption}</caption>}
       <thead>
         <tr>
           <th></th>

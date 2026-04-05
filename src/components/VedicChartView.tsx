@@ -1,4 +1,4 @@
-import { createSignal } from 'solid-js';
+import { createSignal, onMount, onCleanup } from 'solid-js';
 import { VedicChart, defaultStyles } from 'vedic-astrology-chart-solid';
 import type { DivisionalChart, PlanetName } from '../types';
 
@@ -13,6 +13,19 @@ interface Props {
 export default function VedicChartView(props: Props) {
   const [chartStyle, setChartStyle] = createSignal<'north' | 'south'>('north');
   const [displayMode, setDisplayMode] = createSignal<'symbols' | 'names'>('symbols');
+  const [chartSize, setChartSize] = createSignal(500);
+  let containerRef!: HTMLDivElement;
+
+  onMount(() => {
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const w = entry.contentRect.width;
+        setChartSize(Math.min(w, 500));
+      }
+    });
+    ro.observe(containerRef);
+    onCleanup(() => ro.disconnect());
+  });
 
   const ascendantDegrees = () => {
     if (props.selectedChart === 'D1') return props.ascSid;
@@ -40,16 +53,18 @@ export default function VedicChartView(props: Props) {
           {displayMode() === 'symbols' ? '☉ Symbols' : 'Abc Names'}
         </button>
       </div>
-      <VedicChart
-        planets={props.longitudes}
-        ascendant={ascendantDegrees()}
-        ayanamsa={props.ayanamsa}
-        style={chartStyle()}
-        width={500}
-        height={500}
-        showHouseLabels={true}
-        planetDisplayMode={displayMode()}
-      />
+      <div ref={containerRef} style="width:100%;max-width:500px;margin:0 auto;">
+        <VedicChart
+          planets={props.longitudes}
+          ascendant={ascendantDegrees()}
+          ayanamsa={props.ayanamsa}
+          style={chartStyle()}
+          width={chartSize()}
+          height={chartSize()}
+          showHouseLabels={true}
+          planetDisplayMode={displayMode()}
+        />
+      </div>
     </>
   );
 }

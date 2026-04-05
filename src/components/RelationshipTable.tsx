@@ -15,6 +15,7 @@ export default function RelationshipTable(props: Props) {
   return (
     <PlanetMatrix
       id="relationship-table"
+      caption="Compound (Panchadha) Relationship Matrix"
       cell={(a, b) => {
         const nat = getNaturalRelationship(a, b);
         const temp = getTemporaryRelationship(props.signs[a], props.signs[b]);
