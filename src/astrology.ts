@@ -118,8 +118,10 @@ const advanceSign = (sign: number, offset: number) => ((sign - 1 + offset) % 12)
 const isOddSign = (sign: number) => sign % 2 === 1;
 const startByModality = (sign: number, starts: readonly number[]) => starts[(sign - 1) % 3];
 const startByElement = (sign: number) => ELEMENT_STARTS[(sign - 1) % 4];
-const segmentSign = (deg: number, segments: readonly (readonly [number, number])[]) =>
-  segments.find(([limit]) => deg < limit)![1];
+const segmentSign = (deg: number, segments: readonly (readonly [number, number])[]) => {
+  const found = segments.find(([limit]) => deg < limit);
+  return found ? found[1] : segments[segments.length - 1][1];
+};
 
 function toPlanetMap<T>(planets: PlanetData[], getValue: (planet: PlanetData) => T) {
   const result = {} as Record<PlanetName, T>;
@@ -160,8 +162,9 @@ function houseMapFor(
 }
 
 export function dms(degFloat: number): DMS {
-  const deg = Math.floor(degFloat);
-  const minFloat = (degFloat - deg) * 60;
+  const absDeg = Math.abs(degFloat);
+  const deg = Math.floor(absDeg);
+  const minFloat = (absDeg - deg) * 60;
   const minute = Math.floor(minFloat);
   const sec = Math.round((minFloat - minute) * 60 * 100) / 100;
   return { deg, minute, sec };
