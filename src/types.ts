@@ -119,15 +119,6 @@ export interface ParivartanaYoga {
   type: 'Dainya' | 'Khala' | 'Maha';
 }
 
-export interface OrbitalElements {
-  N0: number; N1: number;
-  i0: number; i1: number;
-  w0: number; w1: number;
-  a: number;
-  e0: number; e1: number;
-  M0: number; M1: number;
-}
-
 export interface BuildChartParams {
   year: number;
   month: number;

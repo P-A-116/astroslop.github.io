@@ -9,6 +9,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "astronomia": "^4.2.0",
     "solid-js": "^1.8.0",
     "vedic-astrology-chart-solid": "^1.0.0"
   },

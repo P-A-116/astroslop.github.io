@@ -1,23 +1,32 @@
-import { ORBITAL_ELEMENTS, PLANET_LIST } from './constants';
+import { CalendarGregorianToJD } from 'astronomia/julian';
+import * as solar from 'astronomia/solar';
+import * as moonposition from 'astronomia/moonposition';
+import * as planetposition from 'astronomia/planetposition';
+import * as sidereal from 'astronomia/sidereal';
+import * as nutation from 'astronomia/nutation';
+import earthData from 'astronomia/data/vsop87Bearth';
+import mercuryData from 'astronomia/data/vsop87Bmercury';
+import venusData from 'astronomia/data/vsop87Bvenus';
+import marsData from 'astronomia/data/vsop87Bmars';
+import jupiterData from 'astronomia/data/vsop87Bjupiter';
+import saturnData from 'astronomia/data/vsop87Bsaturn';
+
+import { PLANET_LIST } from './constants';
 import type { MotionType, PlanetName, PlanetPosition } from './types';
 
 const RAD = Math.PI / 180;
 const DEG = 180 / Math.PI;
 const HALF_DAY = 0.5;
-const rad = (d: number) => d * RAD;
-const deg = (r: number) => r * DEG;
-const sin = (d: number) => Math.sin(rad(d));
-const cos = (d: number) => Math.cos(rad(d));
 const norm = (x: number) => ((x % 360) + 360) % 360;
 const wrapDiff = (x: number) => (x > 180 ? x - 360 : x < -180 ? x + 360 : x);
-const lonFromXY = (x: number, y: number) => norm(deg(Math.atan2(y, x)));
-const orbitXY = (N: number, i: number, lon: number, r: number) => {
-  const Nr = rad(N), ir = rad(i), lr = rad(lon);
-  const cN = Math.cos(Nr), sN = Math.sin(Nr), cl = Math.cos(lr), sl = Math.sin(lr), ci = Math.cos(ir);
-  return { x: r * (cN * cl - sN * sl * ci), y: r * (sN * cl + cN * sl * ci) };
-};
 
-type OrbitalPlanet = Exclude<PlanetName, 'Sun' | 'Moon' | 'Rahu' | 'Ketu'>;
+// Pre-instantiate VSOP87 planet objects
+const earthPlanet = new planetposition.Planet(earthData);
+const mercuryPlanet = new planetposition.Planet(mercuryData);
+const venusPlanet = new planetposition.Planet(venusData);
+const marsPlanet = new planetposition.Planet(marsData);
+const jupiterPlanet = new planetposition.Planet(jupiterData);
+const saturnPlanet = new planetposition.Planet(saturnData);
 
 interface AllPositionsResult {
   positions: Record<PlanetName, PlanetPosition>;
@@ -27,110 +36,86 @@ interface AllPositionsResult {
   ascDeg: number;
 }
 
+/** Convert a Gregorian calendar date/time to Julian Day Number. */
 export function julianDay(year: number, month: number, day: number, hour: number): number {
-  let y = year, m = month;
-  if (m <= 2) { y--; m += 12; }
-  const A = Math.floor(y / 100);
-  return Math.floor(365.25 * (y + 4716))
-    + Math.floor(30.6001 * (m + 1))
-    + day + hour / 24 + (2 - A + Math.floor(A / 4)) - 1524.5;
+  return CalendarGregorianToJD(year, month, day + hour / 24);
 }
 
+/** Lahiri ayanamsa (degrees) at the given Julian Day. */
 export function lahiriAyanamsa(jd: number): number {
   const T = (jd - 2415020) / 36525;
   return 22.460148 + T * (1.396042 + T * 0.000308084);
 }
 
-export function kepler(MDeg: number, e: number): number {
-  const M = rad(norm(MDeg));
-  let E = M;
-  for (let i = 0; i < 50; i++) {
-    const dE = (M - E + e * Math.sin(E)) / (1 - e * Math.cos(E));
-    E += dE;
-    if (Math.abs(dE) < 1e-9) break;
-  }
-  return E;
-}
-
-export function trueAnomaly(MDeg: number, e: number): number {
-  const E = kepler(MDeg, e);
-  return deg(2 * Math.atan2(Math.sqrt(1 + e) * Math.sin(E / 2), Math.sqrt(1 - e) * Math.cos(E / 2)));
-}
-
+/**
+ * Apparent geocentric longitude of the Sun (degrees) using VSOP87.
+ * Accepts `d = jd - 2451543.5` for backward compatibility with existing callers.
+ */
 export function sunLongitude(d: number): { lon: number; r: number } {
-  const e = 0.016709 - 1.151e-9 * d;
-  const v = trueAnomaly(norm(356.047 + 0.9856002585 * d), e);
-  return {
-    lon: norm(v + norm(282.9404 + 4.70935e-5 * d)),
-    r: (1 - e * e) / (1 + e * cos(v)),
-  };
+  const jde = d + 2451543.5;
+  const { lon, range } = solar.apparentVSOP87(earthPlanet, jde);
+  return { lon: norm(lon * DEG), r: range };
 }
 
+/**
+ * Geocentric longitude of the Moon (degrees) using the full Meeus Chapter 47 theory.
+ * Accepts `d = jd - 2451543.5` for backward compatibility.
+ */
 export function moonLongitude(d: number): { lon: number } {
-  const N = norm(125.1228 - 0.0529538083 * d);
-  const w = norm(318.0634 + 0.1643573223 * d);
-  const Mm = norm(115.3654 + 13.0649929509 * d);
-  const L = norm(N + w + Mm);
-  const e = 0.0549;
-  const v = trueAnomaly(Mm, e);
-  const { x, y } = orbitXY(N, 5.1454, v + w, 60.2666 * (1 - e * e) / (1 + e * cos(v)));
-  const sun = sunLongitude(d);
-  const Ms = norm(356.047 + 0.9856002585 * d);
-  const D = norm(L - sun.lon);
-  const F = norm(L - N);
-
-  return {
-    lon: norm(
-      lonFromXY(x, y)
-      - 1.274 * sin(Mm - 2 * D)
-      + 0.658 * sin(2 * D)
-      - 0.186 * sin(Ms)
-      - 0.059 * sin(2 * Mm - 2 * D)
-      - 0.057 * sin(Mm - 2 * D + Ms)
-      + 0.053 * sin(Mm + 2 * D)
-      + 0.046 * sin(2 * D - Ms)
-      + 0.041 * sin(Mm - Ms)
-      - 0.035 * sin(D)
-      - 0.031 * sin(Mm + Ms)
-      - 0.015 * sin(2 * F - 2 * D)
-      + 0.011 * sin(Mm - 4 * D),
-    ),
-  };
+  const jde = d + 2451543.5;
+  const { lon } = moonposition.position(jde);
+  return { lon: norm(lon * DEG) };
 }
 
-export function planetLongitude(name: OrbitalPlanet, d: number): { lon: number } {
-  const el = ORBITAL_ELEMENTS[name];
-  const N = norm(el.N0 + el.N1 * d);
-  const i = el.i0 + el.i1 * d;
-  const w = norm(el.w0 + el.w1 * d);
-  const e = el.e0 + el.e1 * d;
-  const v = trueAnomaly(norm(el.M0 + el.M1 * d), e);
-  const { x, y } = orbitXY(N, i, v + w, el.a * (1 - e * e) / (1 + e * cos(v)));
-  const sun = sunLongitude(d);
-  return { lon: lonFromXY(x + sun.r * cos(sun.lon), y + sun.r * sin(sun.lon)) };
+/** Geocentric ecliptic longitude of a planet (degrees) derived from VSOP87 heliocentric data. */
+function geocentricPlanetLon(planet: planetposition.Planet, jde: number): number {
+  const p = planet.position(jde);
+  const e = earthPlanet.position(jde);
+  const xP = p.range * Math.cos(p.lat) * Math.cos(p.lon);
+  const yP = p.range * Math.cos(p.lat) * Math.sin(p.lon);
+  const xE = e.range * Math.cos(e.lat) * Math.cos(e.lon);
+  const yE = e.range * Math.cos(e.lat) * Math.sin(e.lon);
+  return norm(Math.atan2(yP - yE, xP - xE) * DEG);
 }
 
+/** Tropical longitude of Rahu (mean lunar north node). */
 export const rahuTropical = (d: number) => norm(125.1228 - 0.0529538083 * d);
 
-const tropicalLongitude = (name: PlanetName, d: number, rahu = rahuTropical(d)) =>
-  name === 'Sun' ? sunLongitude(d).lon
-    : name === 'Moon' ? moonLongitude(d).lon
-    : name === 'Rahu' ? rahu
-    : name === 'Ketu' ? norm(rahu + 180)
-    : planetLongitude(name as OrbitalPlanet, d).lon;
+const VSOP87_PLANETS: Partial<Record<PlanetName, planetposition.Planet>> = {
+  Mercury: mercuryPlanet,
+  Venus: venusPlanet,
+  Mars: marsPlanet,
+  Jupiter: jupiterPlanet,
+  Saturn: saturnPlanet,
+};
 
+const tropicalLongitude = (name: PlanetName, d: number, rahu = rahuTropical(d)): number => {
+  if (name === 'Sun') return sunLongitude(d).lon;
+  if (name === 'Moon') return moonLongitude(d).lon;
+  if (name === 'Rahu') return rahu;
+  if (name === 'Ketu') return norm(rahu + 180);
+  const p = VSOP87_PLANETS[name];
+  return p ? geocentricPlanetLon(p, d + 2451543.5) : 0;
+};
+
+/** Daily motion of a planet (degrees/day); negative means retrograde. */
 export function planetSpeed(name: PlanetName, d: number): number {
   return name === 'Rahu' || name === 'Ketu'
     ? -1
     : wrapDiff(tropicalLongitude(name, d + HALF_DAY) - tropicalLongitude(name, d - HALF_DAY)) / (2 * HALF_DAY);
 }
 
+/**
+ * Tropical ecliptic longitude of the Ascendant (degrees) using GMST from
+ * the IAU 1982 sidereal time formula and VSOP87 obliquity.
+ */
 export function computeAscendant(jd: number, lat: number, lon: number): number {
-  const d = jd - 2451545;
-  const RAMC = rad(norm(280.46061837 + 360.98564736629 * d + lon));
-  const obl = rad(23.4393 - 3.563e-7 * d);
-  const latR = rad(lat);
-  return norm(deg(Math.atan2(Math.cos(RAMC), -(Math.sin(RAMC) * Math.cos(obl) + Math.tan(latR) * Math.sin(obl)))));
+  // Apparent GMST in seconds of time → convert to degrees
+  const gmstDeg = sidereal.apparent(jd) / 3600 * 15;
+  const RAMC = norm(gmstDeg + lon) * RAD;
+  const obl = nutation.meanObliquity(jd); // radians
+  const latR = lat * RAD;
+  return norm(Math.atan2(Math.cos(RAMC), -(Math.sin(RAMC) * Math.cos(obl) + Math.tan(latR) * Math.sin(obl))) * DEG);
 }
 
 export function computeAllPositions(jd: number, lat: number, lon: number): AllPositionsResult {

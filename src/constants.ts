@@ -2,7 +2,6 @@ import type {
   PlanetName,
   RelationshipType,
   CompoundRelationship,
-  OrbitalElements,
   FunctionalRole,
 } from './types';
 
@@ -41,10 +40,6 @@ const role = (benefics: string, malefics: string, neutrals = ''): FunctionalRole
   malefics: planets(malefics),
   neutrals: planets(neutrals),
 });
-const orbit = (
-  N0: number, N1: number, i0: number, i1: number, w0: number, w1: number,
-  a: number, e0: number, e1: number, M0: number, M1: number,
-): OrbitalElements => ({ N0, N1, i0, i1, w0, w1, a, e0, e1, M0, M1 });
 const sh = (name: string, nature: 'B' | 'M', description: string) => [name, nature, description] as const;
 
 export const SIGN_NAMES = 'Aries Taurus Gemini Cancer Leo Virgo Libra Scorpio Sagittarius Capricorn Aquarius Pisces'.split(' ');
@@ -108,14 +103,6 @@ export const FUNCTIONAL_ROLES: Record<number, FunctionalRoleEntry> = {
 };
 
 export const NAVAMSA_START_SIGNS = Array(3).fill([1, 10, 7, 4]).flat();
-
-export const ORBITAL_ELEMENTS: Record<string, OrbitalElements> = {
-  Mercury: orbit(48.3313, 3.24587e-5, 7.0047, 5e-8, 29.1241, 1.01444e-5, 0.387098, 0.205635, 5.59e-10, 168.6562, 4.0923344368),
-  Venus: orbit(76.6799, 2.4659e-5, 3.3946, 2.75e-8, 54.891, 1.38374e-5, 0.72333, 0.006773, -1.302e-9, 48.0052, 1.6021302244),
-  Mars: orbit(49.5574, 2.11081e-5, 1.8497, -1.78e-8, 286.5016, 2.92961e-5, 1.523688, 0.093405, 2.516e-9, 18.6021, 0.5240207766),
-  Jupiter: orbit(100.4542, 2.76854e-5, 1.303, -1.557e-7, 273.8777, 1.64505e-5, 5.20256, 0.048498, 4.469e-9, 19.895, 0.0830853001),
-  Saturn: orbit(113.6634, 2.3898e-5, 2.4886, -1.081e-7, 339.3939, 2.97661e-5, 9.55475, 0.055546, -9.499e-9, 316.967, 0.0334442282),
-};
 
 export const REL_CSS: Record<CompoundRelationship, string> = {
   'Extreme Friendship': 'rel-ef',
