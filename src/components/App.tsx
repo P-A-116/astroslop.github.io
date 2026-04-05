@@ -13,6 +13,7 @@ import {
   getDivisionalLongitudes,
   getDivisionalCombustion,
   getAscSignForChart,
+  getAscDivisionalLongitude,
   getCharaKarakasFromLongitudes,
 } from '../astrology';
 
@@ -37,6 +38,7 @@ export default function App() {
       signs,
       longitudes,
       ascSign: getAscSignForChart(data, chart),
+      ascLongitude: getAscDivisionalLongitude(data, chart),
       karakas: getCharaKarakasFromLongitudes(longitudes),
       combustion: getDivisionalCombustion(data.planetData, longitudes),
     };
@@ -101,7 +103,7 @@ export default function App() {
                   <VedicChartView
                     longitudes={view().longitudes}
                     ascSign={view().ascSign}
-                    ascSid={view().data.ascSid}
+                    ascSid={view().ascLongitude}
                     ayanamsa={view().data.ayanamsa}
                     selectedChart={view().chart}
                   />

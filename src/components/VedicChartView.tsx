@@ -27,11 +27,7 @@ export default function VedicChartView(props: Props) {
     onCleanup(() => ro.disconnect());
   });
 
-  const ascendantDegrees = () => {
-    if (props.selectedChart === 'D1') return props.ascSid;
-    // For divisional charts, use the start of the ascendant sign (sign number 1-12 → 0°–330°)
-    return (props.ascSign - 1) * 30;
-  };
+  const ascendantDegrees = () => props.ascSid;
 
   return (
     <>
