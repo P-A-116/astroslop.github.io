@@ -882,3 +882,51 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* ── Vedic Chart View ────────────────────────────────────────── */
+.chart-style-toggle {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.chart-style-toggle button {
+  padding: 0.4rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.7);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.chart-style-toggle button.active,
+.chart-style-toggle button:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+section .vedic-chart {
+  display: flex;
+  justify-content: center;
+}
+
+.vedic-chart svg {
+  background-color: rgba(255, 255, 255, 0.03) !important;
+  border-radius: 8px;
+  box-shadow: none !important;
+}
+
+.vedic-chart .house-label {
+  fill: rgba(255, 255, 255, 0.5) !important;
+}
+
+.vedic-chart .chart-lines,
+.vedic-chart .chart-border {
+  stroke: rgba(255, 255, 255, 0.25) !important;
+}
+
