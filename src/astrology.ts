@@ -468,6 +468,16 @@ export function getAscSignForChart(data: ChartData, chart: DivisionalChart): num
   return data[DIVISIONAL_META[chart].ascKey];
 }
 
+export function getAscDivisionalLongitude(data: ChartData, chart: DivisionalChart): number {
+  if (chart === 'D1') return data.ascSid;
+
+  const { divisor, ascKey } = DIVISIONAL_META[chart];
+  const ascDivSign = data[ascKey];
+  const partSize = 30 / divisor;
+  const degInPart = data.ascDeg % partSize;
+  return ((ascDivSign - 1) * 30) + (degInPart * divisor);
+}
+
 export function getDivisionalSigns(
   planets: PlanetData[],
   chart: DivisionalChart,
