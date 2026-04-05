@@ -7,6 +7,7 @@ import AspectTable from './AspectTable';
 import AnalysisTab from './AnalysisTab';
 import DivisionalChartTabs from './DivisionalChartTabs';
 import PlanetCard from './PlanetCard';
+import VedicChartView from './VedicChartView';
 import {
   getDivisionalSigns,
   getDivisionalLongitudes,
@@ -95,6 +96,17 @@ export default function App() {
               </div>
 
               <div id="divisional-tabpanel" role="tabpanel" aria-labelledby={`chart-tab-${view().chart}`}>
+                <section class="card fade-in" style="animation-delay: 0.1s">
+                  <h2 class="section-title">Visual Chart</h2>
+                  <VedicChartView
+                    longitudes={view().longitudes}
+                    ascSign={view().ascSign}
+                    ascSid={view().data.ascSid}
+                    ayanamsa={view().data.ayanamsa}
+                    selectedChart={view().chart}
+                  />
+                </section>
+
                 <section class="card fade-in" id="planets-section" style="animation-delay: 0.12s">
                   <h2 class="section-title">Planetary Positions</h2>
                   <div class="planets-grid" id="planets-grid">
