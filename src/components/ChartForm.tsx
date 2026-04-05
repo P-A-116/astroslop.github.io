@@ -231,7 +231,7 @@ export default function ChartForm(props: Props) {
             <Show when={selectedCity() !== ''}>
               <div class="coords-display">
                 <span class="coords-label">Coordinates:</span>
-                {` ${lat()}\u00B0 N, ${lon()}\u00B0 E \u2014 `}
+                {` ${Math.abs(parseFloat(lat())).toFixed(4)}\u00B0 ${parseFloat(lat()) >= 0 ? 'N' : 'S'}, ${Math.abs(parseFloat(lon())).toFixed(4)}\u00B0 ${parseFloat(lon()) >= 0 ? 'E' : 'W'} \u2014 `}
                 <span class="coords-tz">UTC{parseFloat(tz()) >= 0 ? '+' : ''}{tz()}</span>
               </div>
             </Show>
