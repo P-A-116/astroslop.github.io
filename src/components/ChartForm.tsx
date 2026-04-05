@@ -271,7 +271,7 @@ export default function ChartForm(props: Props) {
           </Field>
 
           <Show when={manualMode()}>
-            <Field id="lat" label="Latitude (\u00B0N positive)">
+            <Field id="lat" label={`Latitude (\u00B0N positive)`}>
               <input
                 type="number"
                 id="lat"
@@ -286,7 +286,7 @@ export default function ChartForm(props: Props) {
               />
             </Field>
 
-            <Field id="lon" label="Longitude (\u00B0E positive)">
+            <Field id="lon" label={`Longitude (\u00B0E positive)`}>
               <input
                 type="number"
                 id="lon"
