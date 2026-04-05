@@ -4,7 +4,7 @@ export type PlanetName =
 
 export type DivisionalChart =
   | 'D1' | 'D2' | 'D3' | 'D4' | 'D7' | 'D9' | 'D10' | 'D12'
-  | 'D16' | 'D20' | 'D27' | 'D30' | 'D40' | 'D45' | 'D60';
+  | 'D16' | 'D20' | 'D24' | 'D27' | 'D30' | 'D40' | 'D45' | 'D60';
 
 export type RelationshipType = 'Friend' | 'Enemy' | 'Neutral';
 export type CompoundRelationship = 'Extreme Friendship' | 'Friendship' | 'Neutral' | 'Enmity' | 'Extreme Enmity';
@@ -58,6 +58,8 @@ export interface PlanetData {
   d16House: number;
   d20Sign: number;
   d20House: number;
+  d24Sign: number;
+  d24House: number;
   d27Sign: number;
   d27House: number;
   d30Sign: number;
@@ -96,6 +98,7 @@ export interface ChartData {
   ascD12: number;
   ascD16: number;
   ascD20: number;
+  ascD24: number;
   ascD27: number;
   ascD30: number;
   ascD40: number;
