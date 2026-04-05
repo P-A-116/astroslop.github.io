@@ -1,10 +1,13 @@
 # Jyotish Chart - Vedic Astrology Chart Maker
 
+**[🔭 Live Demo](https://p-a-116.github.io/astroslop.github.io/)**
+
 A client-side **Vedic (sidereal) astrology** chart generator built with
 [SolidJS](https://www.solidjs.com/) + [TypeScript](https://www.typescriptlang.org/) +
 [Vite](https://vitejs.dev/).
-All planetary positions are computed **in the browser** - no backend or external
-ephemeris service required.
+All planetary positions are computed **in the browser** using the
+[`astronomia`](https://github.com/commenthol/astronomia) library — no backend or
+external ephemeris service required.
 
 ---
 
@@ -12,8 +15,8 @@ ephemeris service required.
 
 | Area | Details |
 |------|---------|
-| **Planetary positions** | Sun, Moon, Mars, Mercury, Jupiter, Venus, Saturn, Rahu and Ketu - sidereal longitudes using Lahiri Ayanamsa |
-| **Divisional charts** | D1 (Rasi) through D60 (Shashtiamsa) - 15 charts total |
+| **Planetary positions** | Sun, Moon, Mars, Mercury, Jupiter, Venus, Saturn, Rahu and Ketu - sidereal longitudes via VSOP87 / Meeus Chapter 47 (via `astronomia`) + Lahiri Ayanamsa |
+| **Divisional charts** | D1 (Rasi) through D60 (Shashtiamsa) - 16 charts total |
 | **Nakshatras and Padas** | 27 Nakshatras with pada and lord |
 | **Relationships** | Natural, Temporary and Compound (Panchadha) relationship matrices |
 | **Aspects** | Sphuta Drishti (aspect strengths in Virupas) for all planet pairs |
@@ -56,16 +59,20 @@ src/astrology.ts           Chart-building logic + Vedic rules engine
   |
   |  imports
   v
-src/astronomy.ts           Positional astronomy
-  |  julianDay(), lahiriAyanamsa()
-  |  kepler(), trueAnomaly()
-  |  sunLongitude(), moonLongitude(), planetLongitude()
-  |  computeAscendant(), computeAllPositions()
+src/astronomy.ts           Positional astronomy (delegates to `astronomia` library)
+  |  julianDay()              Gregorian → JD via astronomia/julian
+  |  lahiriAyanamsa()         Linear approximation
+  |  sunLongitude()           Wraps solar.apparentVSOP87() — full VSOP87 theory
+  |  moonLongitude()          Wraps moonposition.position() — Meeus Ch. 47
+  |  rahuTropical()           Mean lunar node formula
+  |  planetSpeed()            Numerical daily motion
+  |  computeAscendant()       GMST (IAU 1982) + VSOP87 obliquity
+  |  computeAllPositions()    Orchestrator returning sidereal positions
   |
   |  reads
   v
 src/constants.ts           Domain data tables
-  |  PLANET_LIST, SIGN_NAMES, ORBITAL_ELEMENTS, NAKSHATRA_*
+  |  PLANET_LIST, SIGN_NAMES, NAKSHATRA_*
   |  NATURAL_RELATIONSHIPS, COMBUSTION_LIMITS, FUNCTIONAL_ROLES
   |  SHASHTIAMSA_DATA, RULERSHIPS ...
   v
@@ -80,8 +87,8 @@ src/analysis.ts            Yoga detection
 
 1. **User input** - `ChartForm` collects date, time, timezone, location.
 2. **`buildChartData()`** - converts local time to UTC, then Julian Day, then
-   `computeAllPositions()` (sidereal longitudes via simplified orbital mechanics
-   + Lahiri Ayanamsa).
+   `computeAllPositions()` (sidereal longitudes via **VSOP87 via the `astronomia`
+   library** + Lahiri Ayanamsa).
 3. **`ChartData`** object is produced containing positions, divisional signs,
    nakshatras, karakas, combustion flags, lordships, and functional roles.
 4. **UI** reactively renders charts, tables, and analysis from the SolidJS signal.
@@ -100,7 +107,7 @@ src/analysis.ts            Yoga detection
 │   ├── index.tsx              SolidJS mount point
 │   ├── types.ts               TypeScript interfaces and type aliases
 │   ├── constants.ts           Domain data tables (planets, signs, nakshatras)
-│   ├── astronomy.ts           Positional astronomy (Julian Day, Kepler, longitudes)
+│   ├── astronomy.ts           Positional astronomy (VSOP87 + Meeus via `astronomia`)
 │   ├── astrology.ts           Chart-building logic and Vedic rules engine
 │   ├── analysis.ts            Yoga detection (Parivartana)
 │   ├── styles.css             Application styles
@@ -152,7 +159,7 @@ npm run preview    # preview the production build locally
 ### Run Tests
 
 ```bash
-npx vitest run     # single run
+npm test           # single run
 npx vitest         # watch mode
 ```
 
@@ -160,15 +167,37 @@ npx vitest         # watch mode
 
 ## Accuracy Notes
 
-- Planetary longitudes use **simplified analytic orbital elements** (similar to
-  Paul Schlyter's method). They are reasonably accurate for modern dates but
-  may deviate from professional Swiss Ephemeris-based software by a fraction of
-  a degree.
-- **Lahiri Ayanamsa** is approximated with a linear formula - sufficient for
-  most practical purposes.
-- Rahu and Ketu are computed from the mean lunar node.
-- This tool is intended **for educational and reference use** - not as a
-  replacement for professional astrological software.
+- **Sun**: apparent geocentric longitude via `solar.apparentVSOP87()` — full VSOP87 theory.
+- **Moon**: geocentric longitude via `moonposition.position()` — Meeus Chapter 47 lunar theory.
+- **Planets** (Mercury–Saturn): geocentric ecliptic longitude derived from VSOP87B heliocentric datasets via `planetposition.Planet`.
+- **Ascendant**: computed using GMST from the IAU 1982 sidereal time formula (`sidereal.apparent()`) and VSOP87 mean obliquity (`nutation.meanObliquity()`).
+- All of the above are provided by the [`astronomia`](https://github.com/commenthol/astronomia) library and are typically accurate to within arcseconds for modern dates.
+- **Lahiri Ayanamsa** is approximated with a linear formula — sufficient for most practical purposes.
+- **Rahu / Ketu** are computed from the mean lunar node.
+- This tool is intended **for educational and reference use** — not as a replacement for professional astrological software.
+
+---
+
+## Tech Stack
+
+| Package | Role |
+|---------|------|
+| [SolidJS](https://www.solidjs.com/) | Reactive UI framework |
+| [Vite](https://vitejs.dev/) + [vite-plugin-solid](https://github.com/solidjs/vite-plugin-solid) | Build tooling |
+| [`astronomia`](https://github.com/commenthol/astronomia) | VSOP87 planetary data, Julian Day conversion, sidereal time, nutation |
+| [`vedic-astrology-chart-solid`](https://www.npmjs.com/package/vedic-astrology-chart-solid) | South-Indian chart SVG component |
+| [Vitest](https://vitest.dev/) | Unit testing |
+
+---
+
+## Deployment
+
+The site is automatically built and published to **GitHub Pages** on every push to
+`main` via the `.github/workflows/deploy.yml` CI/CD workflow.
+The workflow runs `tsc --noEmit`, `npm test`, and `npm run build` before deploying
+the `dist/` folder.
+
+Live URL: <https://p-a-116.github.io/astroslop.github.io/>
 
 ---
 
