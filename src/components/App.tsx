@@ -1,4 +1,4 @@
-import { createMemo, createSignal, For, Show } from 'solid-js';
+import { createMemo, createSignal, ErrorBoundary, For, Show } from 'solid-js';
 import type { ChartData, DivisionalChart } from '../types';
 import ChartForm from './ChartForm';
 import ChartSummary from './ChartSummary';
@@ -76,6 +76,13 @@ export default function App() {
       <main class="container">
         <ChartForm onGenerate={handleChartGenerated} />
 
+        <ErrorBoundary fallback={(err) => (
+          <div class="card" style="text-align:center; color: #ff6b6b; margin-top: 2rem;">
+            <h2 class="section-title">Something went wrong</h2>
+            <p>An error occurred while computing the chart. Please check your inputs and try again.</p>
+            <p style="font-size: 0.8rem; color: var(--text-dim); margin-top: 0.5rem;">{err.message ?? String(err)}</p>
+          </div>
+        )}>
         <Show when={divisionalData()}>
           {(view) => (
             <div id="output" class="output" aria-live="polite">
@@ -147,6 +154,7 @@ export default function App() {
             </div>
           )}
         </Show>
+        </ErrorBoundary>
       </main>
 
       <footer class="site-footer">

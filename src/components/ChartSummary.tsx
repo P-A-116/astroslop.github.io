@@ -13,6 +13,7 @@ const ASC_ITEMS = [
   ['Asc D12', 'ascD12'],
   ['Asc D16', 'ascD16'],
   ['Asc D20', 'ascD20'],
+  ['Asc D24', 'ascD24'],
   ['Asc D27', 'ascD27'],
   ['Asc D30', 'ascD30'],
   ['Asc D40', 'ascD40'],
