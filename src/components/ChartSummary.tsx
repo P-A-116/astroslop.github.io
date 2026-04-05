@@ -1,4 +1,4 @@
-import { For } from 'solid-js';
+import { For, type JSX } from 'solid-js';
 import type { ChartData } from '../types';
 import { SIGN_NAMES } from '../constants';
 import { formatDms } from '../astrology';
@@ -29,17 +29,20 @@ interface Props {
 }
 
 export default function ChartSummary(props: Props) {
-  const items = () => [
+  const latLabel = () => `${Math.abs(props.lat)}\u00B0 ${props.lat >= 0 ? 'N' : 'S'}`;
+  const lonLabel = () => `${Math.abs(props.lon)}\u00B0 ${props.lon >= 0 ? 'E' : 'W'}`;
+
+  const items = (): [string, string | JSX.Element][] => [
     ['UTC Date/Time', props.utcStr],
     ['Location', props.cityName
-      ? `${props.cityName} (${props.lat}\u00B0 N, ${props.lon}\u00B0 E)`
-      : `${props.lat}\u00B0 N, ${props.lon}\u00B0 E`],
+      ? `${props.cityName} (${latLabel()}, ${lonLabel()})`
+      : `${latLabel()}, ${lonLabel()}`],
     ['Ayanamsa', `${props.data.ayanamsa.toFixed(4)}\u00B0 Lahiri`],
-    ['Ascendant', `<span class="highlight">${SIGN_NAMES[props.data.ascSign - 1]}</span> ${formatDms(props.data.ascDeg)}`],
+    ['Ascendant', <><span class="highlight">{SIGN_NAMES[props.data.ascSign - 1]}</span> {formatDms(props.data.ascDeg)}</>],
     ['Asc Nakshatra', `${props.data.ascNak} Pada ${props.data.ascPada}`],
     ...ASC_ITEMS.map(([label, key]) => [label, SIGN_NAMES[props.data[key] - 1]] as [string, string]),
     ['Asc House', '1st (Whole Sign)'],
-  ] as [string, string][];
+  ];
 
   return (
     <div class="summary-grid" id="summary-content">
@@ -47,7 +50,7 @@ export default function ChartSummary(props: Props) {
         {([label, val]) => (
           <div class="summary-item">
             <div class="summary-label">{label}</div>
-            <div class="summary-value" innerHTML={val}></div>
+            <div class="summary-value">{val}</div>
           </div>
         )}
       </For>

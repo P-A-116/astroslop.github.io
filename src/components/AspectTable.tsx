@@ -18,6 +18,7 @@ export default function AspectTable(props: Props) {
   return (
     <PlanetMatrix
       id="aspect-table"
+      caption="Sphuta Drishti (Aspect Strengths in Virupas)"
       cell={(asp, aspected) => {
         const value = sphutaDrishti(
           asp,
@@ -29,7 +30,6 @@ export default function AspectTable(props: Props) {
         return (
           <td
             class={meta.cls}
-            style={`background:${meta.color}`}
             title={`${asp}\u2192${aspected}: ${value === null ? 'n/a' : meta.display} virupas`}
           >
             {meta.display}

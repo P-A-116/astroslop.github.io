@@ -646,19 +646,23 @@ body {
 }
 
 .asp-strong {
-  color: var(--gold-light);
+  background: #d4a847;
+  color: #0b1428;
   font-weight: 600;
 }
 
 .asp-medium {
-  color: var(--text-bright);
+  background: #7ab0e0;
+  color: #0b1428;
 }
 
 .asp-weak {
-  color: var(--text-dim);
+  background: #3a5070;
+  color: var(--text-bright);
 }
 
 .asp-none {
+  background: #1e2a40;
   color: rgba(100, 120, 160, 0.5);
   font-size: 0.75rem;
 }

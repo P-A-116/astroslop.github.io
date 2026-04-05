@@ -36,7 +36,10 @@ export function julianDay(year: number, month: number, day: number, hour: number
     + day + hour / 24 + (2 - A + Math.floor(A / 4)) - 1524.5;
 }
 
-export const lahiriAyanamsa = (jd: number) => 22.4637 + 1.39694 * ((jd - 2415020) / 36525);
+export function lahiriAyanamsa(jd: number): number {
+  const T = (jd - 2415020) / 36525;
+  return 22.460148 + T * (1.396042 + T * 0.000308084);
+}
 
 export function kepler(MDeg: number, e: number): number {
   const M = rad(norm(MDeg));
