@@ -16,7 +16,7 @@ interface Props {
 const DASH = '\u2014';
 
 export default function PlanetCard(props: Props) {
-  const showShashtiamsa = () => props.selectedChart === 'D1' || props.selectedChart === 'D60';
+  const showShashtiamsa = () => props.selectedChart === 'D60';
 
   const rows = (): [string, JSX.Element | string][] => {
     const { planet, divSign, divAscSign, divLon, divKaraka } = props;
@@ -28,7 +28,7 @@ export default function PlanetCard(props: Props) {
       : { cls: 'badge badge-direct', txt: 'Direct' };
 
     return [
-      ['Degree', formatDms(planet.deg)],
+      ['Degree', formatDms(divLon % 30)],
       ['Sign / House', `${SIGN_NAMES[divSign - 1]} / House ${signToHouse(divSign, divAscSign)}`],
       ['Sign Lord', SIGN_LORDS[divSign - 1]],
       ['Nakshatra', `${nak.nakshatra} Pada ${nak.pada}`],
@@ -50,7 +50,7 @@ export default function PlanetCard(props: Props) {
         <span class="planet-icon">{PLANET_ICONS[props.planet.name] || '\u25CF'}</span>
         <div>
           <div class="planet-name">{props.planet.name}</div>
-          <div class="planet-position">{formatDms(props.planet.deg)} {SIGN_NAMES[props.divSign - 1]}</div>
+          <div class="planet-position">{formatDms(props.divLon % 30)} {SIGN_NAMES[props.divSign - 1]}</div>
         </div>
         {props.divCombust && <span class="planet-combust">{'\uD83D\uDD25'} Combust</span>}
       </div>
