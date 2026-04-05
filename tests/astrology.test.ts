@@ -5,6 +5,7 @@ import {
   signToHouse,
   getCompoundRelationship,
   sphutaDrishti,
+  getD24Sign,
 } from '../src/astrology';
 
 describe('buildChartData', () => {
@@ -104,6 +105,42 @@ describe('getCompoundRelationship', () => {
 
   it('Friend + Enemy = Neutral', () => {
     expect(getCompoundRelationship('Friend', 'Enemy')).toBe('Neutral');
+  });
+});
+
+describe('getD24Sign', () => {
+  it('odd sign at degree 0 starts from Leo (5)', () => {
+    // Aries=1 (odd), deg=0 → partition 0 → advanceSign(5, 0) = 5 (Leo)
+    expect(getD24Sign(1, 0)).toBe(5);
+  });
+
+  it('even sign at degree 0 starts from Cancer (4)', () => {
+    // Taurus=2 (even), deg=0 → partition 0 → advanceSign(4, 0) = 4 (Cancer)
+    expect(getD24Sign(2, 0)).toBe(4);
+  });
+
+  it('odd sign at degree near end (28.75) gives Cancer (4)', () => {
+    // partition 23 → advanceSign(5, 23) = advanceSign(5, 23%12=11) = 4 (Cancer)
+    expect(getD24Sign(1, 28.75)).toBe(4);
+  });
+
+  it('even sign at degree near end (28.75) gives Gemini (3)', () => {
+    // partition 23 → advanceSign(4, 23) = advanceSign(4, 11) = 3 (Gemini)
+    expect(getD24Sign(2, 28.75)).toBe(3);
+  });
+
+  it('odd sign mid-range cycles correctly', () => {
+    // Aries=1, deg=15 → partition 12 → advanceSign(5, 12) = advanceSign(5, 0) = 5 (Leo)
+    expect(getD24Sign(1, 15)).toBe(5);
+    // Aries=1, deg=1.25 → partition 1 → advanceSign(5, 1) = 6 (Virgo)
+    expect(getD24Sign(1, 1.25)).toBe(6);
+  });
+
+  it('even sign mid-range cycles correctly', () => {
+    // Taurus=2, deg=15 → partition 12 → advanceSign(4, 12) = advanceSign(4, 0) = 4 (Cancer)
+    expect(getD24Sign(2, 15)).toBe(4);
+    // Taurus=2, deg=1.25 → partition 1 → advanceSign(4, 1) = 5 (Leo)
+    expect(getD24Sign(2, 1.25)).toBe(5);
   });
 });
 
