@@ -42,7 +42,6 @@ export default function ChartSummary(props: Props) {
     ['Ascendant', <><span class="highlight">{SIGN_NAMES[props.data.ascSign - 1]}</span> {formatDms(props.data.ascDeg)}</>],
     ['Asc Nakshatra', `${props.data.ascNak} Pada ${props.data.ascPada}`],
     ...ASC_ITEMS.map(([label, key]) => [label, SIGN_NAMES[props.data[key] - 1]] as [string, string]),
-    ['Asc House', '1st (Whole Sign)'],
   ];
 
   return (
