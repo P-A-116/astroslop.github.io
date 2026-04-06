@@ -8,6 +8,10 @@ import {
   getD24Sign,
 } from '../src/astrology';
 
+const expectWithin = (actual: number, expected: number, tolerance: number) => {
+  expect(Math.abs(actual - expected)).toBeLessThanOrEqual(tolerance);
+};
+
 describe('buildChartData', () => {
   it('returns a valid ChartData object with expected keys', () => {
     const data = buildChartData({
@@ -34,10 +38,19 @@ describe('buildChartData', () => {
     expect(data.positions.Moon).toBeDefined();
   });
 
-  it('produces ascendant in valid sign range', () => {
-    const data = buildChartData({ year: 2000, month: 1, day: 1, hour: 12, lat: 0, lon: 0 });
-    expect(data.ascSign).toBeGreaterThanOrEqual(1);
-    expect(data.ascSign).toBeLessThanOrEqual(12);
+  it('matches the expected sidereal Sun longitude and sign on 2002-10-06 17:10 UTC', () => {
+    const data = buildChartData({
+      year: 2002,
+      month: 10,
+      day: 6,
+      hour: 17 + 10 / 60,
+      lat: 40.38,
+      lon: 23.43,
+    });
+
+    // Swiss-backed tropical Sun minus Swiss-backed Lahiri ayanamsa: 169.377409 deg
+    expectWithin(data.positions.Sun.lon, 169.377409, 0.05);
+    expect(data.positions.Sun.sign).toBe(6);
   });
 });
 
