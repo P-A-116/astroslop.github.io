@@ -199,6 +199,12 @@ describe('getDivisionalDeity', () => {
     expect(getDivisionalDeity('D20', 2, 29.9)).toBe('Aparajita');
   });
 
+  it('uses the source sign and source degree for D20 when provided', () => {
+    expect(getDivisionalDeity('D20', 2, 14, 1, 0.2)).toBe('Kaali');
+    expect(getDivisionalDeity('D20', 1, 0.2, 2, 0.2)).toBe('Daya');
+    expect(getDivisionalDeity('D20', 1, 0.2, 1, 7.6)).toBe('Vimala');
+  });
+
   it('reverses the D24 order in even signs', () => {
     expect(getDivisionalDeity('D24', 1, 0)).toBe('Skanda');
     expect(getDivisionalDeity('D24', 2, 0)).toBe('Bhima');
@@ -224,6 +230,12 @@ describe('getDivisionalDeity', () => {
     expect(getDivisionalDeity('D45', 1, 1)).toBe('Siva');
     expect(getDivisionalDeity('D45', 2, 0)).toBe('Siva');
     expect(getDivisionalDeity('D45', 3, 0)).toBe('Vishnu');
+  });
+
+  it('uses the source sign modality for D45 when provided', () => {
+    expect(getDivisionalDeity('D45', 2, 0, 1, 0)).toBe('Brahma');
+    expect(getDivisionalDeity('D45', 1, 0, 2, 0)).toBe('Siva');
+    expect(getDivisionalDeity('D45', 1, 0, 3, 0.8)).toBe('Brahma');
   });
 
   it('returns null for charts without a configured deity table', () => {

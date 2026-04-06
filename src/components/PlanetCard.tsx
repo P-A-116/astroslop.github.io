@@ -23,7 +23,7 @@ export default function PlanetCard(props: Props) {
     const nak = getNakshatraPada(divLon);
     const lordships = getLordships(planet.name, divAscSign);
     const role = getFunctionalRole(planet.name, divAscSign);
-    const deity = getDivisionalDeity(props.selectedChart, divSign, divLon);
+    const deity = getDivisionalDeity(props.selectedChart, divSign, divLon, planet.sign, planet.deg);
     const motion = planet.motion === 'Retrograde'
       ? { cls: 'badge badge-retro', txt: '\u211E Retro' }
       : { cls: 'badge badge-direct', txt: 'Direct' };

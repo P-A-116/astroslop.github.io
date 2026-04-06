@@ -129,7 +129,7 @@ const D20_ODD_DEITIES = [
   'Jaya',
   'Lakshmi',
   'Vijaya',
-  'Vimata',
+  'Vimala',
   'Sati',
   'Tara',
   'Jvala-Mukhi',
@@ -365,6 +365,8 @@ export function getDivisionalDeity(
   varga: DivisionalChart,
   divSign: number,
   divLon: number,
+  sourceSign = divSign,
+  sourceDeg = normalizeDegreeInSign(divLon),
 ): string | null {
   switch (varga) {
     case 'D3':
@@ -388,7 +390,7 @@ export function getDivisionalDeity(
         ? pickFromParts(D16_DEITIES, divLon)
         : pickFromReversedParts(D16_DEITIES, divLon);
     case 'D20':
-      return pickFromParts(isOddSign(divSign) ? D20_ODD_DEITIES : D20_EVEN_DEITIES, divLon);
+      return pickFromParts(isOddSign(sourceSign) ? D20_ODD_DEITIES : D20_EVEN_DEITIES, sourceDeg);
     case 'D24':
       return isOddSign(divSign)
         ? pickFromParts(D24_DEITIES, divLon)
@@ -404,7 +406,7 @@ export function getDivisionalDeity(
     case 'D40':
       return pickFromParts(D40_DEITIES, divLon);
     case 'D45':
-      return D45_DEITY_ORDERS[signModality(divSign)][boundedPartIndex(divLon, 45) % 3];
+      return D45_DEITY_ORDERS[signModality(sourceSign)][boundedPartIndex(sourceDeg, 45) % 3];
     default:
       return null;
   }
