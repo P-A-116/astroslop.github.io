@@ -270,7 +270,7 @@ export const DIVISIONAL_CHARTS: readonly DivisionalMeta[] = [
   { chart: 'D12', label: 'D12 (Dvadasamsa)', divisor: 12, signKey: 'd12Sign', ascKey: 'ascD12', houseKey: 'd12House', calc: getD12Sign },
   { chart: 'D16', label: 'D16 (Shodasamsa)', divisor: 16, signKey: 'd16Sign', ascKey: 'ascD16', houseKey: 'd16House', calc: getD16Sign },
   { chart: 'D20', label: 'D20 (Vimsamsa)', divisor: 20, signKey: 'd20Sign', ascKey: 'ascD20', houseKey: 'd20House', calc: getD20Sign },
-  { chart: 'D24', label: 'D24 (Siddhamsa/Chaturvimsamsa)', divisor: 24, signKey: 'd24Sign', ascKey: 'ascD24', houseKey: 'd24House', calc: getD24Sign },
+  { chart: 'D24', label: 'D24 (Siddhamsa)', divisor: 24, signKey: 'd24Sign', ascKey: 'ascD24', houseKey: 'd24House', calc: getD24Sign },
   { chart: 'D27', label: 'D27 (Bhamsa)', divisor: 27, signKey: 'd27Sign', ascKey: 'ascD27', houseKey: 'd27House', calc: getD27Sign },
   { chart: 'D30', label: 'D30 (Trimsamsa)', divisor: 30, signKey: 'd30Sign', ascKey: 'ascD30', houseKey: 'd30House', calc: getD30Sign },
   { chart: 'D40', label: 'D40 (Khavedamsa)', divisor: 40, signKey: 'd40Sign', ascKey: 'ascD40', houseKey: 'd40House', calc: getD40Sign },
