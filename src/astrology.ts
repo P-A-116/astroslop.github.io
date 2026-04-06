@@ -112,16 +112,118 @@ const ELEMENT_STARTS = [1, 4, 7, 10] as const;
 const D3_OFFSETS = [0, 4, 8] as const;
 const D30_ODD = [[5, 1], [10, 11], [18, 9], [25, 3], [30, 7]] as const;
 const D30_EVEN = [[5, 2], [12, 6], [20, 12], [25, 10], [30, 8]] as const;
+const D3_DEITIES = ['Narada', 'Agasthya', 'Doorvasa'] as const;
+const D4_DEITIES = ['Sanaka', 'Sananda', 'Kumara', 'Sanatan'] as const;
+const D7_DEITIES = ['Kshaara', 'Ksheera', 'Dadhi', 'Gritha', 'Iksu Rasa', 'Madhya', 'Suddha Jala'] as const;
+const D9_DEITY_ORDERS = {
+  movable: ['Deva', 'Manushya', 'Rakshasa'],
+  fixed: ['Manushya', 'Rakshasa', 'Deva'],
+  dual: ['Rakshasa', 'Manushya', 'Deva'],
+} as const;
+const D10_DEITIES = ['Indra', 'Agni', 'Yama', 'Rakshasa', 'Varuna', 'Vayu', 'Kubera', 'Isana', 'Brahma', 'Anantha'] as const;
+const D12_DEITIES = ['Ganesa', 'Aswini Kumara', 'Yama', 'Sarpa'] as const;
+const D16_DEITIES = ['Brahma', 'Vishnu', 'Siva', 'Sun'] as const;
+const D20_ODD_DEITIES = [
+  'Kaali',
+  'Gauri',
+  'Jaya',
+  'Lakshmi',
+  'Vijaya',
+  'Vimata',
+  'Sati',
+  'Tara',
+  'Jvala-Mukhi',
+  'Sveta',
+  'Lalita',
+  'Bagala-mukhi',
+  'Pratyangira',
+  'Sachi',
+  'Raudri',
+  'Bhavani',
+  'Varada',
+  'Jaya',
+  'Tripura',
+  'Sumukhi',
+] as const;
+const D20_EVEN_DEITIES = [
+  'Daya',
+  'Megha',
+  'Chinnasi',
+  'Pisachini',
+  'Dhoomavathi',
+  'Matangi',
+  'Bala',
+  'Bhadra',
+  'Aruna',
+  'Anala',
+  'Pingala',
+  'Chuchchuka',
+  'Ghora',
+  'Vaarahi',
+  'Vaishnavi',
+  'Sita',
+  'Bhuvanesvari',
+  'Bhairavi',
+  'Mangala',
+  'Aparajita',
+] as const;
+const D24_DEITIES = ['Skanda', 'Parsudhara', 'Anala', 'Viswakarma', 'Bhaga', 'Mitra', 'Maya', 'Antaka', 'Vrisha-dhwaja', 'Govinda', 'Madana', 'Bhima'] as const;
+const D27_DEITIES = [
+  'Dastra (Aswini Kumara)',
+  'Yama',
+  'Agni',
+  'Brahma',
+  'Chandra',
+  'Isa',
+  'Aditi',
+  'Jiva',
+  'Ahi',
+  'Pitara',
+  'Bhaga',
+  'Aryama',
+  'Surya',
+  'Tvashta',
+  'Marut',
+  'Sakragni',
+  'Mitra',
+  'Vasava',
+  'Rakshasa',
+  'Varina',
+  'Visvadeva',
+  'Govinda',
+  'Vasu',
+  'Varuna',
+  'Ajapa',
+  'Ahirbudhanya',
+  'Pusha',
+] as const;
+const D30_DEITIES = ['Agni', 'Vayu', 'Indra', 'Kubera', 'Varuna'] as const;
+const D40_DEITIES = ['Vishnu', 'Chandra', 'Marichi', 'Tvashta', 'Dhata', 'Siva', 'Ravi', 'Yama', 'Yaksha', 'Gandharva', 'Kala', 'Varuna'] as const;
+const D45_DEITY_ORDERS = {
+  movable: ['Brahma', 'Siva', 'Vishnu'],
+  fixed: ['Siva', 'Vishnu', 'Brahma'],
+  dual: ['Vishnu', 'Brahma', 'Siva'],
+} as const;
 
 const partIndex = (deg: number, parts: number) => Math.floor(deg / (30 / parts));
 const advanceSign = (sign: number, offset: number) => ((sign - 1 + offset) % 12) + 1;
 const isOddSign = (sign: number) => sign % 2 === 1;
 const startByModality = (sign: number, starts: readonly number[]) => starts[(sign - 1) % 3];
 const startByElement = (sign: number) => ELEMENT_STARTS[(sign - 1) % 4];
+const signModality = (sign: number) => ['movable', 'fixed', 'dual'][(sign - 1) % 3] as 'movable' | 'fixed' | 'dual';
 const segmentSign = (deg: number, segments: readonly (readonly [number, number])[]) => {
   const found = segments.find(([limit]) => deg < limit);
   return found ? found[1] : segments[segments.length - 1][1];
 };
+const normalizeDegreeInSign = (longitude: number) => ((longitude % 30) + 30) % 30;
+const boundedPartIndex = (longitude: number, parts: number) => {
+  const degree = normalizeDegreeInSign(longitude);
+  return Math.min(parts - 1, Math.floor(degree / (30 / parts)));
+};
+const pickFromParts = (deities: readonly string[], longitude: number, parts = deities.length) =>
+  deities[boundedPartIndex(longitude, parts)];
+const pickFromReversedParts = (deities: readonly string[], longitude: number, parts = deities.length) =>
+  deities[deities.length - 1 - boundedPartIndex(longitude, parts)];
 
 function toPlanetMap<T>(planets: PlanetData[], getValue: (planet: PlanetData) => T) {
   const result = {} as Record<PlanetName, T>;
@@ -257,6 +359,55 @@ export function getD60Shashtiamsa(sign: number, deg: number): ShashtiamsaInfo {
     nature: entry.nature,
     description: entry.description,
   };
+}
+
+export function getDivisionalDeity(
+  varga: DivisionalChart,
+  divSign: number,
+  divLon: number,
+): string | null {
+  switch (varga) {
+    case 'D3':
+      return pickFromParts(D3_DEITIES, divLon);
+    case 'D4':
+      return pickFromParts(D4_DEITIES, divLon);
+    case 'D7':
+      return isOddSign(divSign)
+        ? pickFromParts(D7_DEITIES, divLon)
+        : pickFromReversedParts(D7_DEITIES, divLon);
+    case 'D9':
+      return pickFromParts(D9_DEITY_ORDERS[signModality(divSign)], divLon);
+    case 'D10':
+      return isOddSign(divSign)
+        ? pickFromParts(D10_DEITIES, divLon)
+        : pickFromReversedParts(D10_DEITIES, divLon);
+    case 'D12':
+      return pickFromParts(D12_DEITIES, divLon);
+    case 'D16':
+      return isOddSign(divSign)
+        ? pickFromParts(D16_DEITIES, divLon)
+        : pickFromReversedParts(D16_DEITIES, divLon);
+    case 'D20':
+      return pickFromParts(isOddSign(divSign) ? D20_ODD_DEITIES : D20_EVEN_DEITIES, divLon);
+    case 'D24':
+      return isOddSign(divSign)
+        ? pickFromParts(D24_DEITIES, divLon)
+        : pickFromReversedParts(D24_DEITIES, divLon);
+    case 'D27':
+      return isOddSign(divSign)
+        ? pickFromParts(D27_DEITIES, divLon)
+        : pickFromReversedParts(D27_DEITIES, divLon);
+    case 'D30':
+      return isOddSign(divSign)
+        ? pickFromParts(D30_DEITIES, divLon)
+        : pickFromReversedParts(D30_DEITIES, divLon);
+    case 'D40':
+      return pickFromParts(D40_DEITIES, divLon);
+    case 'D45':
+      return D45_DEITY_ORDERS[signModality(divSign)][boundedPartIndex(divLon, 45) % 3];
+    default:
+      return null;
+  }
 }
 
 export const DIVISIONAL_CHARTS: readonly DivisionalMeta[] = [

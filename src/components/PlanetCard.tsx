@@ -1,7 +1,7 @@
 import { For, type JSX } from 'solid-js';
 import type { PlanetData, DivisionalChart } from '../types';
 import { PLANET_ICONS, SIGN_NAMES, SIGN_LORDS, NAKSHATRA_LORDS } from '../constants';
-import { formatDms, signToHouse, getNakshatraPada, getLordships, getFunctionalRole } from '../astrology';
+import { formatDms, signToHouse, getNakshatraPada, getLordships, getFunctionalRole, getDivisionalDeity } from '../astrology';
 
 interface Props {
   planet: PlanetData;
@@ -23,6 +23,7 @@ export default function PlanetCard(props: Props) {
     const nak = getNakshatraPada(divLon);
     const lordships = getLordships(planet.name, divAscSign);
     const role = getFunctionalRole(planet.name, divAscSign);
+    const deity = getDivisionalDeity(props.selectedChart, divSign, divLon);
     const motion = planet.motion === 'Retrograde'
       ? { cls: 'badge badge-retro', txt: '\u211E Retro' }
       : { cls: 'badge badge-direct', txt: 'Direct' };
@@ -31,6 +32,7 @@ export default function PlanetCard(props: Props) {
       ['Degree', formatDms(divLon % 30)],
       ['Sign / House', `${SIGN_NAMES[divSign - 1]} / House ${signToHouse(divSign, divAscSign)}`],
       ['Sign Lord', SIGN_LORDS[divSign - 1]],
+      ['Divisional Deity', deity || DASH],
       ['Nakshatra', `${nak.nakshatra} Pada ${nak.pada}`],
       ['Nak. Lord', NAKSHATRA_LORDS[nak.nakshatra] || DASH],
       ['Lords Houses', lordships.length ? lordships.map((house) => `H${house}`).join(', ') : DASH],

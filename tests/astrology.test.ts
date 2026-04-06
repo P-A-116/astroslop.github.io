@@ -6,6 +6,7 @@ import {
   getCompoundRelationship,
   sphutaDrishti,
   getD24Sign,
+  getDivisionalDeity,
 } from '../src/astrology';
 
 const expectWithin = (actual: number, expected: number, tolerance: number) => {
@@ -154,6 +155,81 @@ describe('getD24Sign', () => {
     expect(getD24Sign(2, 15)).toBe(4);
     // Taurus=2, deg=1.25 → partition 1 → advanceSign(4, 1) = 5 (Leo)
     expect(getD24Sign(2, 1.25)).toBe(5);
+  });
+});
+
+describe('getDivisionalDeity', () => {
+  it('returns D3 deities by decanate', () => {
+    expect(getDivisionalDeity('D3', 2, 0)).toBe('Narada');
+    expect(getDivisionalDeity('D3', 2, 10)).toBe('Agasthya');
+    expect(getDivisionalDeity('D3', 2, 23.5)).toBe('Doorvasa');
+  });
+
+  it('reverses the D7 order in even signs', () => {
+    expect(getDivisionalDeity('D7', 1, 0)).toBe('Kshaara');
+    expect(getDivisionalDeity('D7', 2, 0)).toBe('Suddha Jala');
+  });
+
+  it('uses sign modality for D9', () => {
+    expect(getDivisionalDeity('D9', 1, 0)).toBe('Deva');
+    expect(getDivisionalDeity('D9', 2, 0)).toBe('Manushya');
+    expect(getDivisionalDeity('D9', 3, 0)).toBe('Rakshasa');
+  });
+
+  it('reverses the D10 order in even signs', () => {
+    expect(getDivisionalDeity('D10', 1, 0)).toBe('Indra');
+    expect(getDivisionalDeity('D10', 2, 0)).toBe('Anantha');
+  });
+
+  it('uses the requested D12 quarter mapping', () => {
+    expect(getDivisionalDeity('D12', 5, 0)).toBe('Ganesa');
+    expect(getDivisionalDeity('D12', 5, 8)).toBe('Aswini Kumara');
+    expect(getDivisionalDeity('D12', 5, 16)).toBe('Yama');
+    expect(getDivisionalDeity('D12', 5, 24)).toBe('Sarpa');
+  });
+
+  it('reverses the D16 order in even signs', () => {
+    expect(getDivisionalDeity('D16', 1, 0)).toBe('Brahma');
+    expect(getDivisionalDeity('D16', 2, 0)).toBe('Sun');
+  });
+
+  it('uses distinct odd and even deity lists for D20', () => {
+    expect(getDivisionalDeity('D20', 1, 0)).toBe('Kaali');
+    expect(getDivisionalDeity('D20', 2, 0)).toBe('Daya');
+    expect(getDivisionalDeity('D20', 2, 29.9)).toBe('Aparajita');
+  });
+
+  it('reverses the D24 order in even signs', () => {
+    expect(getDivisionalDeity('D24', 1, 0)).toBe('Skanda');
+    expect(getDivisionalDeity('D24', 2, 0)).toBe('Bhima');
+  });
+
+  it('reverses the D27 order in even signs', () => {
+    expect(getDivisionalDeity('D27', 1, 0)).toBe('Dastra (Aswini Kumara)');
+    expect(getDivisionalDeity('D27', 2, 0)).toBe('Pusha');
+  });
+
+  it('reverses the D30 order in even signs', () => {
+    expect(getDivisionalDeity('D30', 1, 0)).toBe('Agni');
+    expect(getDivisionalDeity('D30', 2, 0)).toBe('Varuna');
+  });
+
+  it('uses the D40 twelve-deity sequence', () => {
+    expect(getDivisionalDeity('D40', 7, 0)).toBe('Vishnu');
+    expect(getDivisionalDeity('D40', 7, 27.5)).toBe('Varuna');
+  });
+
+  it('cycles the D45 deity order across 45 subdivisions', () => {
+    expect(getDivisionalDeity('D45', 1, 0)).toBe('Brahma');
+    expect(getDivisionalDeity('D45', 1, 1)).toBe('Siva');
+    expect(getDivisionalDeity('D45', 2, 0)).toBe('Siva');
+    expect(getDivisionalDeity('D45', 3, 0)).toBe('Vishnu');
+  });
+
+  it('returns null for charts without a configured deity table', () => {
+    expect(getDivisionalDeity('D1', 1, 0)).toBeNull();
+    expect(getDivisionalDeity('D2', 1, 0)).toBeNull();
+    expect(getDivisionalDeity('D60', 1, 0)).toBeNull();
   });
 });
 
