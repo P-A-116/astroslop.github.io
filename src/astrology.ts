@@ -245,7 +245,7 @@ export function getD45Sign(sign: number, deg: number): number {
 }
 
 export function getD60Sign(sign: number, deg: number): number {
-  return advanceSign(sign, (Math.floor(deg * 2) % 12) + 1);
+  return advanceSign(sign, (Math.floor(deg * 2) % 12));
 }
 
 export function getD60Shashtiamsa(sign: number, deg: number): ShashtiamsaInfo {
