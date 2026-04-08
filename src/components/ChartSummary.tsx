@@ -40,7 +40,6 @@ export default function ChartSummary(props: Props) {
       : `${latLabel()}, ${lonLabel()}`],
     ['Ayanamsa', `${props.data.ayanamsa.toFixed(4)}\u00B0 Lahiri`],
     ['Ascendant', <><span class="highlight">{SIGN_NAMES[props.data.ascSign - 1]}</span> {formatDms(props.data.ascDeg)}</>],
-    ['Arudha Lagna (A1)', SIGN_NAMES[props.data.arudhaLagna - 1]],
     ['Asc Nakshatra', `${props.data.ascNak} Pada ${props.data.ascPada}`],
     ...ASC_ITEMS.map(([label, key]) => [label, SIGN_NAMES[props.data[key] - 1]] as [string, string]),
   ];

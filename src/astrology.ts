@@ -494,6 +494,28 @@ export function computeArudhaPada(houseIndex: number, houseLordSignIndex: number
   return pada;
 }
 
+/**
+ * Computes Graha Arudhas directly from a planet's current sign to each of its owned signs.
+ * This follows raw graha-arudha counting and intentionally does not apply bhava-pada exception rules.
+ */
+export function computeGrahaArudhas(
+  planetSign: number,
+  planetName: string,
+  signOwnerships: Record<string, number[] | undefined> = RULERSHIPS as Record<string, number[] | undefined>,
+): number[] | null {
+  if (!Number.isInteger(planetSign) || planetSign < 1 || planetSign > 12) return null;
+
+  const ownedSigns = (signOwnerships[planetName] || []).filter(
+    (sign): sign is number => Number.isInteger(sign) && sign >= 1 && sign <= 12,
+  );
+  if (ownedSigns.length === 0) return null;
+
+  return ownedSigns.map((ownedSign) => {
+    const distance = ((ownedSign - planetSign + 12) % 12) + 1;
+    return ((ownedSign + distance - 2) % 12) + 1;
+  });
+}
+
 export function getArudhaPada(
   data: ChartData,
   house: number,
@@ -534,6 +556,19 @@ export function getArudhaLagna(
   chart: DivisionalChart = 'D1',
 ): number {
   return getArudhaPadas(data, chart)[0];
+}
+
+export function getGrahaArudhas(
+  data: ChartData,
+  chart: DivisionalChart = 'D1',
+  signOwnerships: Record<string, number[] | undefined> = RULERSHIPS as Record<string, number[] | undefined>,
+): Record<PlanetName, number[] | null> {
+  const divSigns = getDivisionalSigns(data.planetData, chart);
+
+  return PLANET_LIST.reduce((result, planet) => {
+    result[planet] = computeGrahaArudhas(divSigns[planet], planet, signOwnerships);
+    return result;
+  }, {} as Record<PlanetName, number[] | null>);
 }
 
 export function getTemporaryRelationship(fromSign: number, toSign: number): RelationshipType {

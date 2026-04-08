@@ -2,10 +2,12 @@ import { describe, it, expect } from 'vitest';
 import {
   buildChartData,
   computeArudhaPada,
+  computeGrahaArudhas,
   getArudhasForAllCharts,
   getArudhaLagna,
   getArudhaPada,
   getArudhaPadas,
+  getGrahaArudhas,
   getNakshatraPada,
   signToHouse,
   getCompoundRelationship,
@@ -270,6 +272,68 @@ describe('getArudhaPada', () => {
 
     expect(getArudhaLagna(direct)).toBe(4);
     expect(getArudhaLagna(retrograde)).toBe(4);
+  });
+});
+
+describe('computeGrahaArudhas', () => {
+  it('computes both graha arudhas for a dual-lord planet', () => {
+    expect(computeGrahaArudhas(4, 'Mars', { Mars: [1, 8] })).toEqual([10, 12]);
+  });
+
+  it('computes a single graha arudha for a single-lord planet', () => {
+    expect(computeGrahaArudhas(7, 'Sun', { Sun: [5] })).toEqual([3]);
+    expect(computeGrahaArudhas(10, 'Moon', { Moon: [4] })).toEqual([10]);
+  });
+
+  it('wraps correctly across Pisces to Aries', () => {
+    expect(computeGrahaArudhas(12, 'Mars', { Mars: [1, 8] })).toEqual([2, 4]);
+  });
+
+  it('returns configured Rahu and Ketu graha arudhas when ownership is provided', () => {
+    expect(computeGrahaArudhas(3, 'Rahu', { Rahu: [11] })).toEqual([7]);
+    expect(computeGrahaArudhas(3, 'Ketu', { Ketu: [8] })).toEqual([1]);
+  });
+
+  it('returns null when ownership is missing or the sign is invalid', () => {
+    expect(computeGrahaArudhas(5, 'Pluto', {})).toBeNull();
+    expect(computeGrahaArudhas(13, 'Mars', { Mars: [1, 8] })).toBeNull();
+  });
+});
+
+describe('getGrahaArudhas', () => {
+  it('computes graha arudhas for all nine planets in D1', () => {
+    const data = makeChartData(1, {
+      Sun: { sign: 7 },
+      Moon: { sign: 10 },
+      Mars: { sign: 4 },
+      Mercury: { sign: 6 },
+      Jupiter: { sign: 9 },
+      Venus: { sign: 3 },
+      Saturn: { sign: 11 },
+      Rahu: { sign: 3 },
+      Ketu: { sign: 3 },
+    });
+
+    const result = getGrahaArudhas(data);
+    expect(result.Sun).toEqual([3]);
+    expect(result.Moon).toEqual([10]);
+    expect(result.Mars).toEqual([10, 12]);
+    expect(result.Rahu).toEqual([7]);
+    expect(result.Ketu).toEqual([1]);
+  });
+
+  it('uses the selected divisional chart signs for bulk graha arudhas', () => {
+    const data = makeChartData(1, {
+      Mars: { sign: 4 },
+    });
+    const mars = data.planetData.find(({ name }) => name === 'Mars');
+
+    if (!mars) throw new Error('Mars test fixture missing.');
+
+    mars.navamsaSign = 12;
+
+    expect(getGrahaArudhas(data, 'D1').Mars).toEqual([10, 12]);
+    expect(getGrahaArudhas(data, 'D9').Mars).toEqual([2, 4]);
   });
 });
 
