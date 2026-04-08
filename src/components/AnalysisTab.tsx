@@ -1,7 +1,7 @@
 import { For, Show } from 'solid-js';
 import type { ChartData, DivisionalChart } from '../types';
-import { SIGN_NAMES } from '../constants';
-import { getArudhaPadas } from '../astrology';
+import { PLANET_ICONS, SIGN_NAMES } from '../constants';
+import { getArudhaPadas, getGrahaArudhas } from '../astrology';
 import { findParivartanaYogas } from '../analysis';
 
 const YOGA_INTERPRETATIONS = {
@@ -21,6 +21,7 @@ interface Props {
 export default function AnalysisTab(props: Props) {
   const yogas = () => findParivartanaYogas(props.data, props.selectedChart);
   const arudhas = () => getArudhaPadas(props.data, props.selectedChart);
+  const grahaArudhas = () => getGrahaArudhas(props.data, props.selectedChart);
 
   return (
     <div class="analysis-tab">
@@ -32,6 +33,24 @@ export default function AnalysisTab(props: Props) {
               <div class="arudha-card">
                 <div class="arudha-label">{`A${index() + 1}`}</div>
                 <div class="arudha-value">{SIGN_NAMES[sign - 1]}</div>
+              </div>
+            )}
+          </For>
+        </div>
+      </div>
+
+      <div class="analysis-section">
+        <h3 class="analysis-subtitle">Graha Arudhas</h3>
+        <div class="arudha-grid">
+          <For each={Object.entries(grahaArudhas())}>
+            {([planet, signs]) => (
+              <div class="arudha-card">
+                <div class="arudha-label">{`${PLANET_ICONS[planet as keyof typeof PLANET_ICONS] || ''} ${planet}`}</div>
+                <div class="arudha-value">
+                  {signs?.length
+                    ? signs.map((sign) => SIGN_NAMES[sign - 1]).join(' / ')
+                    : '\u2014'}
+                </div>
               </div>
             )}
           </For>
