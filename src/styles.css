@@ -682,6 +682,49 @@ body {
 .analysis-tab {
   display: flex;
   flex-direction: column;
+  gap: 1rem;
+}
+
+.analysis-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.analysis-subtitle {
+  margin: 0;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-bright);
+}
+
+.arudha-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.arudha-card {
+  border-radius: 8px;
+  padding: 0.8rem 0.9rem;
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+}
+
+.arudha-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.35rem;
+}
+
+.arudha-value {
+  font-size: 0.95rem;
+  color: var(--text-bright);
+  font-weight: 600;
 }
 
 .analysis-empty {
@@ -938,6 +981,10 @@ body {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .arudha-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .form-grid {
     grid-template-columns: 1fr 1fr;
   }
@@ -983,6 +1030,7 @@ body {
   }
 
   .summary-grid,
+  .arudha-grid,
   .chart-tabs {
     grid-template-columns: 1fr;
   }

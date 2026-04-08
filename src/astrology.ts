@@ -506,11 +506,34 @@ export function getArudhaPada(
   return computeArudhaPada(houseSign, divSigns[houseLord]);
 }
 
+export function getArudhaPadas(
+  data: ChartData,
+  chart: DivisionalChart = 'D1',
+): number[] {
+  const ascSign = getAscSignForChart(data, chart);
+  const divSigns = getDivisionalSigns(data.planetData, chart);
+
+  return Array.from({ length: 12 }, (_, index) => {
+    const house = index + 1;
+    const houseSign = houseToSign(house, ascSign);
+    const houseLord = SIGN_LORDS[houseSign - 1];
+    return computeArudhaPada(houseSign, divSigns[houseLord]);
+  });
+}
+
+export function getArudhasForAllCharts(
+  data: ChartData,
+): Record<DivisionalChart, number[]> {
+  return Object.fromEntries(
+    DIVISIONAL_CHARTS.map(({ chart }) => [chart, getArudhaPadas(data, chart)]),
+  ) as Record<DivisionalChart, number[]>;
+}
+
 export function getArudhaLagna(
   data: ChartData,
   chart: DivisionalChart = 'D1',
 ): number {
-  return getArudhaPada(data, 1, chart);
+  return getArudhaPadas(data, chart)[0];
 }
 
 export function getTemporaryRelationship(fromSign: number, toSign: number): RelationshipType {

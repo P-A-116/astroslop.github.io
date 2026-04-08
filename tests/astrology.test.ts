@@ -2,8 +2,10 @@ import { describe, it, expect } from 'vitest';
 import {
   buildChartData,
   computeArudhaPada,
+  getArudhasForAllCharts,
   getArudhaLagna,
   getArudhaPada,
+  getArudhaPadas,
   getNakshatraPada,
   signToHouse,
   getCompoundRelationship,
@@ -214,6 +216,48 @@ describe('getArudhaPada', () => {
     });
 
     expect(getArudhaPada(data, 2)).toBe(4);
+  });
+
+  it('returns all 12 Arudha padas for the selected chart', () => {
+    const data = makeChartData(1, {
+      Mars: { sign: 3 },
+      Venus: { sign: 3 },
+      Mercury: { sign: 5 },
+      Moon: { sign: 4 },
+      Sun: { sign: 5 },
+      Jupiter: { sign: 9 },
+      Saturn: { sign: 10 },
+    });
+
+    expect(getArudhaPadas(data)).toHaveLength(12);
+    expect(getArudhaPadas(data)[0]).toBe(5);
+    expect(getArudhaPadas(data)[1]).toBe(4);
+  });
+
+  it('computes Arudha padas independently for each divisional chart', () => {
+    const data = makeChartData(1, {
+      Mars: { sign: 3 },
+    });
+    const mars = data.planetData.find(({ name }) => name === 'Mars');
+
+    if (!mars) throw new Error('Mars test fixture missing.');
+
+    data.ascNavamsa = 1;
+    mars.navamsaSign = 2;
+
+    expect(getArudhaPadas(data, 'D1')[0]).toBe(5);
+    expect(getArudhaPadas(data, 'D9')[0]).toBe(3);
+  });
+
+  it('returns Arudha sets for all 16 supported charts', () => {
+    const data = makeChartData(1, {
+      Mars: { sign: 3 },
+    });
+
+    const allCharts = getArudhasForAllCharts(data);
+    expect(Object.keys(allCharts)).toHaveLength(16);
+    expect(allCharts.D1).toHaveLength(12);
+    expect(allCharts.D60).toHaveLength(12);
   });
 
   it('ignores retrograde state because the calculation depends only on sign placement', () => {
