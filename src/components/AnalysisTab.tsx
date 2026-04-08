@@ -1,5 +1,5 @@
 import { For, Show } from 'solid-js';
-import type { ChartData, DivisionalChart } from '../types';
+import type { ChartData, DivisionalChart, GulikaDebugResult, UpagrahaFormValues } from '../types';
 import { PLANET_ICONS, SIGN_NAMES } from '../constants';
 import { getArudhaPadas, getGrahaArudhas } from '../astrology';
 import { findParivartanaYogas } from '../analysis';
@@ -16,6 +16,13 @@ const YOGA_INTERPRETATIONS = {
 interface Props {
   data: ChartData;
   selectedChart: DivisionalChart;
+  gulikaDebug: GulikaDebugResult | null;
+  upagrahaValues: UpagrahaFormValues | null;
+}
+
+function formatUtcDate(date: Date) {
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')} `
+    + `${String(date.getUTCHours()).padStart(2, '0')}:${String(date.getUTCMinutes()).padStart(2, '0')}:${String(date.getUTCSeconds()).padStart(2, '0')} UTC`;
 }
 
 export default function AnalysisTab(props: Props) {
@@ -58,28 +65,103 @@ export default function AnalysisTab(props: Props) {
       </div>
 
       <div class="analysis-section">
-        <h3 class="analysis-subtitle">Parivartana Yogas</h3>
-      <Show
-        when={yogas().length > 0}
-        fallback={<p class="analysis-empty">No Parivartana Yogas found in this chart.</p>}
-      >
-        <div class="yoga-list">
-          <For each={yogas()}>
-            {(yoga) => (
-              <div class="yoga-card">
-                <div class="yoga-header">
-                  <span class={`badge yoga-badge yoga-badge-${yoga.type.toLowerCase()}`}>
-                    {yoga.type} Yoga
-                  </span>
-                  <span class="yoga-houses">{`Houses ${yoga.houseA} \u2194 ${yoga.houseB}`}</span>
-                  <span class="yoga-planets">{`${yoga.planetA} \u2194 ${yoga.planetB}`}</span>
+        <h3 class="analysis-subtitle">Gulika / Mandi Diagnostics</h3>
+        <Show
+          when={props.gulikaDebug}
+          fallback={(
+            <p class="analysis-empty">
+              Enter sunrise and sunset in the form to enable Gulika / Mandi diagnostics.
+              The result depends on accurate local sunrise/sunset input for the event date.
+            </p>
+          )}
+        >
+          {(debug) => (
+            <>
+              <div class="diagnostic-grid">
+                <div class="summary-item">
+                  <div class="summary-label">Period</div>
+                  <div class="summary-value">{debug().period}</div>
                 </div>
-                <p class="yoga-interpretation">{YOGA_INTERPRETATIONS[yoga.type]}</p>
+                <div class="summary-item">
+                  <div class="summary-label">Night Start Lord</div>
+                  <div class="summary-value">{props.upagrahaValues?.gulikaConfig.startLordMode ?? 'weekday'}</div>
+                </div>
+                <div class="summary-item">
+                  <div class="summary-label">Identity Mode</div>
+                  <div class="summary-value">{props.upagrahaValues?.gulikaConfig.identityMode ?? 'start-vs-end'}</div>
+                </div>
+                <div class="summary-item">
+                  <div class="summary-label">Gulika Sign</div>
+                  <div class="summary-value">{SIGN_NAMES[debug().gulikaSign - 1]}</div>
+                </div>
+                <div class="summary-item">
+                  <div class="summary-label">Mandi Sign</div>
+                  <div class="summary-value">{SIGN_NAMES[debug().mandiSign - 1]}</div>
+                </div>
+                <div class="summary-item">
+                  <div class="summary-label">Start Lord</div>
+                  <div class="summary-value">{debug().startLord}</div>
+                </div>
               </div>
-            )}
-          </For>
-        </div>
-      </Show>
+
+              <div class="upagraha-trace">
+                <p class="upagraha-trace-line">{`Interval: ${formatUtcDate(debug().dayStart)} → ${formatUtcDate(debug().dayEnd)}`}</p>
+                <p class="upagraha-trace-line">{`Gulika: ${formatUtcDate(debug().gulikaTime)} · ${debug().gulikaLongitude.toFixed(4)}° · ${SIGN_NAMES[debug().gulikaSign - 1]}`}</p>
+                <p class="upagraha-trace-line">{`Mandi: ${formatUtcDate(debug().mandiTime)} · ${debug().mandiLongitude.toFixed(4)}° · ${SIGN_NAMES[debug().mandiSign - 1]}`}</p>
+              </div>
+
+              <div class="table-scroll">
+                <table class="astro-table">
+                  <thead>
+                    <tr>
+                      <th>Segment</th>
+                      <th>Lord</th>
+                      <th>Start</th>
+                      <th>End</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <For each={debug().segments}>
+                      {(segment) => (
+                        <tr class={segment.lord === 'Saturn' ? 'upagraha-highlight-row' : ''}>
+                          <td>{segment.idx + 1}</td>
+                          <td>{segment.lord}</td>
+                          <td>{formatUtcDate(segment.start)}</td>
+                          <td>{formatUtcDate(segment.end)}</td>
+                        </tr>
+                      )}
+                    </For>
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+        </Show>
+      </div>
+
+      <div class="analysis-section">
+        <h3 class="analysis-subtitle">Parivartana Yogas</h3>
+        <Show
+          when={yogas().length > 0}
+          fallback={<p class="analysis-empty">No Parivartana Yogas found in this chart.</p>}
+        >
+          <div class="yoga-list">
+            <For each={yogas()}>
+              {(yoga) => (
+                <div class="yoga-card">
+                  <div class="yoga-header">
+                    <span class={`badge yoga-badge yoga-badge-${yoga.type.toLowerCase()}`}>
+                      {yoga.type} Yoga
+                    </span>
+                    <span class="yoga-houses">{`Houses ${yoga.houseA} \u2194 ${yoga.houseB}`}</span>
+                    <span class="yoga-planets">{`${yoga.planetA} \u2194 ${yoga.planetB}`}</span>
+                  </div>
+                  <p class="yoga-interpretation">{YOGA_INTERPRETATIONS[yoga.type]}</p>
+                </div>
+              )}
+            </For>
+          </div>
+        </Show>
       </div>
     </div>
   );

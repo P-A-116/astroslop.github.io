@@ -1,5 +1,5 @@
 import { createMemo, createSignal, ErrorBoundary, For, Show } from 'solid-js';
-import type { ChartData, DivisionalChart } from '../types';
+import type { ChartData, DivisionalChart, UpagrahaFormValues } from '../types';
 import ChartForm from './ChartForm';
 import ChartSummary from './ChartSummary';
 import RelationshipTable from './RelationshipTable';
@@ -16,6 +16,7 @@ import {
   getAscDivisionalLongitude,
   getCharaKarakasFromLongitudes,
 } from '../astrology';
+import { debugGulikaCalculation } from '../upagraha';
 
 export default function App() {
   const [chartData, setChartData] = createSignal<ChartData | null>(null);
@@ -24,6 +25,7 @@ export default function App() {
   const [lonVal, setLonVal] = createSignal(0);
   const [cityName, setCityName] = createSignal('');
   const [selectedChart, setSelectedChart] = createSignal<DivisionalChart>('D1');
+  const [upagrahaValues, setUpagrahaValues] = createSignal<UpagrahaFormValues | null>(null);
 
   const divisionalData = createMemo(() => {
     const data = chartData();
@@ -44,18 +46,33 @@ export default function App() {
     };
   });
 
+  const gulikaDebug = createMemo(() => {
+    const values = upagrahaValues();
+    if (!values?.sunrise || !values.sunset) return null;
+
+    return debugGulikaCalculation({
+      date: values.eventDate,
+      location: { lat: latVal(), lon: lonVal() },
+      sunrise: values.sunrise,
+      sunset: values.sunset,
+      gulikaConfig: values.gulikaConfig,
+    });
+  });
+
   function handleChartGenerated(
     data: ChartData,
     utc: string,
     lat: number,
     lon: number,
     city: string,
+    upagraha: UpagrahaFormValues,
   ) {
     setChartData(data);
     setUtcStr(utc);
     setLatVal(lat);
     setLonVal(lon);
     setCityName(city);
+    setUpagrahaValues(upagraha);
     setSelectedChart('D1');
   }
 
@@ -148,7 +165,12 @@ export default function App() {
 
                 <section class="card fade-in" id="analysis-section" style="animation-delay: 0.24s">
                   <h2 class="section-title">Analysis</h2>
-                  <AnalysisTab data={view().data} selectedChart={view().chart} />
+                  <AnalysisTab
+                    data={view().data}
+                    selectedChart={view().chart}
+                    gulikaDebug={gulikaDebug()}
+                    upagrahaValues={upagrahaValues()}
+                  />
                 </section>
               </div>
             </div>

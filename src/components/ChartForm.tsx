@@ -1,9 +1,17 @@
 import { createEffect, createMemo, createSignal, Show, For, onCleanup, type JSX } from 'solid-js';
-import type { ChartData } from '../types';
+import type { ChartData, GulikaConfig, UpagrahaFormValues } from '../types';
 import { buildChartData } from '../astrology';
+import { defaultGulikaConfig } from '../upagraha';
 
 interface Props {
-  onGenerate: (data: ChartData, utcStr: string, lat: number, lon: number, cityName: string) => void;
+  onGenerate: (
+    data: ChartData,
+    utcStr: string,
+    lat: number,
+    lon: number,
+    cityName: string,
+    upagraha: UpagrahaFormValues,
+  ) => void;
 }
 
 interface NominatimResult {
@@ -56,18 +64,7 @@ const TZ_OPTIONS = '-12 -11 -10 -9.5 -9 -8 -7 -6 -5 -4.5 -4 -3.5 -3 -2 -1 0 1 2 
 const TZ_OPTION_VALUES = new Set(TZ_OPTIONS.map((opt) => opt.value));
 
 function toUtcDetails(dateVal: string, timeVal: string, tzVal: number) {
-  const [yearStr, monStr, dayStr] = dateVal.split('-');
-  const [hrStr, minStr, secStr = '0'] = timeVal.split(':');
-  const utcDate = new Date(
-    Date.UTC(
-      parseInt(yearStr),
-      parseInt(monStr) - 1,
-      parseInt(dayStr),
-      parseInt(hrStr),
-      parseInt(minStr),
-      parseInt(secStr),
-    ) - tzVal * 3600000,
-  );
+  const utcDate = toAbsoluteDate(dateVal, timeVal, tzVal);
 
   return {
     year: utcDate.getUTCFullYear(),
@@ -80,6 +77,21 @@ function toUtcDetails(dateVal: string, timeVal: string, tzVal: number) {
       + `${String(utcDate.getUTCMinutes()).padStart(2, '0')}:`
       + `${String(utcDate.getUTCSeconds()).padStart(2, '0')} UTC`,
   };
+}
+
+function toAbsoluteDate(dateVal: string, timeVal: string, tzVal: number) {
+  const [yearStr, monStr, dayStr] = dateVal.split('-');
+  const [hrStr, minStr, secStr = '0'] = timeVal.split(':');
+  return new Date(
+    Date.UTC(
+      parseInt(yearStr),
+      parseInt(monStr) - 1,
+      parseInt(dayStr),
+      parseInt(hrStr),
+      parseInt(minStr),
+      parseInt(secStr),
+    ) - tzVal * 3600000,
+  );
 }
 
 function getZoneOffsetMinutes(timestamp: number, timeZone: string) {
@@ -134,6 +146,9 @@ export default function ChartForm(props: Props) {
   const [timezoneLookupError, setTimezoneLookupError] = createSignal('');
   const [resolvedTimezone, setResolvedTimezone] = createSignal<ResolvedTimezone | null>(null);
   const [tzTouched, setTzTouched] = createSignal(false);
+  const [sunriseTime, setSunriseTime] = createSignal('');
+  const [sunsetTime, setSunsetTime] = createSignal('');
+  const [gulikaConfig, setGulikaConfig] = createSignal<GulikaConfig>(defaultGulikaConfig);
 
   let cityDebounceTimer: ReturnType<typeof setTimeout> | undefined;
   let timezoneDebounceTimer: ReturnType<typeof setTimeout> | undefined;
@@ -354,7 +369,19 @@ export default function ChartForm(props: Props) {
     try {
       const utc = toUtcDetails(dateVal, timeVal, tzVal);
       const data = buildChartData({ ...utc, lat: latVal, lon: lonVal });
-      props.onGenerate(data, utc.utcStr, latVal, lonVal, manualMode() ? '' : selectedCity());
+      props.onGenerate(
+        data,
+        utc.utcStr,
+        latVal,
+        lonVal,
+        manualMode() ? '' : selectedCity(),
+        {
+          eventDate: toAbsoluteDate(dateVal, timeVal, tzVal),
+          sunrise: sunriseTime() ? toAbsoluteDate(dateVal, sunriseTime(), tzVal) : null,
+          sunset: sunsetTime() ? toAbsoluteDate(dateVal, sunsetTime(), tzVal) : null,
+          gulikaConfig: gulikaConfig(),
+        },
+      );
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       setError(`Calculation error: ${msg}`);
@@ -527,6 +554,83 @@ export default function ChartForm(props: Props) {
               />
             </Field>
           </Show>
+        </div>
+
+        <div class="settings-panel">
+          <h3 class="settings-title">Upagraha Diagnostics</h3>
+          <p class="settings-note">
+            Optional. Enter local sunrise and sunset for the event date to enable Gulika/Mandi tracing.
+            These values should come from a reliable sunrise/sunset source for the birth location.
+          </p>
+
+          <div class="form-grid">
+            <Field id="sunrise-time" label="Sunrise (local)">
+              <input
+                type="time"
+                id="sunrise-time"
+                name="sunrise-time"
+                step="60"
+                value={sunriseTime()}
+                onInput={(e) => setSunriseTime(e.currentTarget.value)}
+              />
+            </Field>
+
+            <Field id="sunset-time" label="Sunset (local)">
+              <input
+                type="time"
+                id="sunset-time"
+                name="sunset-time"
+                step="60"
+                value={sunsetTime()}
+                onInput={(e) => setSunsetTime(e.currentTarget.value)}
+              />
+            </Field>
+
+            <Field id="gulika-time-division" label="Time Division">
+              <select
+                id="gulika-time-division"
+                name="gulika-time-division"
+                value={gulikaConfig().timeDivision}
+                onChange={(e) => setGulikaConfig({
+                  ...gulikaConfig(),
+                  timeDivision: e.currentTarget.value as GulikaConfig['timeDivision'],
+                })}
+              >
+                <option value="day-night-8-parts">Day / Night in 8 Parts</option>
+              </select>
+            </Field>
+
+            <Field id="gulika-start-lord-mode" label="Night Start Lord">
+              <select
+                id="gulika-start-lord-mode"
+                name="gulika-start-lord-mode"
+                value={gulikaConfig().startLordMode}
+                onChange={(e) => setGulikaConfig({
+                  ...gulikaConfig(),
+                  startLordMode: e.currentTarget.value as GulikaConfig['startLordMode'],
+                })}
+              >
+                <option value="weekday">Weekday Lord</option>
+                <option value="fifth-from-weekday">5th From Weekday</option>
+              </select>
+            </Field>
+
+            <Field id="gulika-identity-mode" label="Gulika / Mandi Identity">
+              <select
+                id="gulika-identity-mode"
+                name="gulika-identity-mode"
+                value={gulikaConfig().identityMode}
+                onChange={(e) => setGulikaConfig({
+                  ...gulikaConfig(),
+                  identityMode: e.currentTarget.value as GulikaConfig['identityMode'],
+                })}
+              >
+                <option value="start-vs-end">Gulika Start / Mandi End</option>
+                <option value="same">Same Point</option>
+                <option value="separate">Separate (Reserved)</option>
+              </select>
+            </Field>
+          </div>
         </div>
 
         <Show when={isResolvingTimezone()}>
