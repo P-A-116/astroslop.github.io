@@ -89,6 +89,7 @@ export interface ChartData {
   ascSid: number;
   ascSign: number;
   ascDeg: number;
+  arudhaLagna: number;
   ascNavamsa: number;
   ascD7: number;
   ascD2: number;

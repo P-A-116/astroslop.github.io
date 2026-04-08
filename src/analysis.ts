@@ -1,9 +1,8 @@
 import type { ChartData, PlanetName, ParivartanaYoga, DivisionalChart } from './types';
 import { SIGN_LORDS } from './constants';
-import { getDivisionalSigns, getAscSignForChart, signToHouse } from './astrology';
+import { getDivisionalSigns, getAscSignForChart, houseToSign, signToHouse } from './astrology';
 
 const DUSTHANAS = new Set([6, 8, 12]);
-const houseSign = (ascSign: number, houseNum: number) => ((ascSign + houseNum - 2) % 12) + 1;
 
 function classifyYoga(houseA: number, houseB: number): 'Dainya' | 'Khala' | 'Maha' {
   if (DUSTHANAS.has(houseA) || DUSTHANAS.has(houseB)) return 'Dainya';
@@ -24,7 +23,7 @@ export function findParivartanaYogas(
     planetHouse[planet.name] = signToHouse(divSigns[planet.name], ascSign);
   }
   for (let house = 1; house <= 12; house++) {
-    houseLord[house - 1] = SIGN_LORDS[houseSign(ascSign, house) - 1];
+    houseLord[house - 1] = SIGN_LORDS[houseToSign(house, ascSign) - 1];
   }
 
   const yogas: ParivartanaYoga[] = [];

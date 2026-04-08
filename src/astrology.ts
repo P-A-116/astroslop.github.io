@@ -220,6 +220,11 @@ const boundedPartIndex = (longitude: number, parts: number) => {
   const degree = normalizeDegreeInSign(longitude);
   return Math.min(parts - 1, Math.floor(degree / (30 / parts)));
 };
+const assertIndexInRange = (value: number, label: string) => {
+  if (!Number.isInteger(value) || value < 1 || value > 12) {
+    throw new RangeError(`${label} must be an integer from 1 to 12.`);
+  }
+};
 const pickFromParts = (deities: readonly string[], longitude: number, parts = deities.length) =>
   deities[boundedPartIndex(longitude, parts)];
 const pickFromReversedParts = (deities: readonly string[], longitude: number, parts = deities.length) =>
@@ -462,8 +467,50 @@ export function getFunctionalRole(planet: PlanetName, ascSign: number): Function
   return 'Unknown';
 }
 
+export function houseToSign(house: number, ascSign: number): number {
+  assertIndexInRange(house, 'House');
+  assertIndexInRange(ascSign, 'Ascendant sign');
+  return advanceSign(ascSign, house - 1);
+}
+
 export function signToHouse(sign: number, ascSign: number): number {
   return ((sign - ascSign + 12) % 12) + 1;
+}
+
+/**
+ * Computes an Arudha Pada from the sign occupied by a house and the sign occupied by that house lord.
+ * Callers working with house numbers should derive the house sign first, or use `getArudhaPada`.
+ */
+export function computeArudhaPada(houseIndex: number, houseLordSignIndex: number): number {
+  assertIndexInRange(houseIndex, 'House sign');
+  assertIndexInRange(houseLordSignIndex, 'House lord sign');
+
+  const distance = ((houseLordSignIndex - houseIndex + 12) % 12) + 1;
+  const pada = advanceSign(houseLordSignIndex, distance - 1);
+  const seventhFromHouse = advanceSign(houseIndex, 6);
+
+  if (pada === houseIndex) return advanceSign(houseIndex, 9);
+  if (pada === seventhFromHouse) return advanceSign(houseIndex, 3);
+  return pada;
+}
+
+export function getArudhaPada(
+  data: ChartData,
+  house: number,
+  chart: DivisionalChart = 'D1',
+): number {
+  const ascSign = getAscSignForChart(data, chart);
+  const houseSign = houseToSign(house, ascSign);
+  const divSigns = getDivisionalSigns(data.planetData, chart);
+  const houseLord = SIGN_LORDS[houseSign - 1];
+  return computeArudhaPada(houseSign, divSigns[houseLord]);
+}
+
+export function getArudhaLagna(
+  data: ChartData,
+  chart: DivisionalChart = 'D1',
+): number {
+  return getArudhaPada(data, 1, chart);
 }
 
 export function getTemporaryRelationship(fromSign: number, toSign: number): RelationshipType {
@@ -582,6 +629,7 @@ export function buildChartData({
   const { nakshatra: ascNak, pada: ascPada } = getNakshatraPada(ascSid);
   const karakas = getCharaKarakas(positions);
   const sunLon = positions.Sun.lon;
+  const arudhaLagna = computeArudhaPada(ascSign, positions[SIGN_LORDS[ascSign - 1]].sign);
 
   const planetData = PLANET_LIST.map((name) => {
     const { lon: pLon, sign, deg, motion } = positions[name];
@@ -619,6 +667,7 @@ export function buildChartData({
     ascSid,
     ascSign,
     ascDeg,
+    arudhaLagna,
     ...otherAscSigns,
     ascNak,
     ascPada,

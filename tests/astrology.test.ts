@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import {
   buildChartData,
+  computeArudhaPada,
+  getArudhaLagna,
+  getArudhaPada,
   getNakshatraPada,
   signToHouse,
   getCompoundRelationship,
@@ -8,9 +11,120 @@ import {
   getD24Sign,
   getDivisionalDeity,
 } from '../src/astrology';
+import { PLANET_LIST, SIGN_LORDS } from '../src/constants';
+import type { ChartData, MotionType, PlanetData, PlanetName } from '../src/types';
 
 const expectWithin = (actual: number, expected: number, tolerance: number) => {
   expect(Math.abs(actual - expected)).toBeLessThanOrEqual(tolerance);
+};
+
+const makePlanet = (
+  ascSign: number,
+  name: PlanetName,
+  sign: number,
+  motion: MotionType = 'Direct',
+): PlanetData => {
+  const house = signToHouse(sign, ascSign);
+  return {
+    name,
+    lon: (sign - 1) * 30,
+    sign,
+    deg: 0,
+    motion,
+    house,
+    navamsaSign: sign,
+    navamsaHouse: house,
+    d7Sign: sign,
+    d7House: house,
+    d2Sign: sign,
+    d3Sign: sign,
+    d4Sign: sign,
+    d10Sign: sign,
+    d10House: house,
+    d12Sign: sign,
+    d12House: house,
+    d16Sign: sign,
+    d16House: house,
+    d20Sign: sign,
+    d20House: house,
+    d24Sign: sign,
+    d24House: house,
+    d27Sign: sign,
+    d27House: house,
+    d30Sign: sign,
+    d30House: house,
+    d40Sign: sign,
+    d40House: house,
+    d45Sign: sign,
+    d45House: house,
+    d60Sign: sign,
+    d60House: house,
+    d60Shashtiamsa: {
+      number: 1,
+      name: 'Ghora',
+      nature: 'M',
+      description: 'stub',
+    },
+    lordships: [],
+    role: 'Unknown',
+    combust: false,
+    nakshatra: 'Ashwini',
+    pada: 1,
+    nakLord: 'Ketu',
+    signLord: SIGN_LORDS[sign - 1],
+    karaka: null,
+  };
+};
+
+const makeChartData = (
+  ascSign: number,
+  placements: Partial<Record<PlanetName, { sign: number; motion?: MotionType }>>,
+): ChartData => {
+  const planetData = PLANET_LIST.map((planet) => {
+    const placement = placements[planet] ?? { sign: 1 };
+    return makePlanet(ascSign, planet, placement.sign, placement.motion);
+  });
+
+  return {
+    jd: 0,
+    lat: 0,
+    lon: 0,
+    ayanamsa: 0,
+    ascSid: (ascSign - 1) * 30,
+    ascSign,
+    ascDeg: 0,
+    arudhaLagna: computeArudhaPada(ascSign, (placements[SIGN_LORDS[ascSign - 1]] ?? { sign: ascSign }).sign),
+    ascNavamsa: ascSign,
+    ascD7: ascSign,
+    ascD2: ascSign,
+    ascD3: ascSign,
+    ascD4: ascSign,
+    ascD10: ascSign,
+    ascD12: ascSign,
+    ascD16: ascSign,
+    ascD20: ascSign,
+    ascD24: ascSign,
+    ascD27: ascSign,
+    ascD30: ascSign,
+    ascD40: ascSign,
+    ascD45: ascSign,
+    ascD60: ascSign,
+    ascNak: 'Ashwini',
+    ascPada: 1,
+    positions: Object.fromEntries(
+      planetData.map((planet) => [
+        planet.name,
+        {
+          lon: planet.lon,
+          sign: planet.sign,
+          deg: planet.deg,
+          motion: planet.motion,
+        },
+      ]),
+    ) as ChartData['positions'],
+    planetData,
+    karakas: {},
+  };
 };
 
 describe('buildChartData', () => {
@@ -32,6 +146,9 @@ describe('buildChartData', () => {
     expect(typeof data.ascDeg).toBe('number');
     expect(data.ascDeg).toBeGreaterThanOrEqual(0);
     expect(data.ascDeg).toBeLessThan(30);
+    expect(typeof data.arudhaLagna).toBe('number');
+    expect(data.arudhaLagna).toBeGreaterThanOrEqual(1);
+    expect(data.arudhaLagna).toBeLessThanOrEqual(12);
     expect(Array.isArray(data.planetData)).toBe(true);
     expect(data.planetData.length).toBe(9);
     expect(data.positions).toBeDefined();
@@ -52,6 +169,63 @@ describe('buildChartData', () => {
     // Swiss-backed tropical Sun minus Swiss-backed Lahiri ayanamsa: 169.377409 deg
     expectWithin(data.positions.Sun.lon, 169.377409, 0.05);
     expect(data.positions.Sun.sign).toBe(6);
+  });
+});
+
+describe('computeArudhaPada', () => {
+  it('computes an ordinary pada using inclusive counting', () => {
+    expect(computeArudhaPada(1, 3)).toBe(5);
+  });
+
+  it('moves to the 10th when the computed pada falls back in the house sign', () => {
+    expect(computeArudhaPada(1, 7)).toBe(10);
+  });
+
+  it('moves to the 4th when the computed pada falls in the 7th from the house sign', () => {
+    expect(computeArudhaPada(1, 4)).toBe(4);
+  });
+
+  it('wraps correctly across Pisces to Aries', () => {
+    expect(computeArudhaPada(12, 1)).toBe(2);
+  });
+
+  it('treats the lord in the same sign as a self-placement and applies the 10th-house exception', () => {
+    expect(computeArudhaPada(5, 5)).toBe(2);
+  });
+
+  it('handles a lord placed in the 7th sign without special-casing motion or dignity', () => {
+    expect(computeArudhaPada(5, 11)).toBe(2);
+  });
+});
+
+describe('getArudhaPada', () => {
+  it('computes Arudha Lagna from the chart ascendant and Lagna lord sign', () => {
+    const data = makeChartData(1, {
+      Mars: { sign: 3 },
+    });
+
+    expect(getArudhaLagna(data)).toBe(5);
+    expect(getArudhaPada(data, 1)).toBe(5);
+  });
+
+  it('supports generalized future padas by accepting other house numbers', () => {
+    const data = makeChartData(1, {
+      Venus: { sign: 3 },
+    });
+
+    expect(getArudhaPada(data, 2)).toBe(4);
+  });
+
+  it('ignores retrograde state because the calculation depends only on sign placement', () => {
+    const direct = makeChartData(1, {
+      Mars: { sign: 4, motion: 'Direct' },
+    });
+    const retrograde = makeChartData(1, {
+      Mars: { sign: 4, motion: 'Retrograde' },
+    });
+
+    expect(getArudhaLagna(direct)).toBe(4);
+    expect(getArudhaLagna(retrograde)).toBe(4);
   });
 });
 
