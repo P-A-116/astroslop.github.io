@@ -1,8 +1,6 @@
 import { createEffect, createMemo, createSignal, Show, For, onCleanup, type JSX } from 'solid-js';
-import type { ChartData, GulikaConfig, UpagrahaFormValues } from '../types';
+import type { ChartData } from '../types';
 import { buildChartData } from '../astrology';
-import { defaultGulikaConfig } from '../upagraha';
-import { computeSunriseSunsetLocal } from '../astronomy';
 
 interface Props {
   onGenerate: (
@@ -11,7 +9,6 @@ interface Props {
     lat: number,
     lon: number,
     cityName: string,
-    upagraha: UpagrahaFormValues,
   ) => void;
 }
 
@@ -147,11 +144,6 @@ export default function ChartForm(props: Props) {
   const [timezoneLookupError, setTimezoneLookupError] = createSignal('');
   const [resolvedTimezone, setResolvedTimezone] = createSignal<ResolvedTimezone | null>(null);
   const [tzTouched, setTzTouched] = createSignal(false);
-  const [sunriseTime, setSunriseTime] = createSignal('');
-  const [sunsetTime, setSunsetTime] = createSignal('');
-  const [autoSunTimes, setAutoSunTimes] = createSignal(true);
-  const [sunTimesNote, setSunTimesNote] = createSignal('');
-  const [gulikaConfig, setGulikaConfig] = createSignal<GulikaConfig>(defaultGulikaConfig);
 
   let cityDebounceTimer: ReturnType<typeof setTimeout> | undefined;
   let timezoneDebounceTimer: ReturnType<typeof setTimeout> | undefined;
@@ -192,36 +184,6 @@ export default function ChartForm(props: Props) {
   createEffect(() => {
     const suggested = suggestedTimezoneValue();
     if (suggested !== null && !tzTouched()) setTz(suggested);
-  });
-
-  createEffect(() => {
-    if (!autoSunTimes()) return;
-
-    const dateVal = date();
-    const tzVal = parseFloat(tz());
-    const latVal = parseFloat(lat());
-    const lonVal = parseFloat(lon());
-
-    if (!dateVal || Number.isNaN(tzVal) || Number.isNaN(latVal) || Number.isNaN(lonVal)) {
-      setSunTimesNote('');
-      return;
-    }
-
-    const [year, month, day] = dateVal.split('-').map(Number);
-    const result = computeSunriseSunsetLocal(year, month, day, latVal, lonVal, tzVal);
-
-    if (result.kind === 'ok') {
-      setSunriseTime(result.sunrise);
-      setSunsetTime(result.sunset);
-      setSunTimesNote('Auto-filled from coordinates (offline approximation).');
-      return;
-    }
-
-    setSunriseTime('');
-    setSunsetTime('');
-    if (result.kind === 'polar-night') setSunTimesNote('No sunrise/sunset on this date at this latitude (polar night).');
-    else if (result.kind === 'midnight-sun') setSunTimesNote('No sunrise/sunset on this date at this latitude (midnight sun).');
-    else setSunTimesNote('');
   });
 
   async function lookupTimezone(latNum: number, lonNum: number, forceApply = false) {
@@ -408,12 +370,6 @@ export default function ChartForm(props: Props) {
         latVal,
         lonVal,
         manualMode() ? '' : selectedCity(),
-        {
-          eventDate: toAbsoluteDate(dateVal, timeVal, tzVal),
-          sunrise: sunriseTime() ? toAbsoluteDate(dateVal, sunriseTime(), tzVal) : null,
-          sunset: sunsetTime() ? toAbsoluteDate(dateVal, sunsetTime(), tzVal) : null,
-          gulikaConfig: gulikaConfig(),
-        },
       );
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -586,108 +542,6 @@ export default function ChartForm(props: Props) {
                 onInput={(e) => handleLonInput(e.currentTarget.value)}
               />
             </Field>
-          </Show>
-        </div>
-
-        <div class="settings-panel">
-          <h3 class="settings-title">Upagraha Diagnostics</h3>
-          <p class="settings-note">
-            Optional. Enter local sunrise and sunset for the event date to enable Gulika/Mandi tracing.
-            These values should come from a reliable sunrise/sunset source for the birth location.
-          </p>
-
-          <div class="form-grid">
-            <Field id="sunrise-time" label="Sunrise (local)">
-              <input
-                type="time"
-                id="sunrise-time"
-                name="sunrise-time"
-                step="60"
-                value={sunriseTime()}
-                onInput={(e) => {
-                  setAutoSunTimes(false);
-                  setSunriseTime(e.currentTarget.value);
-                }}
-              />
-            </Field>
-
-            <Field id="sunset-time" label="Sunset (local)">
-              <input
-                type="time"
-                id="sunset-time"
-                name="sunset-time"
-                step="60"
-                value={sunsetTime()}
-                onInput={(e) => {
-                  setAutoSunTimes(false);
-                  setSunsetTime(e.currentTarget.value);
-                }}
-              />
-            </Field>
-
-            <Field id="sun-times-auto" label="Sunrise/Sunset Auto">
-              <label style="display:flex; gap:0.5rem; align-items:center; user-select:none;">
-                <input
-                  type="checkbox"
-                  id="sun-times-auto"
-                  name="sun-times-auto"
-                  checked={autoSunTimes()}
-                  onChange={(e) => setAutoSunTimes(e.currentTarget.checked)}
-                />
-                <span>Auto-compute from coordinates</span>
-              </label>
-            </Field>
-
-            <Field id="gulika-time-division" label="Time Division">
-              <select
-                id="gulika-time-division"
-                name="gulika-time-division"
-                value={gulikaConfig().timeDivision}
-                onChange={(e) => setGulikaConfig({
-                  ...gulikaConfig(),
-                  timeDivision: e.currentTarget.value as GulikaConfig['timeDivision'],
-                })}
-              >
-                <option value="day-night-8-parts">Day / Night in 8 Parts</option>
-              </select>
-            </Field>
-
-            <Field id="gulika-start-lord-mode" label="Night Start Lord">
-              <select
-                id="gulika-start-lord-mode"
-                name="gulika-start-lord-mode"
-                value={gulikaConfig().startLordMode}
-                onChange={(e) => setGulikaConfig({
-                  ...gulikaConfig(),
-                  startLordMode: e.currentTarget.value as GulikaConfig['startLordMode'],
-                })}
-              >
-                <option value="weekday">Weekday Lord</option>
-                <option value="fifth-from-weekday">5th From Weekday</option>
-              </select>
-            </Field>
-
-            <Field id="gulika-identity-mode" label="Gulika / Mandi Identity">
-              <select
-                id="gulika-identity-mode"
-                name="gulika-identity-mode"
-                value={gulikaConfig().identityMode}
-                onChange={(e) => setGulikaConfig({
-                  ...gulikaConfig(),
-                  identityMode: e.currentTarget.value as GulikaConfig['identityMode'],
-                })}
-              >
-                <option value="start-vs-end">Gulika Start / Mandi End</option>
-                <option value="same">Same Point</option>
-                <option value="separate">Separate (Reserved)</option>
-              </select>
-            </Field>
-          </div>
-
-          <Show when={sunTimesNote() !== ''}>
-            <div class="location-message info" aria-live="polite">
-              {sunTimesNote()}
-            </div>
           </Show>
         </div>
 

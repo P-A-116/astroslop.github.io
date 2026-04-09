@@ -1,5 +1,5 @@
 import { createMemo, createSignal, ErrorBoundary, For, Show } from 'solid-js';
-import type { ChartData, DivisionalChart, UpagrahaFormValues } from '../types';
+import type { ChartData, DivisionalChart } from '../types';
 import ChartForm from './ChartForm';
 import ChartSummary from './ChartSummary';
 import RelationshipTable from './RelationshipTable';
@@ -16,7 +16,6 @@ import {
   getAscDivisionalLongitude,
   getCharaKarakasFromLongitudes,
 } from '../astrology';
-import { debugGulikaCalculation } from '../upagraha';
 
 export default function App() {
   const [chartData, setChartData] = createSignal<ChartData | null>(null);
@@ -25,7 +24,6 @@ export default function App() {
   const [lonVal, setLonVal] = createSignal(0);
   const [cityName, setCityName] = createSignal('');
   const [selectedChart, setSelectedChart] = createSignal<DivisionalChart>('D1');
-  const [upagrahaValues, setUpagrahaValues] = createSignal<UpagrahaFormValues | null>(null);
 
   const divisionalData = createMemo(() => {
     const data = chartData();
@@ -46,33 +44,18 @@ export default function App() {
     };
   });
 
-  const gulikaDebug = createMemo(() => {
-    const values = upagrahaValues();
-    if (!values?.sunrise || !values.sunset) return null;
-
-    return debugGulikaCalculation({
-      date: values.eventDate,
-      location: { lat: latVal(), lon: lonVal() },
-      sunrise: values.sunrise,
-      sunset: values.sunset,
-      gulikaConfig: values.gulikaConfig,
-    });
-  });
-
   function handleChartGenerated(
     data: ChartData,
     utc: string,
     lat: number,
     lon: number,
     city: string,
-    upagraha: UpagrahaFormValues,
   ) {
     setChartData(data);
     setUtcStr(utc);
     setLatVal(lat);
     setLonVal(lon);
     setCityName(city);
-    setUpagrahaValues(upagraha);
     setSelectedChart('D1');
   }
 
@@ -168,8 +151,6 @@ export default function App() {
                   <AnalysisTab
                     data={view().data}
                     selectedChart={view().chart}
-                    gulikaDebug={gulikaDebug()}
-                    upagrahaValues={upagrahaValues()}
                   />
                 </section>
               </div>
