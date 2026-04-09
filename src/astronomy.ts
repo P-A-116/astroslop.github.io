@@ -134,3 +134,107 @@ export function computeAllPositions(jd: number, lat: number, lon: number): AllPo
   const ascSid = norm(computeAscendant(jd, lat, lon) - ayanamsa);
   return { positions, ayanamsa, ascSid, ascSign: Math.floor(ascSid / 30) + 1, ascDeg: ascSid % 30 };
 }
+
+function clampHourRange(hour: number) {
+  const x = hour % 24;
+  return x < 0 ? x + 24 : x;
+}
+
+function toTimeHHMM(hour: number) {
+  const h = Math.floor(hour);
+  const m = Math.round((hour - h) * 60);
+  const hh = (m === 60 ? (h + 1) : h) % 24;
+  const mm = m === 60 ? 0 : m;
+  return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+}
+
+function dayOfYear(year: number, month: number, day: number) {
+  // month is 1-12
+  const start = Date.UTC(year, 0, 1);
+  const cur = Date.UTC(year, month - 1, day);
+  return Math.floor((cur - start) / 86400000) + 1;
+}
+
+export type SunriseSunsetResult =
+  | { kind: 'ok'; sunrise: string; sunset: string }
+  | { kind: 'polar-night'; sunrise: null; sunset: null }
+  | { kind: 'midnight-sun'; sunrise: null; sunset: null }
+  | { kind: 'invalid'; sunrise: null; sunset: null; message: string };
+
+/**
+ * Offline sunrise/sunset approximation (NOAA solar equations).
+ *
+ * - No API calls, no server required.
+ * - Uses the provided timezone offset (hours) to return local wall-clock times.
+ * - Returns nulls for polar day/night where sunrise/sunset don't occur.
+ */
+export function computeSunriseSunsetLocal(
+  year: number,
+  month: number,
+  day: number,
+  lat: number,
+  lon: number,
+  tzOffsetHours: number,
+): SunriseSunsetResult {
+  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+    return { kind: 'invalid', sunrise: null, sunset: null, message: 'Invalid date.' };
+  }
+  if (!Number.isFinite(lat) || lat < -90 || lat > 90) {
+    return { kind: 'invalid', sunrise: null, sunset: null, message: 'Invalid latitude.' };
+  }
+  if (!Number.isFinite(lon) || lon < -180 || lon > 180) {
+    return { kind: 'invalid', sunrise: null, sunset: null, message: 'Invalid longitude.' };
+  }
+  if (!Number.isFinite(tzOffsetHours) || tzOffsetHours < -14 || tzOffsetHours > 14) {
+    return { kind: 'invalid', sunrise: null, sunset: null, message: 'Invalid timezone offset.' };
+  }
+
+  const zenithDeg = 90.833; // official-ish sunrise/sunset zenith
+  const N = dayOfYear(year, month, day);
+  const lngHour = lon / 15;
+
+  const sin = (deg: number) => Math.sin(deg * RAD);
+  const cos = (deg: number) => Math.cos(deg * RAD);
+  const tan = (deg: number) => Math.tan(deg * RAD);
+  const atanDeg = (x: number) => Math.atan(x) * DEG;
+  const acosDeg = (x: number) => Math.acos(x) * DEG;
+
+  function calc(isRise: boolean) {
+    const t = N + ((isRise ? 6 : 18) - lngHour) / 24;
+    const M = 0.9856 * t - 3.289;
+    const L = norm(M + 1.916 * sin(M) + 0.020 * sin(2 * M) + 282.634);
+
+    // Right ascension (hours), corrected to same quadrant as L
+    let RA = norm(atanDeg(0.91764 * tan(L)));
+    const Lquadrant = Math.floor(L / 90) * 90;
+    const RAquadrant = Math.floor(RA / 90) * 90;
+    RA = (RA + (Lquadrant - RAquadrant)) / 15;
+
+    const sinDec = 0.39782 * sin(L);
+    const cosDec = Math.cos(Math.asin(sinDec));
+    const cosH =
+      (cos(zenithDeg) - sinDec * sin(lat)) /
+      (cosDec * cos(lat));
+
+    if (cosH > 1) return { kind: 'polar-night' as const, hour: null };
+    if (cosH < -1) return { kind: 'midnight-sun' as const, hour: null };
+
+    const H = (isRise ? 360 - acosDeg(cosH) : acosDeg(cosH)) / 15;
+    const T = H + RA - 0.06571 * t - 6.622;
+    const UT = clampHourRange(T - lngHour);
+    const localHour = clampHourRange(UT + tzOffsetHours);
+    return { kind: 'ok' as const, hour: localHour };
+  }
+
+  const rise = calc(true);
+  const set = calc(false);
+
+  if (rise.kind !== 'ok' || set.kind !== 'ok') {
+    // If either says "no event", treat the day as polar day/night.
+    if (rise.kind === 'midnight-sun' || set.kind === 'midnight-sun') return { kind: 'midnight-sun', sunrise: null, sunset: null };
+    if (rise.kind === 'polar-night' || set.kind === 'polar-night') return { kind: 'polar-night', sunrise: null, sunset: null };
+    return { kind: 'invalid', sunrise: null, sunset: null, message: 'Unable to compute sunrise/sunset.' };
+  }
+
+  return { kind: 'ok', sunrise: toTimeHHMM(rise.hour), sunset: toTimeHHMM(set.hour) };
+}

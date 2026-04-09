@@ -2,6 +2,7 @@ import { createEffect, createMemo, createSignal, Show, For, onCleanup, type JSX 
 import type { ChartData, GulikaConfig, UpagrahaFormValues } from '../types';
 import { buildChartData } from '../astrology';
 import { defaultGulikaConfig } from '../upagraha';
+import { computeSunriseSunsetLocal } from '../astronomy';
 
 interface Props {
   onGenerate: (
@@ -148,6 +149,8 @@ export default function ChartForm(props: Props) {
   const [tzTouched, setTzTouched] = createSignal(false);
   const [sunriseTime, setSunriseTime] = createSignal('');
   const [sunsetTime, setSunsetTime] = createSignal('');
+  const [autoSunTimes, setAutoSunTimes] = createSignal(true);
+  const [sunTimesNote, setSunTimesNote] = createSignal('');
   const [gulikaConfig, setGulikaConfig] = createSignal<GulikaConfig>(defaultGulikaConfig);
 
   let cityDebounceTimer: ReturnType<typeof setTimeout> | undefined;
@@ -189,6 +192,36 @@ export default function ChartForm(props: Props) {
   createEffect(() => {
     const suggested = suggestedTimezoneValue();
     if (suggested !== null && !tzTouched()) setTz(suggested);
+  });
+
+  createEffect(() => {
+    if (!autoSunTimes()) return;
+
+    const dateVal = date();
+    const tzVal = parseFloat(tz());
+    const latVal = parseFloat(lat());
+    const lonVal = parseFloat(lon());
+
+    if (!dateVal || Number.isNaN(tzVal) || Number.isNaN(latVal) || Number.isNaN(lonVal)) {
+      setSunTimesNote('');
+      return;
+    }
+
+    const [year, month, day] = dateVal.split('-').map(Number);
+    const result = computeSunriseSunsetLocal(year, month, day, latVal, lonVal, tzVal);
+
+    if (result.kind === 'ok') {
+      setSunriseTime(result.sunrise);
+      setSunsetTime(result.sunset);
+      setSunTimesNote('Auto-filled from coordinates (offline approximation).');
+      return;
+    }
+
+    setSunriseTime('');
+    setSunsetTime('');
+    if (result.kind === 'polar-night') setSunTimesNote('No sunrise/sunset on this date at this latitude (polar night).');
+    else if (result.kind === 'midnight-sun') setSunTimesNote('No sunrise/sunset on this date at this latitude (midnight sun).');
+    else setSunTimesNote('');
   });
 
   async function lookupTimezone(latNum: number, lonNum: number, forceApply = false) {
@@ -571,7 +604,10 @@ export default function ChartForm(props: Props) {
                 name="sunrise-time"
                 step="60"
                 value={sunriseTime()}
-                onInput={(e) => setSunriseTime(e.currentTarget.value)}
+                onInput={(e) => {
+                  setAutoSunTimes(false);
+                  setSunriseTime(e.currentTarget.value);
+                }}
               />
             </Field>
 
@@ -582,8 +618,24 @@ export default function ChartForm(props: Props) {
                 name="sunset-time"
                 step="60"
                 value={sunsetTime()}
-                onInput={(e) => setSunsetTime(e.currentTarget.value)}
+                onInput={(e) => {
+                  setAutoSunTimes(false);
+                  setSunsetTime(e.currentTarget.value);
+                }}
               />
+            </Field>
+
+            <Field id="sun-times-auto" label="Sunrise/Sunset Auto">
+              <label style="display:flex; gap:0.5rem; align-items:center; user-select:none;">
+                <input
+                  type="checkbox"
+                  id="sun-times-auto"
+                  name="sun-times-auto"
+                  checked={autoSunTimes()}
+                  onChange={(e) => setAutoSunTimes(e.currentTarget.checked)}
+                />
+                <span>Auto-compute from coordinates</span>
+              </label>
             </Field>
 
             <Field id="gulika-time-division" label="Time Division">
@@ -631,6 +683,12 @@ export default function ChartForm(props: Props) {
               </select>
             </Field>
           </div>
+
+          <Show when={sunTimesNote() !== ''}>
+            <div class="location-message info" aria-live="polite">
+              {sunTimesNote()}
+            </div>
+          </Show>
         </div>
 
         <Show when={isResolvingTimezone()}>
