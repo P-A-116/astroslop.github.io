@@ -17,20 +17,26 @@ describe('normalizeLongitude', () => {
 });
 
 describe('computeUpagrahas', () => {
-  it('matches classical example for Sun = 40deg', () => {
+  it('matches classical reflection values for Sun = 40deg', () => {
     const result = computeUpagrahas(40);
 
     // Expected:
     // Dhooma = 173deg20'
-    // Vyatipata = 226deg40'
-    // Parivesha = 46deg40'
+    // Vyatipata = 186deg40'
+    // Parivesha = 6deg40'
     // Chapa = 353deg20'
     // Upaketu = 10deg00'
     expect(result.dhooma).toBeCloseTo(173 + (20 / 60), 12);
-    expect(result.vyatipata).toBeCloseTo(226 + (40 / 60), 12);
-    expect(result.parivesha).toBeCloseTo(46 + (40 / 60), 12);
+    expect(result.vyatipata).toBeCloseTo(186 + (40 / 60), 12);
+    expect(result.parivesha).toBeCloseTo(6 + (40 / 60), 12);
     expect(result.chapa).toBeCloseTo(353 + (20 / 60), 12);
     expect(result.upaketu).toBeCloseTo(10, 12);
+  });
+
+  it('supports legacy additive chain when explicitly requested', () => {
+    const result = computeUpagrahas(40, { scheme: 'additive_chain' });
+    expect(result.vyatipata).toBeCloseTo(226 + (40 / 60), 12);
+    expect(result.parivesha).toBeCloseTo(46 + (40 / 60), 12);
   });
 
   it('handles Sun near 360deg without overflow/sign errors', () => {

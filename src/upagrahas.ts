@@ -10,6 +10,12 @@ export interface Upagrahas {
 
 export interface UpagrahasOptions {
   /**
+   * Upagraha transformation tradition.
+   * - classical_reflection: Vyatipata = 360deg - Dhooma, etc. (default)
+   * - additive_chain: legacy additive chain.
+   */
+  scheme?: 'classical_reflection' | 'additive_chain';
+  /**
    * Validation behavior when classical invariant fails.
    * - throw: throw an Error
    * - warn: emit console.warn only when debug=true
@@ -77,9 +83,14 @@ export function computeUpagrahas(
 
   const sun = normalizeLongitude(sunLongitude);
   const dhooma = normalizeLongitude(sun + ARC_133_20);
-  const vyatipata = normalizeLongitude(dhooma + ARC_53_20);
+  const useAdditiveChain = options.scheme === 'additive_chain';
+  const vyatipata = useAdditiveChain
+    ? normalizeLongitude(dhooma + ARC_53_20)
+    : normalizeLongitude(FULL_CIRCLE_DEGREES - dhooma);
   const parivesha = normalizeLongitude(vyatipata + HALF_CIRCLE_DEGREES);
-  const chapa = normalizeLongitude(parivesha - ARC_53_20);
+  const chapa = useAdditiveChain
+    ? normalizeLongitude(parivesha - ARC_53_20)
+    : normalizeLongitude(FULL_CIRCLE_DEGREES - parivesha);
   const upaketu = normalizeLongitude(chapa + ARC_16_40);
 
   const result: Upagrahas = { dhooma, vyatipata, parivesha, chapa, upaketu };
