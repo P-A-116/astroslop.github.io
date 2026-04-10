@@ -12,6 +12,14 @@ export type RelationshipType = 'Friend' | 'Enemy' | 'Neutral';
 export type CompoundRelationship = 'Extreme Friendship' | 'Friendship' | 'Neutral' | 'Enmity' | 'Extreme Enmity';
 export type MotionType = 'Direct' | 'Retrograde';
 export type FunctionalRole = 'Benefic' | 'Malefic' | 'Neutral' | 'Unknown';
+export type KarakaName =
+  | 'Atmakaraka'
+  | 'Amatyakaraka'
+  | 'Bhratrikaraka'
+  | 'Matrikaraka'
+  | 'Putrakaraka'
+  | 'Gnatikaraka'
+  | 'Darakaraka';
 
 export interface DMS {
   deg: number;
@@ -84,8 +92,8 @@ export interface PlanetData {
   nakshatra: string;
   pada: number;
   nakLord: string;
-  signLord: string;
-  karaka: string | null;
+  signLord: PlanetName;
+  karaka: KarakaName | null;
 }
 
 export interface ChartData {
@@ -116,7 +124,7 @@ export interface ChartData {
   ascPada: number;
   positions: Record<PlanetName, PlanetPosition>;
   planetData: PlanetData[];
-  karakas: Partial<Record<PlanetName, string>>;
+  karakas: Partial<Record<PlanetName, KarakaName>>;
   upagrahas: {
     dhooma: number;
     vyatipata: number;

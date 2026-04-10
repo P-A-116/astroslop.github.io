@@ -1,4 +1,4 @@
-import { For, Show } from 'solid-js';
+import { For, Show, createMemo } from 'solid-js';
 import type { ChartData, DivisionalChart } from '../types';
 import { PLANET_ICONS, SIGN_NAMES } from '../constants';
 import { formatDms, getArudhaPadas, getGrahaArudhas } from '../astrology';
@@ -19,9 +19,9 @@ interface Props {
 }
 
 export default function AnalysisTab(props: Props) {
-  const yogas = () => findParivartanaYogas(props.data, props.selectedChart);
-  const arudhas = () => getArudhaPadas(props.data, props.selectedChart);
-  const grahaArudhas = () => getGrahaArudhas(props.data, props.selectedChart);
+  const yogas = createMemo(() => findParivartanaYogas(props.data, props.selectedChart));
+  const arudhas = createMemo(() => getArudhaPadas(props.data, props.selectedChart));
+  const grahaArudhas = createMemo(() => getGrahaArudhas(props.data, props.selectedChart));
   const formatSignedDms = (longitude: number) => {
     const normalized = ((longitude % 360) + 360) % 360;
     const sign = SIGN_NAMES[Math.floor(normalized / 30)];

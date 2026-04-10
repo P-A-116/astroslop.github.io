@@ -16,6 +16,8 @@ import {
   sphutaDrishti,
   getD24Sign,
   getDivisionalDeity,
+  getNakshatraName,
+  isCombust,
 } from '../src/astrology';
 import { PLANET_LIST, SIGN_LORDS } from '../src/constants';
 import type { ChartData, MotionType, PlanetData, PlanetName } from '../src/types';
@@ -193,6 +195,60 @@ describe('buildChartData', () => {
     // Swiss-backed tropical Sun minus Swiss-backed Lahiri ayanamsa: 169.377409 deg
     expectWithin(data.positions.Sun.lon, 169.377409, 0.05);
     expect(data.positions.Sun.sign).toBe(6);
+  });
+
+  it('rejects invalid numeric input ranges explicitly', () => {
+    expect(() => buildChartData({
+      year: 2002,
+      month: 10,
+      day: 6,
+      hour: 17.1,
+      lat: 95,
+      lon: 23.43,
+    })).toThrow('Latitude must be between -90 and 90.');
+
+    expect(() => buildChartData({
+      year: 2002,
+      month: 10,
+      day: 6,
+      hour: 17.1,
+      lat: 40.38,
+      lon: -181,
+    })).toThrow('Longitude must be between -180 and 180.');
+
+    expect(() => buildChartData({
+      year: 2002,
+      month: 2,
+      day: 30,
+      hour: 17.1,
+      lat: 40.38,
+      lon: 23.43,
+    })).toThrow('Day is out of range for the given month and year.');
+  });
+
+  it('handles date-crossover UTC boundaries without instability', () => {
+    const caseA = buildChartData({
+      year: 2025,
+      month: 12,
+      day: 31,
+      hour: 23 + 59 / 60 + 59 / 3600,
+      lat: 40.38,
+      lon: 23.43,
+    });
+    const caseB = buildChartData({
+      year: 2026,
+      month: 1,
+      day: 1,
+      hour: 0,
+      lat: 40.38,
+      lon: 23.43,
+    });
+
+    expectWithin(caseB.jd - caseA.jd, 1 / 86400, 1e-9);
+    expect(caseA.ascSign).toBeGreaterThanOrEqual(1);
+    expect(caseA.ascSign).toBeLessThanOrEqual(12);
+    expect(caseB.ascSign).toBeGreaterThanOrEqual(1);
+    expect(caseB.ascSign).toBeLessThanOrEqual(12);
   });
 });
 
@@ -382,6 +438,49 @@ describe('getNakshatraPada', () => {
   it('moves to second nakshatra after 13.333 degrees', () => {
     const result = getNakshatraPada(40 / 3 + 0.01);
     expect(result.nakshatra).toBe('Bharani');
+  });
+
+  it('normalizes negative longitude and returns Revati pada 4 near Aries wrap', () => {
+    const result = getNakshatraPada(-0.1);
+    expect(result.nakshatra).toBe('Revati');
+    expect(result.pada).toBe(4);
+    expect(getNakshatraName(-0.1)).toBe('Revati');
+  });
+
+  it('keeps cusp/normalization boundaries deterministic', () => {
+    const cases = [
+      { lon: 0, nakshatra: 'Ashwini', pada: 1 },
+      { lon: 29.999999, nakshatra: 'Krittika', pada: 1 },
+      { lon: 30, nakshatra: 'Krittika', pada: 1 },
+      { lon: 359.999999, nakshatra: 'Revati', pada: 4 },
+      { lon: 360, nakshatra: 'Ashwini', pada: 1 },
+      { lon: 360.1, nakshatra: 'Ashwini', pada: 1 },
+    ] as const;
+
+    for (const testCase of cases) {
+      const result = getNakshatraPada(testCase.lon);
+      expect(result.nakshatra).toBe(testCase.nakshatra);
+      expect(result.pada).toBe(testCase.pada);
+      expect(getNakshatraName(testCase.lon)).toBe(testCase.nakshatra);
+      expect(result.pada).toBeGreaterThanOrEqual(1);
+      expect(result.pada).toBeLessThanOrEqual(4);
+    }
+  });
+});
+
+describe('divisional cusp boundaries', () => {
+  it('D24 transitions exactly at subdivision boundaries', () => {
+    expect(getD24Sign(1, 1.249999)).toBe(5);
+    expect(getD24Sign(1, 1.25)).toBe(6);
+    expect(getD24Sign(1, 29.999999)).toBe(4);
+  });
+});
+
+describe('isCombust threshold edges', () => {
+  it('uses an exclusive threshold at the exact limit', () => {
+    expect(isCombust('Mercury', 0, 13.9999, 'Direct')).toBe(true);
+    expect(isCombust('Mercury', 0, 14, 'Direct')).toBe(false);
+    expect(isCombust('Mercury', 0, 14.0001, 'Direct')).toBe(false);
   });
 });
 

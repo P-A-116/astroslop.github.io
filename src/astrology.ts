@@ -24,6 +24,7 @@ import type {
   PlanetPosition,
   PlanetData,
   ChartData,
+  KarakaName,
   DMS,
   NakshatraPada,
   RelationshipType,
@@ -250,7 +251,7 @@ function rankKarakas(entries: { planet: PlanetName; value: number }[]) {
     .reduce((result, entry, index) => {
       if (index < KARAKA_NAMES.length) result[entry.planet] = KARAKA_NAMES[index];
       return result;
-    }, {} as Partial<Record<PlanetName, string>>);
+    }, {} as Partial<Record<PlanetName, KarakaName>>);
 }
 
 function rankKarakasFromLongitudes(getLongitude: (planet: PlanetName) => number) {
@@ -298,14 +299,16 @@ export function formatDms(degFloat: number): string {
 }
 
 export function getNakshatraName(longitude: number): string {
-  return NAKSHATRA_LIST[Math.floor((longitude % 360) / (40 / 3))];
+  const normalized = ((longitude % 360) + 360) % 360;
+  return NAKSHATRA_LIST[Math.floor(normalized / (40 / 3))];
 }
 
 export function getNakshatraPada(longitude: number): NakshatraPada {
-  const index = Math.floor(longitude / (40 / 3));
+  const normalized = ((longitude % 360) + 360) % 360;
+  const index = Math.floor(normalized / (40 / 3));
   return {
     nakshatra: NAKSHATRA_LIST[index % 27],
-    pada: Math.floor((longitude % (40 / 3)) / (10 / 3)) + 1,
+    pada: Math.floor((normalized % (40 / 3)) / (10 / 3)) + 1,
   };
 }
 
@@ -611,13 +614,13 @@ export function getCompoundRelationship(
 
 export function getCharaKarakas(
   positions: Record<PlanetName, PlanetPosition>,
-): Partial<Record<PlanetName, string>> {
+): Partial<Record<PlanetName, KarakaName>> {
   return rankKarakasFromLongitudes((planet) => positions[planet].lon);
 }
 
 export function getCharaKarakasFromLongitudes(
   lons: Record<PlanetName, number>,
-): Partial<Record<PlanetName, string>> {
+): Partial<Record<PlanetName, KarakaName>> {
   return rankKarakasFromLongitudes((planet) => lons[planet]);
 }
 
@@ -694,6 +697,37 @@ export function buildChartData({
   localMonth,
   localDay,
 }: BuildChartParams): ChartData {
+  const assertFiniteNumber = (value: number, label: string) => {
+    if (!Number.isFinite(value)) throw new RangeError(`${label} must be a finite number.`);
+  };
+
+  assertFiniteNumber(year, 'Year');
+  assertFiniteNumber(month, 'Month');
+  assertFiniteNumber(day, 'Day');
+  assertFiniteNumber(hour, 'Hour');
+  assertFiniteNumber(lat, 'Latitude');
+  assertFiniteNumber(lon, 'Longitude');
+
+  if (!Number.isInteger(year)) throw new RangeError('Year must be an integer.');
+  if (!Number.isInteger(month) || month < 1 || month > 12) {
+    throw new RangeError('Month must be an integer from 1 to 12.');
+  }
+  if (!Number.isInteger(day) || day < 1 || day > 31) {
+    throw new RangeError('Day must be an integer from 1 to 31.');
+  }
+  if (hour < 0 || hour >= 24) throw new RangeError('Hour must be in the range [0, 24).');
+  if (lat < -90 || lat > 90) throw new RangeError('Latitude must be between -90 and 90.');
+  if (lon < -180 || lon > 180) throw new RangeError('Longitude must be between -180 and 180.');
+
+  const utcDate = new Date(Date.UTC(year, month - 1, day));
+  if (
+    utcDate.getUTCFullYear() !== year
+    || utcDate.getUTCMonth() !== month - 1
+    || utcDate.getUTCDate() !== day
+  ) {
+    throw new RangeError('Day is out of range for the given month and year.');
+  }
+
   const jd = julianDay(year, month, day, hour);
   const { positions, ayanamsa, ascSid, ascSign, ascDeg } = computeAllPositions(jd, lat, lon);
   const ascSigns = ascSignsFor(ascSign, ascDeg);
