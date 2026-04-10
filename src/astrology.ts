@@ -10,15 +10,7 @@ import {
   NATURAL_RELATIONSHIPS,
   SHASHTIAMSA_DATA,
 } from './constants';
-import { computeKalaVelasDetailed } from './kalaVelas';
 import { computeUpagrahas, formatUpagrahas } from './upagrahas';
-export {
-  computeAllUpagrahas,
-} from './allUpagrahas';
-export {
-  computeKalaVelas,
-  computeKalaVelasDetailed,
-} from './kalaVelas';
 export {
   computeUpagrahas,
   formatLongitudeSignDegreesMinutes,
@@ -26,7 +18,7 @@ export {
   normalizeLongitude,
   verifyUpagrahas,
 } from './upagrahas';
-import { julianDay, computeAllPositions, computeSunriseSunsetUtc } from './astronomy';
+import { julianDay, computeAllPositions } from './astronomy';
 import type {
   PlanetName,
   PlanetPosition,
@@ -710,34 +702,10 @@ export function buildChartData({
   const sunLon = positions.Sun.lon;
   const upagrahas = computeUpagrahas(sunLon);
   const upagrahasFormatted = formatUpagrahas(upagrahas);
-  const birthTime = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0) + hour * 3600000);
-  const birthWeekday = weekday ?? birthTime.getUTCDay();
-  const eventYear = localYear ?? year;
-  const eventMonth = localMonth ?? month;
-  const eventDay = localDay ?? day;
-  const { sunrise, sunset } = computeSunriseSunsetUtc(eventYear, eventMonth, eventDay, lat, lon);
-  const nextDayDate = new Date(Date.UTC(eventYear, eventMonth - 1, eventDay + 1));
-  const { sunrise: nextSunrise } = computeSunriseSunsetUtc(
-    nextDayDate.getUTCFullYear(),
-    nextDayDate.getUTCMonth() + 1,
-    nextDayDate.getUTCDate(),
-    lat,
-    lon,
-  );
-  const kalaVelas = computeKalaVelasDetailed({
-    birthTime,
-    sunrise,
-    sunset,
-    nextSunrise,
-    latitude: lat,
-    longitude: lon,
-    weekday: birthWeekday,
-    options: {
-      gulikaMode: 'midpoint',
-      mandiMode: 'segment_start',
-      weekdayBoundary: 'sunrise',
-    },
-  });
+  void weekday;
+  void localYear;
+  void localMonth;
+  void localDay;
   const arudhaLagna = computeArudhaPada(ascSign, positions[SIGN_LORDS[ascSign - 1]].sign);
 
   const planetData = PLANET_LIST.map((name) => {
@@ -785,7 +753,6 @@ export function buildChartData({
     karakas,
     upagrahas,
     upagrahasFormatted,
-    kalaVelas,
   } as ChartData;
 }
 

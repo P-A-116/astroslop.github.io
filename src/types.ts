@@ -131,14 +131,6 @@ export interface ChartData {
     chapa: { sign: string; degrees: number; minutes: number; text: string };
     upaketu: { sign: string; degrees: number; minutes: number; text: string };
   };
-  kalaVelas?: {
-    gulika: { longitude: number; formatted: { sign: string; degrees: number; minutes: number; text: string }; source: 'kala'; calculationMode: string; segmentLongitudeRange?: { start: number; end: number } };
-    mandi: { longitude: number; formatted: { sign: string; degrees: number; minutes: number; text: string }; source: 'kala'; calculationMode: string; segmentLongitudeRange?: { start: number; end: number } };
-    kala: { longitude: number; formatted: { sign: string; degrees: number; minutes: number; text: string }; source: 'kala'; calculationMode: string; segmentLongitudeRange?: { start: number; end: number } };
-    mrityu: { longitude: number; formatted: { sign: string; degrees: number; minutes: number; text: string }; source: 'kala'; calculationMode: string; segmentLongitudeRange?: { start: number; end: number } };
-    ardhaprahara: { longitude: number; formatted: { sign: string; degrees: number; minutes: number; text: string }; source: 'kala'; calculationMode: string; segmentLongitudeRange?: { start: number; end: number } };
-    yamaghantaka: { longitude: number; formatted: { sign: string; degrees: number; minutes: number; text: string }; source: 'kala'; calculationMode: string; segmentLongitudeRange?: { start: number; end: number } };
-  };
 }
 
 export interface ParivartanaYoga {

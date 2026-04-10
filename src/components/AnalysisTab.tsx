@@ -34,19 +34,6 @@ export default function AnalysisTab(props: Props) {
     ['Chapa (Indra Dhanus)', props.data.upagrahas.chapa],
     ['Upaketu (Sikhi)', props.data.upagrahas.upaketu],
   ] as const);
-  const formatRange = (start: number, end: number) => {
-    return `${formatSignedDms(start)} -> ${formatSignedDms(end)}`;
-  };
-  const kalaVelaItems = () => {
-    if (!props.data.kalaVelas) return [];
-    return [
-      ['Gulika', props.data.kalaVelas.gulika.segmentLongitudeRange],
-      ['Kala', props.data.kalaVelas.kala.segmentLongitudeRange],
-      ['Mrityu', props.data.kalaVelas.mrityu.segmentLongitudeRange],
-      ['Ardha Prahara', props.data.kalaVelas.ardhaprahara.segmentLongitudeRange],
-      ['Yamaghantaka', props.data.kalaVelas.yamaghantaka.segmentLongitudeRange],
-    ] as const;
-  };
 
   return (
     <div class="analysis-tab">
@@ -62,27 +49,6 @@ export default function AnalysisTab(props: Props) {
             )}
           </For>
         </div>
-      </div>
-
-      <div class="analysis-section">
-        <h3 class="analysis-subtitle">Kala Velas</h3>
-        <Show
-          when={kalaVelaItems().length > 0}
-          fallback={<p class="analysis-empty">Kala Vela values unavailable for this chart.</p>}
-        >
-          <div class="arudha-grid">
-            <For each={kalaVelaItems()}>
-              {([name, range]) => (
-                <div class="arudha-card">
-                  <div class="arudha-label">{name}</div>
-                  <div class="arudha-value">
-                    {range ? formatRange(range.start, range.end) : '—'}
-                  </div>
-                </div>
-              )}
-            </For>
-          </div>
-        </Show>
       </div>
 
       <div class="analysis-section">
