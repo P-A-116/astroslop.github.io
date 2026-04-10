@@ -17,6 +17,7 @@ import type { MotionType, PlanetName, PlanetPosition } from './types';
 const RAD = Math.PI / 180;
 const DEG = 180 / Math.PI;
 const HALF_DAY = 0.5;
+const MINUTES_PER_DAY = 1440;
 const norm = (x: number) => ((x % 360) + 360) % 360;
 const wrapDiff = (x: number) => (x > 180 ? x - 360 : x < -180 ? x + 360 : x);
 
@@ -116,6 +117,56 @@ export function computeAscendant(jd: number, lat: number, lon: number): number {
   const obl = nutation.meanObliquity(jd); // radians
   const latR = lat * RAD;
   return norm(Math.atan2(Math.cos(RAMC), -(Math.sin(RAMC) * Math.cos(obl) + Math.tan(latR) * Math.sin(obl))) * DEG);
+}
+
+/**
+ * Approximate sunrise/sunset UTC times for a civil date at latitude/longitude
+ * using the standard NOAA solar algorithm (official zenith 90.833°).
+ */
+export function computeSunriseSunsetUtc(
+  year: number,
+  month: number,
+  day: number,
+  lat: number,
+  lon: number,
+): { sunrise: Date; sunset: Date } {
+  const dayOfYear = Math.floor((Date.UTC(year, month - 1, day) - Date.UTC(year, 0, 0)) / 86400000);
+  const zenith = 90.833;
+  const lngHour = lon / 15;
+
+  const computeUtHours = (isSunrise: boolean): number => {
+    const t = dayOfYear + ((isSunrise ? 6 : 18) - lngHour) / 24;
+    const M = (0.9856 * t) - 3.289;
+    let L = M + (1.916 * Math.sin(M * RAD)) + (0.020 * Math.sin(2 * M * RAD)) + 282.634;
+    L = norm(L);
+
+    let RA = Math.atan(0.91764 * Math.tan(L * RAD)) * DEG;
+    RA = norm(RA);
+    const Lquadrant = Math.floor(L / 90) * 90;
+    const RAquadrant = Math.floor(RA / 90) * 90;
+    RA = (RA + (Lquadrant - RAquadrant)) / 15;
+
+    const sinDec = 0.39782 * Math.sin(L * RAD);
+    const cosDec = Math.cos(Math.asin(sinDec));
+    const cosH = (Math.cos(zenith * RAD) - (sinDec * Math.sin(lat * RAD))) / (cosDec * Math.cos(lat * RAD));
+
+    if (cosH < -1 || cosH > 1) {
+      throw new RangeError('Sunrise/sunset cannot be computed for this date and latitude.');
+    }
+
+    let H = isSunrise ? 360 - (Math.acos(cosH) * DEG) : Math.acos(cosH) * DEG;
+    H /= 15;
+
+    const T = H + RA - (0.06571 * t) - 6.622;
+    return (T - lngHour + 24) % 24;
+  };
+
+  const sunriseHours = computeUtHours(true);
+  const sunsetHours = computeUtHours(false);
+  const sunrise = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0) + sunriseHours * (MINUTES_PER_DAY / 24) * 60000);
+  const sunset = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0) + sunsetHours * (MINUTES_PER_DAY / 24) * 60000);
+
+  return { sunrise, sunset };
 }
 
 export function computeAllPositions(jd: number, lat: number, lon: number): AllPositionsResult {
