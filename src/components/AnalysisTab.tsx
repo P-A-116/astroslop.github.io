@@ -1,7 +1,7 @@
 import { For, Show } from 'solid-js';
 import type { ChartData, DivisionalChart } from '../types';
 import { PLANET_ICONS, SIGN_NAMES } from '../constants';
-import { getArudhaPadas, getGrahaArudhas } from '../astrology';
+import { formatDms, getArudhaPadas, getGrahaArudhas } from '../astrology';
 import { findParivartanaYogas } from '../analysis';
 
 const YOGA_INTERPRETATIONS = {
@@ -22,12 +22,17 @@ export default function AnalysisTab(props: Props) {
   const yogas = () => findParivartanaYogas(props.data, props.selectedChart);
   const arudhas = () => getArudhaPadas(props.data, props.selectedChart);
   const grahaArudhas = () => getGrahaArudhas(props.data, props.selectedChart);
+  const formatSignedDms = (longitude: number) => {
+    const normalized = ((longitude % 360) + 360) % 360;
+    const sign = SIGN_NAMES[Math.floor(normalized / 30)];
+    return `${sign} ${formatDms(normalized % 30)}`;
+  };
   const upagrahaItems = () => ([
-    ['Dhooma', props.data.upagrahas.dhooma, props.data.upagrahasFormatted.dhooma],
-    ['Vyatipata', props.data.upagrahas.vyatipata, props.data.upagrahasFormatted.vyatipata],
-    ['Parivesha', props.data.upagrahas.parivesha, props.data.upagrahasFormatted.parivesha],
-    ['Chapa (Indra Dhanus)', props.data.upagrahas.chapa, props.data.upagrahasFormatted.chapa],
-    ['Upaketu (Sikhi)', props.data.upagrahas.upaketu, props.data.upagrahasFormatted.upaketu],
+    ['Dhooma', props.data.upagrahas.dhooma],
+    ['Vyatipata', props.data.upagrahas.vyatipata],
+    ['Parivesha', props.data.upagrahas.parivesha],
+    ['Chapa (Indra Dhanus)', props.data.upagrahas.chapa],
+    ['Upaketu (Sikhi)', props.data.upagrahas.upaketu],
   ] as const);
   const kalaVelaItems = () => {
     if (!props.data.kalaVelas) return [];
@@ -47,13 +52,10 @@ export default function AnalysisTab(props: Props) {
         <h3 class="analysis-subtitle">Solar Upagrahas</h3>
         <div class="arudha-grid">
           <For each={upagrahaItems()}>
-            {([name, raw, formatted]) => (
+            {([name, longitude]) => (
               <div class="arudha-card">
                 <div class="arudha-label">{name}</div>
-                <div class="arudha-value">{formatted.text}</div>
-                <div class="analysis-empty" style="margin-top: 0.35rem;">
-                  {`${raw.toFixed(4)}° absolute`}
-                </div>
+                <div class="arudha-value">{formatSignedDms(longitude)}</div>
               </div>
             )}
           </For>
@@ -71,10 +73,7 @@ export default function AnalysisTab(props: Props) {
               {([name, point]) => (
                 <div class="arudha-card">
                   <div class="arudha-label">{name}</div>
-                  <div class="arudha-value">{point.formatted.text}</div>
-                  <div class="analysis-empty" style="margin-top: 0.35rem;">
-                    {`${point.longitude.toFixed(4)}° absolute`}
-                  </div>
+                  <div class="arudha-value">{formatSignedDms(point.longitude)}</div>
                 </div>
               )}
             </For>
