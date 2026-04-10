@@ -128,6 +128,20 @@ const makeChartData = (
     ) as ChartData['positions'],
     planetData,
     karakas: {},
+    upagrahas: {
+      dhooma: 0,
+      vyatipata: 0,
+      parivesha: 0,
+      chapa: 0,
+      upaketu: 0,
+    },
+    upagrahasFormatted: {
+      dhooma: { sign: 'Aries', degrees: 0, minutes: 0, text: 'Aries 0deg 0\'' },
+      vyatipata: { sign: 'Aries', degrees: 0, minutes: 0, text: 'Aries 0deg 0\'' },
+      parivesha: { sign: 'Aries', degrees: 0, minutes: 0, text: 'Aries 0deg 0\'' },
+      chapa: { sign: 'Aries', degrees: 0, minutes: 0, text: 'Aries 0deg 0\'' },
+      upaketu: { sign: 'Aries', degrees: 0, minutes: 0, text: 'Aries 0deg 0\'' },
+    },
   };
 };
 
@@ -158,6 +172,10 @@ describe('buildChartData', () => {
     expect(data.positions).toBeDefined();
     expect(data.positions.Sun).toBeDefined();
     expect(data.positions.Moon).toBeDefined();
+    expect(data.upagrahas).toBeDefined();
+    expect(typeof data.upagrahas.upaketu).toBe('number');
+    expect(data.upagrahasFormatted).toBeDefined();
+    expect(typeof data.upagrahasFormatted.upaketu.text).toBe('string');
   });
 
   it('matches the expected sidereal Sun longitude and sign on 2002-10-06 17:10 UTC', () => {
