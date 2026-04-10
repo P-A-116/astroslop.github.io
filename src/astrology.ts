@@ -732,8 +732,8 @@ export function buildChartData({
     longitude: lon,
     weekday: birthWeekday,
     options: {
-      gulikaMode: 'start',
-      mandiMode: 'same_as_gulika',
+      gulikaMode: 'midpoint',
+      mandiMode: 'segment_start',
     },
   });
   const arudhaLagna = computeArudhaPada(ascSign, positions[SIGN_LORDS[ascSign - 1]].sign);

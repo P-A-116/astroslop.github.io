@@ -22,9 +22,11 @@ describe('Kala Vela sequencing', () => {
     );
 
     expect(segments[0].lord).toBe('Mercury');
-    expect(segments[1].lord).toBe('Moon');
-    expect(segments[2].lord).toBe('Saturn');
-    expect(segments[7].lord).toBeNull(); // 8th is lordless
+    expect(segments[1].lord).toBe('Jupiter');
+    expect(segments[2].lord).toBe('Venus');
+    expect(segments[3].lord).toBe('Saturn');
+    expect(segments[4].lord).toBeNull(); // lord-less slot after Saturn
+    expect(segments[7].lord).toBe('Mars');
   });
 
   it('uses 5th-from-weekday lord as first segment for night birth', () => {
@@ -37,9 +39,9 @@ describe('Kala Vela sequencing', () => {
       3, // Wednesday -> Mercury
     );
 
-    // 5th from Mercury in sequence Saturn->Jupiter->Mars->Sun->Venus->Mercury->Moon is Mars.
-    expect(segments[0].lord).toBe('Mars');
-    expect(segments[1].lord).toBe('Sun');
+    // 5th from Mercury in weekday order is Sun.
+    expect(segments[0].lord).toBe('Sun');
+    expect(segments[1].lord).toBe('Moon');
   });
 });
 
@@ -65,16 +67,19 @@ describe('computeKalaVelas', () => {
       longitude: 0,
       weekday: 3,
       options: {
-        gulikaMode: 'start',
+        gulikaMode: 'midpoint',
         mandiMode: 'same_as_gulika',
         ascendantResolver,
       },
     });
 
-    expect(result.gulika).toBeCloseTo(ascendantResolver(saturnSegment.start), 12);
+    expect(result.gulika).toBeCloseTo(
+      ascendantResolver(new Date((saturnSegment.start.getTime() + saturnSegment.end.getTime()) / 2)),
+      12,
+    );
   });
 
-  it('supports Parashara and extended Mandi modes distinctly', () => {
+  it('supports midpoint Gulika and start-of-Saturn Mandi distinctly', () => {
     const birthTime = new Date('2026-04-10T10:00:00.000Z');
 
     const parashara = computeKalaVelas({
@@ -86,8 +91,8 @@ describe('computeKalaVelas', () => {
       longitude: 0,
       weekday: 5, // Friday
       options: {
-        gulikaMode: 'start',
-        mandiMode: 'same_as_gulika',
+        gulikaMode: 'midpoint',
+        mandiMode: 'segment_start',
         ascendantResolver,
       },
     });
@@ -101,14 +106,14 @@ describe('computeKalaVelas', () => {
       longitude: 0,
       weekday: 5,
       options: {
-        gulikaMode: 'start',
+        gulikaMode: 'midpoint',
         mandiMode: 'segment_midpoint',
         ascendantResolver,
       },
     });
 
-    expect(parashara.gulika).toBeCloseTo(parashara.mandi, 12);
-    expect(Math.abs(extended.gulika - extended.mandi)).toBeGreaterThan(1e-9);
+    expect(Math.abs(parashara.gulika - parashara.mandi)).toBeGreaterThan(1e-9);
+    expect(extended.gulika).toBeCloseTo(extended.mandi, 12);
   });
 
   it('handles birth exactly at segment boundary without assigning 8th segment', () => {

@@ -15,7 +15,7 @@ export interface KalaVelas {
 
 export interface KalaVelaOptions {
   gulikaMode: 'start' | 'midpoint';
-  mandiMode: 'same_as_gulika' | 'segment_midpoint' | 'classical_offset';
+  mandiMode: 'same_as_gulika' | 'segment_start' | 'segment_midpoint' | 'classical_offset';
   /**
    * Optional timestamp for separate Mandi in classical_offset mode.
    * If omitted in classical_offset mode, the function throws.
@@ -43,24 +43,17 @@ const WEEKDAY_LORDS: readonly WeekdayLord[] = [
   'Saturn',
 ];
 
-// Classical sequence for Kala Vela assignment.
-const KALA_SEQUENCE: readonly SegmentLord[] = [
-  'Saturn',
-  'Jupiter',
-  'Mars',
+// Classical weekday sequence with explicit lord-less slot after Saturn.
+const KALA_SEQUENCE_WITH_LORDLESS: readonly (SegmentLord | null)[] = [
   'Sun',
-  'Venus',
-  'Mercury',
   'Moon',
+  'Mars',
+  'Mercury',
+  'Jupiter',
+  'Venus',
+  'Saturn',
+  null,
 ];
-
-const KALA_MAP = {
-  Sun: 'kala',
-  Mars: 'mrityu',
-  Mercury: 'ardhaprahara',
-  Jupiter: 'yamaghantaka',
-  Saturn: 'gulika',
-} as const;
 
 const DAY_OR_NIGHT_PARTS = 8;
 const NIGHT_START_OFFSET_FROM_WEEKDAY = 4; // 5th from weekday lord, inclusive counting.
@@ -73,9 +66,15 @@ function getWeekdayLord(weekday: number): WeekdayLord {
 }
 
 function shiftedPlanet(start: SegmentLord, offset: number): SegmentLord {
-  const idx = KALA_SEQUENCE.indexOf(start);
+  const idx = WEEKDAY_LORDS.indexOf(start);
   if (idx < 0) throw new Error(`Unknown sequence planet: ${start}`);
-  return KALA_SEQUENCE[(idx + offset) % KALA_SEQUENCE.length];
+  return WEEKDAY_LORDS[(idx + offset) % WEEKDAY_LORDS.length];
+}
+
+function shiftedSequenceLord(start: SegmentLord, offset: number): SegmentLord | null {
+  const idx = KALA_SEQUENCE_WITH_LORDLESS.indexOf(start);
+  if (idx < 0) throw new Error(`Unknown sequence planet: ${start}`);
+  return KALA_SEQUENCE_WITH_LORDLESS[(idx + offset) % KALA_SEQUENCE_WITH_LORDLESS.length];
 }
 
 function dateDiffMs(later: Date, earlier: Date): number {
@@ -114,7 +113,7 @@ function computeSegmentAssignments(
   return Array.from({ length: DAY_OR_NIGHT_PARTS }, (_, index) => ({
     start: addMs(start, segmentMs * index),
     end: addMs(start, segmentMs * (index + 1)),
-    lord: index === DAY_OR_NIGHT_PARTS - 1 ? null : shiftedPlanet(startLord, index),
+    lord: shiftedSequenceLord(startLord, index),
   }));
 }
 
@@ -184,6 +183,13 @@ export function computeKalaVelas(input: {
   let mandi: number;
   if (options.mandiMode === 'same_as_gulika') {
     mandi = gulika;
+  } else if (options.mandiMode === 'segment_start') {
+    mandi = getAscendantLongitudeAtTime(
+      segmentMoment(saturnSegment, 'start'),
+      latitude,
+      longitude,
+      options.ascendantResolver,
+    );
   } else if (options.mandiMode === 'segment_midpoint') {
     mandi = getAscendantLongitudeAtTime(
       segmentMoment(saturnSegment, 'midpoint'),

@@ -13,8 +13,8 @@ describe('computeAllUpagrahas', () => {
       lon: -74.006,
       weekday: 5,
       options: {
-        gulikaMode: 'start',
-        mandiMode: 'same_as_gulika',
+        gulikaMode: 'midpoint',
+        mandiMode: 'segment_start',
       },
     });
 
@@ -25,6 +25,6 @@ describe('computeAllUpagrahas', () => {
     expect(result.kalaVelas.gulika.source).toBe('kala');
     expect(typeof result.kalaVelas.gulika.longitude).toBe('number');
     expect(typeof result.kalaVelas.gulika.formatted.text).toBe('string');
-    expect(result.kalaVelas.mandi.calculationMode.includes('mandi:same_as_gulika')).toBe(true);
+    expect(result.kalaVelas.mandi.calculationMode.includes('mandi:segment_start')).toBe(true);
   });
 });
