@@ -1,6 +1,6 @@
 import { createEffect, createMemo, createSignal, Show, For, onCleanup, type JSX } from 'solid-js';
 import type { ChartData } from '../types';
-import { buildChartData } from '../astrology';
+import { buildChartDataFromLocalInput } from '../astrology';
 
 interface Props {
   onGenerate: (
@@ -60,52 +60,6 @@ const TZ_OPTIONS = '-12 -11 -10 -9.5 -9 -8 -7 -6 -5 -4.5 -4 -3.5 -3 -2 -1 0 1 2 
   .map((value) => ({ value, label: formatTzLabel(value) }));
 
 const TZ_OPTION_VALUES = new Set(TZ_OPTIONS.map((opt) => opt.value));
-
-function toUtcDetails(dateVal: string, timeVal: string, tzVal: number) {
-  const utcDate = toAbsoluteDate(dateVal, timeVal, tzVal);
-
-  return {
-    year: utcDate.getUTCFullYear(),
-    month: utcDate.getUTCMonth() + 1,
-    day: utcDate.getUTCDate(),
-    hour: utcDate.getUTCHours() + utcDate.getUTCMinutes() / 60 + utcDate.getUTCSeconds() / 3600,
-    utcStr:
-      `${utcDate.getUTCFullYear()}-${String(utcDate.getUTCMonth() + 1).padStart(2, '0')}-${String(utcDate.getUTCDate()).padStart(2, '0')} `
-      + `${String(utcDate.getUTCHours()).padStart(2, '0')}:`
-      + `${String(utcDate.getUTCMinutes()).padStart(2, '0')}:`
-      + `${String(utcDate.getUTCSeconds()).padStart(2, '0')} UTC`,
-  };
-}
-
-function getLocalWeekday(dateVal: string, timeVal: string): number {
-  const [yearStr, monStr, dayStr] = dateVal.split('-');
-  const [hrStr, minStr, secStr = '0'] = timeVal.split(':');
-  return new Date(
-    Date.UTC(
-      parseInt(yearStr, 10),
-      parseInt(monStr, 10) - 1,
-      parseInt(dayStr, 10),
-      parseInt(hrStr, 10),
-      parseInt(minStr, 10),
-      parseInt(secStr, 10),
-    ),
-  ).getUTCDay();
-}
-
-function toAbsoluteDate(dateVal: string, timeVal: string, tzVal: number) {
-  const [yearStr, monStr, dayStr] = dateVal.split('-');
-  const [hrStr, minStr, secStr = '0'] = timeVal.split(':');
-  return new Date(
-    Date.UTC(
-      parseInt(yearStr),
-      parseInt(monStr) - 1,
-      parseInt(dayStr),
-      parseInt(hrStr),
-      parseInt(minStr),
-      parseInt(secStr),
-    ) - tzVal * 3600000,
-  );
-}
 
 function getZoneOffsetMinutes(timestamp: number, timeZone: string) {
   const formatter = new Intl.DateTimeFormat('en-US', {
@@ -377,20 +331,16 @@ export default function ChartForm(props: Props) {
     }
 
     try {
-      const utc = toUtcDetails(dateVal, timeVal, tzVal);
-      const [localYear, localMonth, localDay] = dateVal.split('-').map((value) => parseInt(value, 10));
-      const data = buildChartData({
-        ...utc,
+      const { data, utcStr } = buildChartDataFromLocalInput({
+        date: dateVal,
+        time: timeVal,
+        tzOffsetHours: tzVal,
         lat: latVal,
         lon: lonVal,
-        weekday: getLocalWeekday(dateVal, timeVal),
-        localYear,
-        localMonth,
-        localDay,
       });
       props.onGenerate(
         data,
-        utc.utcStr,
+        utcStr,
         latVal,
         lonVal,
         manualMode() ? '' : selectedCity(),

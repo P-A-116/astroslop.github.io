@@ -1,3 +1,5 @@
+import type { NakshatraName } from './constants';
+
 export type PlanetName =
   | 'Sun' | 'Moon' | 'Mars' | 'Mercury' | 'Jupiter'
   | 'Venus' | 'Saturn' | 'Rahu' | 'Ketu';
@@ -28,7 +30,7 @@ export interface DMS {
 }
 
 export interface NakshatraPada {
-  nakshatra: string;
+  nakshatra: NakshatraName;
   pada: number;
 }
 
@@ -89,9 +91,9 @@ export interface PlanetData {
   lordships: number[];
   role: FunctionalRole;
   combust: boolean;
-  nakshatra: string;
+  nakshatra: NakshatraName;
   pada: number;
-  nakLord: string;
+  nakLord: PlanetName;
   signLord: PlanetName;
   karaka: KarakaName | null;
 }
@@ -120,7 +122,7 @@ export interface ChartData {
   ascD40: number;
   ascD45: number;
   ascD60: number;
-  ascNak: string;
+  ascNak: NakshatraName;
   ascPada: number;
   positions: Record<PlanetName, PlanetPosition>;
   planetData: PlanetData[];

@@ -45,15 +45,44 @@ const sh = (name: string, nature: 'B' | 'M', description: string) => [name, natu
 export const SIGN_NAMES = 'Aries Taurus Gemini Cancer Leo Virgo Libra Scorpio Sagittarius Capricorn Aquarius Pisces'.split(' ');
 export const PLANET_LIST = planets('Sun Moon Mars Mercury Jupiter Venus Saturn Rahu Ketu');
 export const SIGN_LORDS = planets('Mars Venus Mercury Moon Sun Mercury Venus Mars Jupiter Saturn Saturn Jupiter');
-export const NAKSHATRA_LIST = 'Ashwini|Bharani|Krittika|Rohini|Mrigashira|Ardra|Punarvasu|Pushya|Ashlesha|Magha|Purva Phalguni|Uttara Phalguni|Hasta|Chitra|Swati|Vishakha|Anuradha|Jyeshtha|Mula|Purva Ashadha|Uttara Ashadha|Shravana|Dhanishta|Shatabhisha|Purva Bhadrapada|Uttara Bhadrapada|Revati'.split('|');
+export const NAKSHATRA_LIST = [
+  'Ashwini',
+  'Bharani',
+  'Krittika',
+  'Rohini',
+  'Mrigashira',
+  'Ardra',
+  'Punarvasu',
+  'Pushya',
+  'Ashlesha',
+  'Magha',
+  'Purva Phalguni',
+  'Uttara Phalguni',
+  'Hasta',
+  'Chitra',
+  'Swati',
+  'Vishakha',
+  'Anuradha',
+  'Jyeshtha',
+  'Mula',
+  'Purva Ashadha',
+  'Uttara Ashadha',
+  'Shravana',
+  'Dhanishta',
+  'Shatabhisha',
+  'Purva Bhadrapada',
+  'Uttara Bhadrapada',
+  'Revati',
+] as const;
+export type NakshatraName = typeof NAKSHATRA_LIST[number];
 
-const NAKSHATRA_LORD_SEQUENCE = planets('Ketu Venus Sun Moon Mars Rahu Jupiter Saturn Mercury');
+const NAKSHATRA_LORD_SEQUENCE: readonly PlanetName[] = planets('Ketu Venus Sun Moon Mars Rahu Jupiter Saturn Mercury');
 export const NAKSHATRA_LORDS = Object.fromEntries(
   NAKSHATRA_LIST.map((nakshatra, index) => [
     nakshatra,
     NAKSHATRA_LORD_SEQUENCE[index % NAKSHATRA_LORD_SEQUENCE.length],
   ]),
-) as Record<string, PlanetName>;
+) as Record<NakshatraName, PlanetName>;
 
 const PLANET_GLYPHS = ['\u2609', '\u263D', '\u2642', '\u263F', '\u2643', '\u2640', '\u2644', '\u260A', '\u260B'];
 export const PLANET_ICONS = Object.fromEntries(

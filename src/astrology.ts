@@ -97,6 +97,14 @@ interface DivisionalMeta {
   houseKey?: PlanetHouseKey;
 }
 
+interface BuildChartFromLocalParams {
+  date: string;
+  time: string;
+  tzOffsetHours: number;
+  lat: number;
+  lon: number;
+}
+
 const KARAKA_NAMES = [
   'Atmakaraka',
   'Amatyakaraka',
@@ -763,7 +771,7 @@ export function buildChartData({
       combust: name !== 'Sun' && !!COMBUSTION_LIMITS[name] && isCombust(name, sunLon, pLon, motion),
       nakshatra,
       pada,
-      nakLord: NAKSHATRA_LORDS[nakshatra] || '\u2014',
+      nakLord: NAKSHATRA_LORDS[nakshatra],
       signLord: SIGN_LORDS[sign - 1],
       karaka: karakas[name] || null,
     } as PlanetData;
@@ -788,6 +796,56 @@ export function buildChartData({
     upagrahas,
     upagrahasFormatted,
   } as ChartData;
+}
+
+export function buildChartDataFromLocalInput({
+  date,
+  time,
+  tzOffsetHours,
+  lat,
+  lon,
+}: BuildChartFromLocalParams): { data: ChartData; utcStr: string } {
+  const [yearStr, monthStr, dayStr] = date.split('-');
+  const [hourStr, minuteStr, secondStr = '0'] = time.split(':');
+  const year = Number(yearStr);
+  const month = Number(monthStr);
+  const day = Number(dayStr);
+  const hour = Number(hourStr);
+  const minute = Number(minuteStr);
+  const second = Number(secondStr);
+
+  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+    throw new RangeError('Date must be in YYYY-MM-DD format.');
+  }
+  if (!Number.isFinite(hour) || !Number.isFinite(minute) || !Number.isFinite(second)) {
+    throw new RangeError('Time must be in HH:MM[:SS] format.');
+  }
+
+  const localAsUtcMs = Date.UTC(year, month - 1, day, hour, minute, second);
+  const utcDate = new Date(localAsUtcMs - tzOffsetHours * 3600000);
+  const utcYear = utcDate.getUTCFullYear();
+  const utcMonth = utcDate.getUTCMonth() + 1;
+  const utcDay = utcDate.getUTCDate();
+  const utcHour = utcDate.getUTCHours() + utcDate.getUTCMinutes() / 60 + utcDate.getUTCSeconds() / 3600;
+  const utcStr = `${utcYear}-${String(utcMonth).padStart(2, '0')}-${String(utcDay).padStart(2, '0')} `
+    + `${String(utcDate.getUTCHours()).padStart(2, '0')}:`
+    + `${String(utcDate.getUTCMinutes()).padStart(2, '0')}:`
+    + `${String(utcDate.getUTCSeconds()).padStart(2, '0')} UTC`;
+
+  const data = buildChartData({
+    year: utcYear,
+    month: utcMonth,
+    day: utcDay,
+    hour: utcHour,
+    lat,
+    lon,
+    localYear: year,
+    localMonth: month,
+    localDay: day,
+    weekday: new Date(Date.UTC(year, month - 1, day, hour, minute, second)).getUTCDay(),
+  });
+
+  return { data, utcStr };
 }
 
 export function getAscSignForChart(data: ChartData, chart: DivisionalChart): number {
