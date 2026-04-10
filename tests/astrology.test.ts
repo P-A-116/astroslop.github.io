@@ -18,6 +18,7 @@ import {
   getDivisionalDeity,
   getNakshatraName,
   isCombust,
+  buildChartDataFromLocalInput,
 } from '../src/astrology';
 import { PLANET_LIST, SIGN_LORDS } from '../src/constants';
 import type { ChartData, MotionType, PlanetData, PlanetName } from '../src/types';
@@ -249,6 +250,103 @@ describe('buildChartData', () => {
     expect(caseA.ascSign).toBeLessThanOrEqual(12);
     expect(caseB.ascSign).toBeGreaterThanOrEqual(1);
     expect(caseB.ascSign).toBeLessThanOrEqual(12);
+  });
+});
+
+describe('buildChartDataFromLocalInput', () => {
+  it('converts local time with half-hour offset to equivalent UTC chart', () => {
+    const viaLocal = buildChartDataFromLocalInput({
+      date: '2026-01-01',
+      time: '00:30:00',
+      tzOffsetHours: 5.5,
+      lat: 40.38,
+      lon: 23.43,
+    });
+    const directUtc = buildChartData({
+      year: 2025,
+      month: 12,
+      day: 31,
+      hour: 19,
+      lat: 40.38,
+      lon: 23.43,
+    });
+
+    expect(viaLocal.utcStr).toBe('2025-12-31 19:00:00 UTC');
+    expectWithin(viaLocal.data.jd, directUtc.jd, 1e-9);
+    expectWithin(viaLocal.data.positions.Sun.lon, directUtc.positions.Sun.lon, 1e-6);
+    expectWithin(viaLocal.data.ascSid, directUtc.ascSid, 1e-6);
+  });
+
+  it('handles +14 and -12 offsets at day boundaries', () => {
+    const plus14 = buildChartDataFromLocalInput({
+      date: '2026-01-01',
+      time: '00:00:00',
+      tzOffsetHours: 14,
+      lat: 40.38,
+      lon: 23.43,
+    });
+    const minus12 = buildChartDataFromLocalInput({
+      date: '2026-01-01',
+      time: '23:59:59',
+      tzOffsetHours: -12,
+      lat: 40.38,
+      lon: 23.43,
+    });
+    const plus95 = buildChartDataFromLocalInput({
+      date: '2026-01-01',
+      time: '00:00:00',
+      tzOffsetHours: 9.5,
+      lat: 40.38,
+      lon: 23.43,
+    });
+
+    expect(plus14.utcStr).toBe('2025-12-31 10:00:00 UTC');
+    expect(minus12.utcStr).toBe('2026-01-02 11:59:59 UTC');
+    expect(plus95.utcStr).toBe('2025-12-31 14:30:00 UTC');
+  });
+
+  it('rejects malformed local inputs without silent rollover', () => {
+    expect(() => buildChartDataFromLocalInput({
+      date: '2026-13-40',
+      time: '10:00:00',
+      tzOffsetHours: 3,
+      lat: 40.38,
+      lon: 23.43,
+    })).toThrow('Month must be an integer from 1 to 12.');
+
+    expect(() => buildChartDataFromLocalInput({
+      date: '2026-02-30',
+      time: '10:00:00',
+      tzOffsetHours: 3,
+      lat: 40.38,
+      lon: 23.43,
+    })).toThrow('Day is out of range for the given month and year.');
+
+    expect(() => buildChartDataFromLocalInput({
+      date: '2026-01-01',
+      time: '25:99:00',
+      tzOffsetHours: 3,
+      lat: 40.38,
+      lon: 23.43,
+    })).toThrow('Hour must be an integer from 0 to 23.');
+
+    expect(() => buildChartDataFromLocalInput({
+      date: '2026-01-01',
+      time: '10:00:60',
+      tzOffsetHours: 3,
+      lat: 40.38,
+      lon: 23.43,
+    })).toThrow('Second must be an integer from 0 to 59.');
+  });
+
+  it('rejects invalid timezone offsets', () => {
+    expect(() => buildChartDataFromLocalInput({
+      date: '2026-01-01',
+      time: '10:00:00',
+      tzOffsetHours: 20,
+      lat: 40.38,
+      lon: 23.43,
+    })).toThrow('Timezone offset must be between -12 and +14 hours.');
   });
 });
 

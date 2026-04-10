@@ -2,6 +2,7 @@ import {
   PLANET_LIST,
   SIGN_LORDS,
   NAKSHATRA_LIST,
+  type NakshatraName,
   NAKSHATRA_LORDS,
   NAVAMSA_START_SIGNS,
   COMBUSTION_LIMITS,
@@ -306,7 +307,7 @@ export function formatDms(degFloat: number): string {
   return `${deg}\u00B0 ${minute}' ${sec}"`;
 }
 
-export function getNakshatraName(longitude: number): string {
+export function getNakshatraName(longitude: number): NakshatraName {
   const normalized = ((longitude % 360) + 360) % 360;
   return NAKSHATRA_LIST[Math.floor(normalized / (40 / 3))];
 }
@@ -819,6 +820,37 @@ export function buildChartDataFromLocalInput({
   }
   if (!Number.isFinite(hour) || !Number.isFinite(minute) || !Number.isFinite(second)) {
     throw new RangeError('Time must be in HH:MM[:SS] format.');
+  }
+  if (!Number.isFinite(tzOffsetHours)) {
+    throw new RangeError('Timezone offset must be a finite number.');
+  }
+  if (tzOffsetHours < -12 || tzOffsetHours > 14) {
+    throw new RangeError('Timezone offset must be between -12 and +14 hours.');
+  }
+  if (!Number.isInteger(year)) throw new RangeError('Year must be an integer.');
+  if (!Number.isInteger(month) || month < 1 || month > 12) {
+    throw new RangeError('Month must be an integer from 1 to 12.');
+  }
+  if (!Number.isInteger(day) || day < 1 || day > 31) {
+    throw new RangeError('Day must be an integer from 1 to 31.');
+  }
+  if (!Number.isInteger(hour) || hour < 0 || hour > 23) {
+    throw new RangeError('Hour must be an integer from 0 to 23.');
+  }
+  if (!Number.isInteger(minute) || minute < 0 || minute > 59) {
+    throw new RangeError('Minute must be an integer from 0 to 59.');
+  }
+  if (!Number.isInteger(second) || second < 0 || second > 59) {
+    throw new RangeError('Second must be an integer from 0 to 59.');
+  }
+
+  const localDate = new Date(Date.UTC(year, month - 1, day));
+  if (
+    localDate.getUTCFullYear() !== year
+    || localDate.getUTCMonth() !== month - 1
+    || localDate.getUTCDate() !== day
+  ) {
+    throw new RangeError('Day is out of range for the given month and year.');
   }
 
   const localAsUtcMs = Date.UTC(year, month - 1, day, hour, minute, second);
