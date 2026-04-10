@@ -16,6 +16,7 @@ export interface KalaVelas {
 export interface KalaVelaOptions {
   gulikaMode: 'start' | 'midpoint';
   mandiMode: 'same_as_gulika' | 'segment_start' | 'segment_midpoint' | 'classical_offset';
+  weekdayBoundary?: 'civil_midnight' | 'sunrise';
   /**
    * Optional timestamp for separate Mandi in classical_offset mode.
    * If omitted in classical_offset mode, the function throws.
@@ -155,7 +156,16 @@ export function computeKalaVelas(input: {
   options: KalaVelaOptions;
 }): KalaVelas {
   const { birthTime, sunrise, sunset, nextSunrise, latitude, longitude, weekday, options } = input;
-  const segments = computeSegmentAssignments(birthTime, sunrise, sunset, nextSunrise, weekday);
+  const weekdayForSequence = options.weekdayBoundary === 'civil_midnight'
+    ? weekday
+    : (birthTime.getTime() < sunrise.getTime() ? (weekday + 6) % 7 : weekday);
+  const segments = computeSegmentAssignments(
+    birthTime,
+    sunrise,
+    sunset,
+    nextSunrise,
+    weekdayForSequence,
+  );
   const saturnSegment = findSegmentByLord(segments, 'Saturn');
 
   const segmentLongitudes = {} as Partial<Record<SegmentLord, number>>;

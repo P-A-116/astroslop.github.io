@@ -101,9 +101,9 @@ const tropicalLongitude = (name: PlanetName, d: number, rahu = rahuTropical(d)):
 
 /** Daily motion of a planet (degrees/day); negative means retrograde. */
 export function planetSpeed(name: PlanetName, d: number): number {
-  return name === 'Rahu' || name === 'Ketu'
-    ? -1
-    : wrapDiff(tropicalLongitude(name, d + HALF_DAY) - tropicalLongitude(name, d - HALF_DAY)) / (2 * HALF_DAY);
+  if (name === 'Rahu') return -0.0529538083;
+  if (name === 'Ketu') return 0.0529538083;
+  return wrapDiff(tropicalLongitude(name, d + HALF_DAY) - tropicalLongitude(name, d - HALF_DAY)) / (2 * HALF_DAY);
 }
 
 /**

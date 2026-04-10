@@ -147,4 +147,41 @@ describe('computeKalaVelas', () => {
     expect(result.gulika).toBeGreaterThanOrEqual(0);
     expect(result.gulika).toBeLessThan(360);
   });
+
+  it('uses sunrise weekday boundary for post-midnight births by default', () => {
+    const birthTime = new Date('2026-04-10T05:00:00.000Z'); // before sunrise
+
+    const sunriseBoundary = computeKalaVelas({
+      birthTime,
+      sunrise,
+      sunset,
+      nextSunrise,
+      latitude: 0,
+      longitude: 0,
+      weekday: 5, // Friday civil date, but should use Thursday before sunrise
+      options: {
+        gulikaMode: 'midpoint',
+        mandiMode: 'same_as_gulika',
+        ascendantResolver,
+      },
+    });
+
+    const civilBoundary = computeKalaVelas({
+      birthTime,
+      sunrise,
+      sunset,
+      nextSunrise,
+      latitude: 0,
+      longitude: 0,
+      weekday: 5,
+      options: {
+        gulikaMode: 'midpoint',
+        mandiMode: 'same_as_gulika',
+        weekdayBoundary: 'civil_midnight',
+        ascendantResolver,
+      },
+    });
+
+    expect(sunriseBoundary.gulika).not.toBeCloseTo(civilBoundary.gulika, 12);
+  });
 });

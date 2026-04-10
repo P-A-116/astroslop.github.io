@@ -261,6 +261,13 @@ function rankKarakas(entries: { planet: PlanetName; value: number }[]) {
     }, {} as Partial<Record<PlanetName, string>>);
 }
 
+function rankKarakasFromLongitudes(getLongitude: (planet: PlanetName) => number) {
+  return rankKarakas(KARAKA_PLANETS.map((planet) => ({
+    planet,
+    value: getLongitude(planet) % 30,
+  })));
+}
+
 function divisionalSignsFor(sign: number, deg: number) {
   const result = {} as Record<PlanetSignKey, number>;
   for (const { signKey, calc } of DIVISIONAL_CHARTS) result[signKey] = calc(sign, deg);
@@ -588,8 +595,8 @@ export function getGrahaArudhas(
 }
 
 export function getTemporaryRelationship(fromSign: number, toSign: number): RelationshipType {
-  const diff = ((toSign - fromSign) % 12 + 12) % 12;
-  return [1, 2, 3, 9, 10, 11].includes(diff) ? 'Friend' : 'Enemy';
+  const diff = ((toSign - fromSign + 12) % 12) + 1;
+  return [2, 3, 4, 10, 11, 12].includes(diff) ? 'Friend' : 'Enemy';
 }
 
 export function getNaturalRelationship(a: PlanetName, b: PlanetName): RelationshipType {
@@ -613,19 +620,13 @@ export function getCompoundRelationship(
 export function getCharaKarakas(
   positions: Record<PlanetName, PlanetPosition>,
 ): Partial<Record<PlanetName, string>> {
-  return rankKarakas(KARAKA_PLANETS.map((planet) => ({
-    planet,
-    value: positions[planet].lon,
-  })));
+  return rankKarakasFromLongitudes((planet) => positions[planet].lon);
 }
 
 export function getCharaKarakasFromLongitudes(
   lons: Record<PlanetName, number>,
 ): Partial<Record<PlanetName, string>> {
-  return rankKarakas(KARAKA_PLANETS.map((planet) => ({
-    planet,
-    value: lons[planet] % 30,
-  })));
+  return rankKarakasFromLongitudes((planet) => lons[planet]);
 }
 
 export function sphutaDrishti(
@@ -734,6 +735,7 @@ export function buildChartData({
     options: {
       gulikaMode: 'midpoint',
       mandiMode: 'segment_start',
+      weekdayBoundary: 'sunrise',
     },
   });
   const arudhaLagna = computeArudhaPada(ascSign, positions[SIGN_LORDS[ascSign - 1]].sign);

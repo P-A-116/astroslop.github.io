@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { julianDay, lahiriAyanamsa, sunLongitude, moonLongitude, computeAscendant } from '../src/astronomy';
+import { julianDay, lahiriAyanamsa, sunLongitude, moonLongitude, computeAscendant, planetSpeed } from '../src/astronomy';
 
 const expectWithin = (actual: number, expected: number, tolerance: number) => {
   expect(Math.abs(actual - expected)).toBeLessThanOrEqual(tolerance);
@@ -54,5 +54,12 @@ describe('computeAscendant', () => {
   it('matches Swiss Ephemeris tropical ascendant at the equator and prime meridian for J2000.0 within 0.05 degrees', () => {
     // Swiss Ephemeris swe_houses_ex(): 11.375507 deg
     expectWithin(computeAscendant(julianDay(2000, 1, 1, 12), 0, 0), 11.375507, 0.05);
+  });
+});
+
+describe('planetSpeed', () => {
+  it('uses physically realistic mean-node daily motion for Rahu/Ketu', () => {
+    expect(planetSpeed('Rahu', OCTOBER_2002_D)).toBeCloseTo(-0.0529538083, 12);
+    expect(planetSpeed('Ketu', OCTOBER_2002_D)).toBeCloseTo(0.0529538083, 12);
   });
 });

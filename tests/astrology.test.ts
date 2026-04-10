@@ -11,6 +11,8 @@ import {
   getNakshatraPada,
   signToHouse,
   getCompoundRelationship,
+  getCharaKarakas,
+  getTemporaryRelationship,
   sphutaDrishti,
   getD24Sign,
   getDivisionalDeity,
@@ -419,6 +421,57 @@ describe('getCompoundRelationship', () => {
 
   it('Friend + Enemy = Neutral', () => {
     expect(getCompoundRelationship('Friend', 'Enemy')).toBe('Neutral');
+  });
+});
+
+describe('getTemporaryRelationship', () => {
+  it('matches the canonical 12-house temporary relationship mapping', () => {
+    const fromSign = 1;
+    const expected: Record<number, 'Friend' | 'Enemy'> = {
+      1: 'Enemy',
+      2: 'Friend',
+      3: 'Friend',
+      4: 'Friend',
+      5: 'Enemy',
+      6: 'Enemy',
+      7: 'Enemy',
+      8: 'Enemy',
+      9: 'Enemy',
+      10: 'Friend',
+      11: 'Friend',
+      12: 'Friend',
+    };
+
+    for (let toSign = 1; toSign <= 12; toSign += 1) {
+      expect(getTemporaryRelationship(fromSign, toSign)).toBe(expected[toSign]);
+    }
+  });
+});
+
+describe('getCharaKarakas', () => {
+  it('ranks using degrees within sign, not absolute zodiac longitude', () => {
+    const makePos = (lon: number) => ({
+      lon,
+      sign: Math.floor(lon / 30) + 1,
+      deg: lon % 30,
+      motion: 'Direct' as const,
+    });
+
+    const karakas = getCharaKarakas({
+      Sun: makePos(29),
+      Moon: makePos(58), // 28 in-sign
+      Mars: makePos(57), // 27 in-sign
+      Mercury: makePos(56), // 26 in-sign
+      Jupiter: makePos(55), // 25 in-sign
+      Venus: makePos(54), // 24 in-sign
+      Saturn: makePos(53), // 23 in-sign
+      Rahu: makePos(10),
+      Ketu: makePos(190),
+    });
+
+    expect(karakas.Sun).toBe('Atmakaraka');
+    expect(karakas.Moon).toBe('Amatyakaraka');
+    expect(karakas.Saturn).toBe('Darakaraka');
   });
 });
 
