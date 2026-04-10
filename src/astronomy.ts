@@ -133,6 +133,9 @@ export function computeSunriseSunsetUtc(
   const date = new Date(Date.UTC(year, month - 1, day, 12, 0, 0, 0));
   const sunrise = getSunrise(lat, lon, date);
   const sunset = getSunset(lat, lon, date);
+  if (!sunrise || !sunset) {
+    throw new RangeError('Sunrise/sunset cannot be computed for this date and latitude.');
+  }
   return { sunrise, sunset };
 }
 
