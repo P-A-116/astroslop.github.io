@@ -10,6 +10,21 @@ import {
   NATURAL_RELATIONSHIPS,
   SHASHTIAMSA_DATA,
 } from './constants';
+import { computeUpagrahas, formatUpagrahas } from './upagrahas';
+export {
+  computeAllUpagrahas,
+} from './allUpagrahas';
+export {
+  computeKalaVelas,
+  computeKalaVelasDetailed,
+} from './kalaVelas';
+export {
+  computeUpagrahas,
+  formatLongitudeSignDegreesMinutes,
+  formatUpagrahas,
+  normalizeLongitude,
+  verifyUpagrahas,
+} from './upagrahas';
 import { julianDay, computeAllPositions } from './astronomy';
 import type {
   PlanetName,
@@ -687,6 +702,8 @@ export function buildChartData({
   const { nakshatra: ascNak, pada: ascPada } = getNakshatraPada(ascSid);
   const karakas = getCharaKarakas(positions);
   const sunLon = positions.Sun.lon;
+  const upagrahas = computeUpagrahas(sunLon);
+  const upagrahasFormatted = formatUpagrahas(upagrahas);
   const arudhaLagna = computeArudhaPada(ascSign, positions[SIGN_LORDS[ascSign - 1]].sign);
 
   const planetData = PLANET_LIST.map((name) => {
@@ -732,6 +749,8 @@ export function buildChartData({
     positions,
     planetData,
     karakas,
+    upagrahas,
+    upagrahasFormatted,
   } as ChartData;
 }
 

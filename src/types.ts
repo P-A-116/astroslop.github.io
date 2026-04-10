@@ -117,6 +117,20 @@ export interface ChartData {
   positions: Record<PlanetName, PlanetPosition>;
   planetData: PlanetData[];
   karakas: Partial<Record<PlanetName, string>>;
+  upagrahas: {
+    dhooma: number;
+    vyatipata: number;
+    parivesha: number;
+    chapa: number;
+    upaketu: number;
+  };
+  upagrahasFormatted: {
+    dhooma: { sign: string; degrees: number; minutes: number; text: string };
+    vyatipata: { sign: string; degrees: number; minutes: number; text: string };
+    parivesha: { sign: string; degrees: number; minutes: number; text: string };
+    chapa: { sign: string; degrees: number; minutes: number; text: string };
+    upaketu: { sign: string; degrees: number; minutes: number; text: string };
+  };
 }
 
 export interface ParivartanaYoga {
