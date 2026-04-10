@@ -132,12 +132,12 @@ export interface ChartData {
     upaketu: { sign: string; degrees: number; minutes: number; text: string };
   };
   kalaVelas?: {
-    gulika: { longitude: number; formatted: { sign: string; degrees: number; minutes: number; text: string }; source: 'kala'; calculationMode: string; segmentRange?: { start: Date; end: Date } };
-    mandi: { longitude: number; formatted: { sign: string; degrees: number; minutes: number; text: string }; source: 'kala'; calculationMode: string; segmentRange?: { start: Date; end: Date } };
-    kala: { longitude: number; formatted: { sign: string; degrees: number; minutes: number; text: string }; source: 'kala'; calculationMode: string; segmentRange?: { start: Date; end: Date } };
-    mrityu: { longitude: number; formatted: { sign: string; degrees: number; minutes: number; text: string }; source: 'kala'; calculationMode: string; segmentRange?: { start: Date; end: Date } };
-    ardhaprahara: { longitude: number; formatted: { sign: string; degrees: number; minutes: number; text: string }; source: 'kala'; calculationMode: string; segmentRange?: { start: Date; end: Date } };
-    yamaghantaka: { longitude: number; formatted: { sign: string; degrees: number; minutes: number; text: string }; source: 'kala'; calculationMode: string; segmentRange?: { start: Date; end: Date } };
+    gulika: { longitude: number; formatted: { sign: string; degrees: number; minutes: number; text: string }; source: 'kala'; calculationMode: string; segmentLongitudeRange?: { start: number; end: number } };
+    mandi: { longitude: number; formatted: { sign: string; degrees: number; minutes: number; text: string }; source: 'kala'; calculationMode: string; segmentLongitudeRange?: { start: number; end: number } };
+    kala: { longitude: number; formatted: { sign: string; degrees: number; minutes: number; text: string }; source: 'kala'; calculationMode: string; segmentLongitudeRange?: { start: number; end: number } };
+    mrityu: { longitude: number; formatted: { sign: string; degrees: number; minutes: number; text: string }; source: 'kala'; calculationMode: string; segmentLongitudeRange?: { start: number; end: number } };
+    ardhaprahara: { longitude: number; formatted: { sign: string; degrees: number; minutes: number; text: string }; source: 'kala'; calculationMode: string; segmentLongitudeRange?: { start: number; end: number } };
+    yamaghantaka: { longitude: number; formatted: { sign: string; degrees: number; minutes: number; text: string }; source: 'kala'; calculationMode: string; segmentLongitudeRange?: { start: number; end: number } };
   };
 }
 

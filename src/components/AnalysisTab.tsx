@@ -34,20 +34,17 @@ export default function AnalysisTab(props: Props) {
     ['Chapa (Indra Dhanus)', props.data.upagrahas.chapa],
     ['Upaketu (Sikhi)', props.data.upagrahas.upaketu],
   ] as const);
-  const formatRange = (start: Date, end: Date) => {
-    const opts: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'UTC' };
-    const startText = new Intl.DateTimeFormat('en-GB', opts).format(start);
-    const endText = new Intl.DateTimeFormat('en-GB', opts).format(end);
-    return `${startText}-${endText} UTC`;
+  const formatRange = (start: number, end: number) => {
+    return `${formatSignedDms(start)} -> ${formatSignedDms(end)}`;
   };
   const kalaVelaItems = () => {
     if (!props.data.kalaVelas) return [];
     return [
-      ['Gulika', props.data.kalaVelas.gulika.segmentRange],
-      ['Kala', props.data.kalaVelas.kala.segmentRange],
-      ['Mrityu', props.data.kalaVelas.mrityu.segmentRange],
-      ['Ardha Prahara', props.data.kalaVelas.ardhaprahara.segmentRange],
-      ['Yamaghantaka', props.data.kalaVelas.yamaghantaka.segmentRange],
+      ['Gulika', props.data.kalaVelas.gulika.segmentLongitudeRange],
+      ['Kala', props.data.kalaVelas.kala.segmentLongitudeRange],
+      ['Mrityu', props.data.kalaVelas.mrityu.segmentLongitudeRange],
+      ['Ardha Prahara', props.data.kalaVelas.ardhaprahara.segmentLongitudeRange],
+      ['Yamaghantaka', props.data.kalaVelas.yamaghantaka.segmentLongitudeRange],
     ] as const;
   };
 

@@ -240,9 +240,9 @@ export interface UpagrahaPoint {
   formatted: ReturnType<typeof formatLongitudeSignDegreesMinutes>;
   source: 'solar' | 'kala';
   calculationMode: string;
-  segmentRange?: {
-    start: Date;
-    end: Date;
+  segmentLongitudeRange?: {
+    start: number;
+    end: number;
   };
 }
 
@@ -282,16 +282,29 @@ export function computeKalaVelasDetailed(input: {
   );
   const segmentRange = (lord: SegmentLord) => {
     const segment = findSegmentByLord(segments, lord);
-    return { start: segment.start, end: segment.end };
+    return {
+      start: getAscendantLongitudeAtTime(
+        segment.start,
+        input.latitude,
+        input.longitude,
+        input.options.ascendantResolver,
+      ),
+      end: getAscendantLongitudeAtTime(
+        segment.end,
+        input.latitude,
+        input.longitude,
+        input.options.ascendantResolver,
+      ),
+    };
   };
 
   return {
-    gulika: { longitude: result.gulika, formatted: formatLongitudeSignDegreesMinutes(result.gulika), source: 'kala', calculationMode: mode, segmentRange: segmentRange('Saturn') },
-    mandi: { longitude: result.mandi, formatted: formatLongitudeSignDegreesMinutes(result.mandi), source: 'kala', calculationMode: mode, segmentRange: segmentRange('Saturn') },
-    kala: { longitude: result.kala, formatted: formatLongitudeSignDegreesMinutes(result.kala), source: 'kala', calculationMode: mode, segmentRange: segmentRange('Sun') },
-    mrityu: { longitude: result.mrityu, formatted: formatLongitudeSignDegreesMinutes(result.mrityu), source: 'kala', calculationMode: mode, segmentRange: segmentRange('Mars') },
-    ardhaprahara: { longitude: result.ardhaprahara, formatted: formatLongitudeSignDegreesMinutes(result.ardhaprahara), source: 'kala', calculationMode: mode, segmentRange: segmentRange('Mercury') },
-    yamaghantaka: { longitude: result.yamaghantaka, formatted: formatLongitudeSignDegreesMinutes(result.yamaghantaka), source: 'kala', calculationMode: mode, segmentRange: segmentRange('Jupiter') },
+    gulika: { longitude: result.gulika, formatted: formatLongitudeSignDegreesMinutes(result.gulika), source: 'kala', calculationMode: mode, segmentLongitudeRange: segmentRange('Saturn') },
+    mandi: { longitude: result.mandi, formatted: formatLongitudeSignDegreesMinutes(result.mandi), source: 'kala', calculationMode: mode, segmentLongitudeRange: segmentRange('Saturn') },
+    kala: { longitude: result.kala, formatted: formatLongitudeSignDegreesMinutes(result.kala), source: 'kala', calculationMode: mode, segmentLongitudeRange: segmentRange('Sun') },
+    mrityu: { longitude: result.mrityu, formatted: formatLongitudeSignDegreesMinutes(result.mrityu), source: 'kala', calculationMode: mode, segmentLongitudeRange: segmentRange('Mars') },
+    ardhaprahara: { longitude: result.ardhaprahara, formatted: formatLongitudeSignDegreesMinutes(result.ardhaprahara), source: 'kala', calculationMode: mode, segmentLongitudeRange: segmentRange('Mercury') },
+    yamaghantaka: { longitude: result.yamaghantaka, formatted: formatLongitudeSignDegreesMinutes(result.yamaghantaka), source: 'kala', calculationMode: mode, segmentLongitudeRange: segmentRange('Jupiter') },
   };
 }
 
