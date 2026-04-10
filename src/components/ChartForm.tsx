@@ -77,6 +77,21 @@ function toUtcDetails(dateVal: string, timeVal: string, tzVal: number) {
   };
 }
 
+function getLocalWeekday(dateVal: string, timeVal: string): number {
+  const [yearStr, monStr, dayStr] = dateVal.split('-');
+  const [hrStr, minStr, secStr = '0'] = timeVal.split(':');
+  return new Date(
+    Date.UTC(
+      parseInt(yearStr, 10),
+      parseInt(monStr, 10) - 1,
+      parseInt(dayStr, 10),
+      parseInt(hrStr, 10),
+      parseInt(minStr, 10),
+      parseInt(secStr, 10),
+    ),
+  ).getUTCDay();
+}
+
 function toAbsoluteDate(dateVal: string, timeVal: string, tzVal: number) {
   const [yearStr, monStr, dayStr] = dateVal.split('-');
   const [hrStr, minStr, secStr = '0'] = timeVal.split(':');
@@ -363,7 +378,16 @@ export default function ChartForm(props: Props) {
 
     try {
       const utc = toUtcDetails(dateVal, timeVal, tzVal);
-      const data = buildChartData({ ...utc, lat: latVal, lon: lonVal });
+      const [localYear, localMonth, localDay] = dateVal.split('-').map((value) => parseInt(value, 10));
+      const data = buildChartData({
+        ...utc,
+        lat: latVal,
+        lon: lonVal,
+        weekday: getLocalWeekday(dateVal, timeVal),
+        localYear,
+        localMonth,
+        localDay,
+      });
       props.onGenerate(
         data,
         utc.utcStr,

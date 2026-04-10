@@ -4,6 +4,7 @@ import * as moonposition from 'astronomia/moonposition';
 import * as planetposition from 'astronomia/planetposition';
 import * as sidereal from 'astronomia/sidereal';
 import * as nutation from 'astronomia/nutation';
+import { getSunrise, getSunset } from 'sunrise-sunset-js';
 import earthData from 'astronomia/data/vsop87Bearth';
 import mercuryData from 'astronomia/data/vsop87Bmercury';
 import venusData from 'astronomia/data/vsop87Bvenus';
@@ -116,6 +117,23 @@ export function computeAscendant(jd: number, lat: number, lon: number): number {
   const obl = nutation.meanObliquity(jd); // radians
   const latR = lat * RAD;
   return norm(Math.atan2(Math.cos(RAMC), -(Math.sin(RAMC) * Math.cos(obl) + Math.tan(latR) * Math.sin(obl))) * DEG);
+}
+
+/**
+ * Sunrise/sunset UTC times for a civil date at latitude/longitude.
+ * Uses sunrise-sunset-js for robust astronomical event timing.
+ */
+export function computeSunriseSunsetUtc(
+  year: number,
+  month: number,
+  day: number,
+  lat: number,
+  lon: number,
+): { sunrise: Date; sunset: Date } {
+  const date = new Date(Date.UTC(year, month - 1, day, 12, 0, 0, 0));
+  const sunrise = getSunrise(lat, lon, date);
+  const sunset = getSunset(lat, lon, date);
+  return { sunrise, sunset };
 }
 
 export function computeAllPositions(jd: number, lat: number, lon: number): AllPositionsResult {

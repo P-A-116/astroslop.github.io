@@ -29,6 +29,17 @@ export default function AnalysisTab(props: Props) {
     ['Chapa (Indra Dhanus)', props.data.upagrahas.chapa, props.data.upagrahasFormatted.chapa],
     ['Upaketu (Sikhi)', props.data.upagrahas.upaketu, props.data.upagrahasFormatted.upaketu],
   ] as const);
+  const kalaVelaItems = () => {
+    if (!props.data.kalaVelas) return [];
+    return [
+      ['Gulika', props.data.kalaVelas.gulika],
+      ['Mandi', props.data.kalaVelas.mandi],
+      ['Kala', props.data.kalaVelas.kala],
+      ['Mrityu', props.data.kalaVelas.mrityu],
+      ['Ardha Prahara', props.data.kalaVelas.ardhaprahara],
+      ['Yamaghantaka', props.data.kalaVelas.yamaghantaka],
+    ] as const;
+  };
 
   return (
     <div class="analysis-tab">
@@ -47,6 +58,28 @@ export default function AnalysisTab(props: Props) {
             )}
           </For>
         </div>
+      </div>
+
+      <div class="analysis-section">
+        <h3 class="analysis-subtitle">Kala Velas</h3>
+        <Show
+          when={kalaVelaItems().length > 0}
+          fallback={<p class="analysis-empty">Kala Vela values unavailable for this chart.</p>}
+        >
+          <div class="arudha-grid">
+            <For each={kalaVelaItems()}>
+              {([name, point]) => (
+                <div class="arudha-card">
+                  <div class="arudha-label">{name}</div>
+                  <div class="arudha-value">{point.formatted.text}</div>
+                  <div class="analysis-empty" style="margin-top: 0.35rem;">
+                    {`${point.longitude.toFixed(4)}° absolute`}
+                  </div>
+                </div>
+              )}
+            </For>
+          </div>
+        </Show>
       </div>
 
       <div class="analysis-section">

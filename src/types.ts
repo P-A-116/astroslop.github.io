@@ -131,6 +131,14 @@ export interface ChartData {
     chapa: { sign: string; degrees: number; minutes: number; text: string };
     upaketu: { sign: string; degrees: number; minutes: number; text: string };
   };
+  kalaVelas?: {
+    gulika: { longitude: number; formatted: { sign: string; degrees: number; minutes: number; text: string }; source: 'kala'; calculationMode: string };
+    mandi: { longitude: number; formatted: { sign: string; degrees: number; minutes: number; text: string }; source: 'kala'; calculationMode: string };
+    kala: { longitude: number; formatted: { sign: string; degrees: number; minutes: number; text: string }; source: 'kala'; calculationMode: string };
+    mrityu: { longitude: number; formatted: { sign: string; degrees: number; minutes: number; text: string }; source: 'kala'; calculationMode: string };
+    ardhaprahara: { longitude: number; formatted: { sign: string; degrees: number; minutes: number; text: string }; source: 'kala'; calculationMode: string };
+    yamaghantaka: { longitude: number; formatted: { sign: string; degrees: number; minutes: number; text: string }; source: 'kala'; calculationMode: string };
+  };
 }
 
 export interface ParivartanaYoga {
@@ -148,4 +156,8 @@ export interface BuildChartParams {
   hour: number;
   lat: number;
   lon: number;
+  weekday?: number;
+  localYear?: number;
+  localMonth?: number;
+  localDay?: number;
 }
