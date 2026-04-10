@@ -22,9 +22,33 @@ export default function AnalysisTab(props: Props) {
   const yogas = () => findParivartanaYogas(props.data, props.selectedChart);
   const arudhas = () => getArudhaPadas(props.data, props.selectedChart);
   const grahaArudhas = () => getGrahaArudhas(props.data, props.selectedChart);
+  const upagrahaItems = () => ([
+    ['Dhooma', props.data.upagrahas.dhooma, props.data.upagrahasFormatted.dhooma],
+    ['Vyatipata', props.data.upagrahas.vyatipata, props.data.upagrahasFormatted.vyatipata],
+    ['Parivesha', props.data.upagrahas.parivesha, props.data.upagrahasFormatted.parivesha],
+    ['Chapa (Indra Dhanus)', props.data.upagrahas.chapa, props.data.upagrahasFormatted.chapa],
+    ['Upaketu (Sikhi)', props.data.upagrahas.upaketu, props.data.upagrahasFormatted.upaketu],
+  ] as const);
 
   return (
     <div class="analysis-tab">
+      <div class="analysis-section">
+        <h3 class="analysis-subtitle">Solar Upagrahas</h3>
+        <div class="arudha-grid">
+          <For each={upagrahaItems()}>
+            {([name, raw, formatted]) => (
+              <div class="arudha-card">
+                <div class="arudha-label">{name}</div>
+                <div class="arudha-value">{formatted.text}</div>
+                <div class="analysis-empty" style="margin-top: 0.35rem;">
+                  {`${raw.toFixed(4)}° absolute`}
+                </div>
+              </div>
+            )}
+          </For>
+        </div>
+      </div>
+
       <div class="analysis-section">
         <h3 class="analysis-subtitle">Arudha Padas</h3>
         <div class="arudha-grid">
