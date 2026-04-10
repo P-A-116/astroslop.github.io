@@ -28,6 +28,16 @@ export interface KalaVelaOptions {
   ascendantResolver?: (time: Date, latitude: number, longitude: number) => number;
 }
 
+function getWeekdayForSequence(
+  birthTime: Date,
+  sunrise: Date,
+  weekday: number,
+  boundary: KalaVelaOptions['weekdayBoundary'],
+): number {
+  if (boundary === 'civil_midnight') return weekday;
+  return birthTime.getTime() < sunrise.getTime() ? (weekday + 6) % 7 : weekday;
+}
+
 interface SegmentAssignment {
   start: Date;
   end: Date;
@@ -156,9 +166,12 @@ export function computeKalaVelas(input: {
   options: KalaVelaOptions;
 }): KalaVelas {
   const { birthTime, sunrise, sunset, nextSunrise, latitude, longitude, weekday, options } = input;
-  const weekdayForSequence = options.weekdayBoundary === 'civil_midnight'
-    ? weekday
-    : (birthTime.getTime() < sunrise.getTime() ? (weekday + 6) % 7 : weekday);
+  const weekdayForSequence = getWeekdayForSequence(
+    birthTime,
+    sunrise,
+    weekday,
+    options.weekdayBoundary,
+  );
   const segments = computeSegmentAssignments(
     birthTime,
     sunrise,
@@ -227,6 +240,10 @@ export interface UpagrahaPoint {
   formatted: ReturnType<typeof formatLongitudeSignDegreesMinutes>;
   source: 'solar' | 'kala';
   calculationMode: string;
+  segmentRange?: {
+    start: Date;
+    end: Date;
+  };
 }
 
 export interface KalaVelasDetailed {
@@ -250,14 +267,31 @@ export function computeKalaVelasDetailed(input: {
 }): KalaVelasDetailed {
   const result = computeKalaVelas(input);
   const mode = `gulika:${input.options.gulikaMode}; mandi:${input.options.mandiMode}`;
+  const weekdayForSequence = getWeekdayForSequence(
+    input.birthTime,
+    input.sunrise,
+    input.weekday,
+    input.options.weekdayBoundary,
+  );
+  const segments = computeSegmentAssignments(
+    input.birthTime,
+    input.sunrise,
+    input.sunset,
+    input.nextSunrise,
+    weekdayForSequence,
+  );
+  const segmentRange = (lord: SegmentLord) => {
+    const segment = findSegmentByLord(segments, lord);
+    return { start: segment.start, end: segment.end };
+  };
 
   return {
-    gulika: { longitude: result.gulika, formatted: formatLongitudeSignDegreesMinutes(result.gulika), source: 'kala', calculationMode: mode },
-    mandi: { longitude: result.mandi, formatted: formatLongitudeSignDegreesMinutes(result.mandi), source: 'kala', calculationMode: mode },
-    kala: { longitude: result.kala, formatted: formatLongitudeSignDegreesMinutes(result.kala), source: 'kala', calculationMode: mode },
-    mrityu: { longitude: result.mrityu, formatted: formatLongitudeSignDegreesMinutes(result.mrityu), source: 'kala', calculationMode: mode },
-    ardhaprahara: { longitude: result.ardhaprahara, formatted: formatLongitudeSignDegreesMinutes(result.ardhaprahara), source: 'kala', calculationMode: mode },
-    yamaghantaka: { longitude: result.yamaghantaka, formatted: formatLongitudeSignDegreesMinutes(result.yamaghantaka), source: 'kala', calculationMode: mode },
+    gulika: { longitude: result.gulika, formatted: formatLongitudeSignDegreesMinutes(result.gulika), source: 'kala', calculationMode: mode, segmentRange: segmentRange('Saturn') },
+    mandi: { longitude: result.mandi, formatted: formatLongitudeSignDegreesMinutes(result.mandi), source: 'kala', calculationMode: mode, segmentRange: segmentRange('Saturn') },
+    kala: { longitude: result.kala, formatted: formatLongitudeSignDegreesMinutes(result.kala), source: 'kala', calculationMode: mode, segmentRange: segmentRange('Sun') },
+    mrityu: { longitude: result.mrityu, formatted: formatLongitudeSignDegreesMinutes(result.mrityu), source: 'kala', calculationMode: mode, segmentRange: segmentRange('Mars') },
+    ardhaprahara: { longitude: result.ardhaprahara, formatted: formatLongitudeSignDegreesMinutes(result.ardhaprahara), source: 'kala', calculationMode: mode, segmentRange: segmentRange('Mercury') },
+    yamaghantaka: { longitude: result.yamaghantaka, formatted: formatLongitudeSignDegreesMinutes(result.yamaghantaka), source: 'kala', calculationMode: mode, segmentRange: segmentRange('Jupiter') },
   };
 }
 

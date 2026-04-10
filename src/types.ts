@@ -132,12 +132,12 @@ export interface ChartData {
     upaketu: { sign: string; degrees: number; minutes: number; text: string };
   };
   kalaVelas?: {
-    gulika: { longitude: number; formatted: { sign: string; degrees: number; minutes: number; text: string }; source: 'kala'; calculationMode: string };
-    mandi: { longitude: number; formatted: { sign: string; degrees: number; minutes: number; text: string }; source: 'kala'; calculationMode: string };
-    kala: { longitude: number; formatted: { sign: string; degrees: number; minutes: number; text: string }; source: 'kala'; calculationMode: string };
-    mrityu: { longitude: number; formatted: { sign: string; degrees: number; minutes: number; text: string }; source: 'kala'; calculationMode: string };
-    ardhaprahara: { longitude: number; formatted: { sign: string; degrees: number; minutes: number; text: string }; source: 'kala'; calculationMode: string };
-    yamaghantaka: { longitude: number; formatted: { sign: string; degrees: number; minutes: number; text: string }; source: 'kala'; calculationMode: string };
+    gulika: { longitude: number; formatted: { sign: string; degrees: number; minutes: number; text: string }; source: 'kala'; calculationMode: string; segmentRange?: { start: Date; end: Date } };
+    mandi: { longitude: number; formatted: { sign: string; degrees: number; minutes: number; text: string }; source: 'kala'; calculationMode: string; segmentRange?: { start: Date; end: Date } };
+    kala: { longitude: number; formatted: { sign: string; degrees: number; minutes: number; text: string }; source: 'kala'; calculationMode: string; segmentRange?: { start: Date; end: Date } };
+    mrityu: { longitude: number; formatted: { sign: string; degrees: number; minutes: number; text: string }; source: 'kala'; calculationMode: string; segmentRange?: { start: Date; end: Date } };
+    ardhaprahara: { longitude: number; formatted: { sign: string; degrees: number; minutes: number; text: string }; source: 'kala'; calculationMode: string; segmentRange?: { start: Date; end: Date } };
+    yamaghantaka: { longitude: number; formatted: { sign: string; degrees: number; minutes: number; text: string }; source: 'kala'; calculationMode: string; segmentRange?: { start: Date; end: Date } };
   };
 }
 

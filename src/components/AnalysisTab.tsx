@@ -34,15 +34,20 @@ export default function AnalysisTab(props: Props) {
     ['Chapa (Indra Dhanus)', props.data.upagrahas.chapa],
     ['Upaketu (Sikhi)', props.data.upagrahas.upaketu],
   ] as const);
+  const formatRange = (start: Date, end: Date) => {
+    const opts: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'UTC' };
+    const startText = new Intl.DateTimeFormat('en-GB', opts).format(start);
+    const endText = new Intl.DateTimeFormat('en-GB', opts).format(end);
+    return `${startText}-${endText} UTC`;
+  };
   const kalaVelaItems = () => {
     if (!props.data.kalaVelas) return [];
     return [
-      ['Gulika', props.data.kalaVelas.gulika],
-      ['Mandi', props.data.kalaVelas.mandi],
-      ['Kala', props.data.kalaVelas.kala],
-      ['Mrityu', props.data.kalaVelas.mrityu],
-      ['Ardha Prahara', props.data.kalaVelas.ardhaprahara],
-      ['Yamaghantaka', props.data.kalaVelas.yamaghantaka],
+      ['Gulika', props.data.kalaVelas.gulika.segmentRange],
+      ['Kala', props.data.kalaVelas.kala.segmentRange],
+      ['Mrityu', props.data.kalaVelas.mrityu.segmentRange],
+      ['Ardha Prahara', props.data.kalaVelas.ardhaprahara.segmentRange],
+      ['Yamaghantaka', props.data.kalaVelas.yamaghantaka.segmentRange],
     ] as const;
   };
 
@@ -70,10 +75,12 @@ export default function AnalysisTab(props: Props) {
         >
           <div class="arudha-grid">
             <For each={kalaVelaItems()}>
-              {([name, point]) => (
+              {([name, range]) => (
                 <div class="arudha-card">
                   <div class="arudha-label">{name}</div>
-                  <div class="arudha-value">{formatSignedDms(point.longitude)}</div>
+                  <div class="arudha-value">
+                    {range ? formatRange(range.start, range.end) : '—'}
+                  </div>
                 </div>
               )}
             </For>
