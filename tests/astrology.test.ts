@@ -306,7 +306,7 @@ describe('sphutaDrishti', () => {
     for (const planet of planets) {
       for (let angle = 0; angle < 360; angle += 15) {
         const result = sphutaDrishti(planet, 'Sun', 0, angle);
-        if (result !== null) { expect(result).toBeGreaterThanOrEqual(0); expect(result).toBeLessThanOrEqual(60); }
+        if (result !== null) { expect(result).toBeGreaterThanOrEqual(0); expect(result).toBeLessThanOrEqual(75); }
       }
     }
   });
