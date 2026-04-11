@@ -387,7 +387,8 @@ function marsAspect(a: number): number | null {
   if (a < 60) return null;
   if (a < 90) return a - 45;
   if (a < 120) return 45 + (a - 90) / 2;
-  if (a < 180) return 2 * (150 - a);
+  if (a < 150) return 2 * (150 - a);
+  if (a < 180) return (300 - a) / 2;
   if (a < 210) return 60;
   if (a < 240) return 270 - a;
   if (a < 270) return 0;
