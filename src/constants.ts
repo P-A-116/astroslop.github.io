@@ -131,7 +131,7 @@ export const FUNCTIONAL_ROLES: Record<number, FunctionalRoleEntry> = {
   12: role('Moon Mars Jupiter', 'Mercury Saturn Venus Sun'),
 };
 
-export const NAVAMSA_START_SIGNS = Array(3).fill([1, 10, 7, 4]).flat();
+export const NAVAMSA_START_SIGNS = [1, 10, 7, 4, 1, 10, 7, 4, 1, 10, 7, 4];
 
 export const REL_CSS: Record<CompoundRelationship, string> = {
   'Extreme Friendship': 'rel-ef',

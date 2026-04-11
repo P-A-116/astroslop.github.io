@@ -18,7 +18,7 @@ declare module 'astronomia/moonposition' {
 declare module 'astronomia/planetposition' {
   interface Coord { lon: number; lat: number; range: number }
   export class Planet {
-    constructor(data: object);
+    constructor(data: unknown);
     position(jde: number): Coord;
   }
 }
@@ -34,26 +34,26 @@ declare module 'astronomia/nutation' {
 }
 
 declare module 'astronomia/data/vsop87Bearth' {
-  const data: object;
+  const data: unknown;
   export default data;
 }
 declare module 'astronomia/data/vsop87Bmercury' {
-  const data: object;
+  const data: unknown;
   export default data;
 }
 declare module 'astronomia/data/vsop87Bvenus' {
-  const data: object;
+  const data: unknown;
   export default data;
 }
 declare module 'astronomia/data/vsop87Bmars' {
-  const data: object;
+  const data: unknown;
   export default data;
 }
 declare module 'astronomia/data/vsop87Bjupiter' {
-  const data: object;
+  const data: unknown;
   export default data;
 }
 declare module 'astronomia/data/vsop87Bsaturn' {
-  const data: object;
+  const data: unknown;
   export default data;
 }

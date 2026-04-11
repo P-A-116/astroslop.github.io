@@ -4,7 +4,6 @@ import * as moonposition from 'astronomia/moonposition';
 import * as planetposition from 'astronomia/planetposition';
 import * as sidereal from 'astronomia/sidereal';
 import * as nutation from 'astronomia/nutation';
-import { getSunrise, getSunset } from 'sunrise-sunset-js';
 import earthData from 'astronomia/data/vsop87Bearth';
 import mercuryData from 'astronomia/data/vsop87Bmercury';
 import venusData from 'astronomia/data/vsop87Bvenus';
@@ -13,12 +12,13 @@ import jupiterData from 'astronomia/data/vsop87Bjupiter';
 import saturnData from 'astronomia/data/vsop87Bsaturn';
 
 import { PLANET_LIST } from './constants';
+import { normalizeLongitude } from './upagrahas';
 import type { MotionType, PlanetName, PlanetPosition } from './types';
 
 const RAD = Math.PI / 180;
 const DEG = 180 / Math.PI;
 const HALF_DAY = 0.5;
-const norm = (x: number) => ((x % 360) + 360) % 360;
+const norm = normalizeLongitude;
 const wrapDiff = (x: number) => (x > 180 ? x - 360 : x < -180 ? x + 360 : x);
 
 // Pre-instantiate VSOP87 planet objects
@@ -68,7 +68,13 @@ export function moonLongitude(d: number): { lon: number } {
   return { lon: norm(lon * DEG) };
 }
 
-/** Geocentric ecliptic longitude of a planet (degrees) derived from VSOP87 heliocentric data. */
+/**
+ * Geocentric ecliptic longitude of a planet (degrees) derived from VSOP87 heliocentric data.
+ *
+ * The Z-axis (ecliptic latitude) is intentionally omitted from the atan2 calculation.
+ * The cos(lat) projection onto the ecliptic plane is the correct approach for computing
+ * ecliptic longitude; latitude would only be needed if we also wanted geocentric latitude.
+ */
 function geocentricPlanetLon(planet: planetposition.Planet, jde: number): number {
   const p = planet.position(jde);
   const e = earthPlanet.position(jde);
@@ -119,26 +125,6 @@ export function computeAscendant(jd: number, lat: number, lon: number): number {
   return norm(Math.atan2(Math.cos(RAMC), -(Math.sin(RAMC) * Math.cos(obl) + Math.tan(latR) * Math.sin(obl))) * DEG);
 }
 
-/**
- * Sunrise/sunset UTC times for a civil date at latitude/longitude.
- * Uses sunrise-sunset-js for robust astronomical event timing.
- */
-export function computeSunriseSunsetUtc(
-  year: number,
-  month: number,
-  day: number,
-  lat: number,
-  lon: number,
-): { sunrise: Date; sunset: Date } {
-  const date = new Date(Date.UTC(year, month - 1, day, 12, 0, 0, 0));
-  const sunrise = getSunrise(lat, lon, date);
-  const sunset = getSunset(lat, lon, date);
-  if (!sunrise || !sunset) {
-    throw new RangeError('Sunrise/sunset cannot be computed for this date and latitude.');
-  }
-  return { sunrise, sunset };
-}
-
 export function computeAllPositions(jd: number, lat: number, lon: number): AllPositionsResult {
   const d = jd - 2451543.5;
   const ayanamsa = lahiriAyanamsa(jd);
@@ -147,7 +133,7 @@ export function computeAllPositions(jd: number, lat: number, lon: number): AllPo
   const positions = Object.fromEntries(PLANET_LIST.map((name) => {
     const tropLon = tropicalLongitude(name, d, rahu);
     const sidLon = norm(tropLon - ayanamsa);
-    const speed = name === 'Rahu' || name === 'Ketu' ? -1 : planetSpeed(name, d);
+    const speed = planetSpeed(name, d);
     const motion: MotionType = speed < 0 ? 'Retrograde' : 'Direct';
     return [name, { lon: sidLon, sign: Math.floor(sidLon / 30) + 1, deg: sidLon % 30, motion }];
   })) as Record<PlanetName, PlanetPosition>;

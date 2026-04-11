@@ -35,67 +35,14 @@ import type {
   BuildChartParams,
   DivisionalChart,
   ShashtiamsaInfo,
+  DivisionalPlacement,
 } from './types';
 
-type PlanetSignKey =
-  | 'sign'
-  | 'd2Sign'
-  | 'd3Sign'
-  | 'd4Sign'
-  | 'd7Sign'
-  | 'navamsaSign'
-  | 'd10Sign'
-  | 'd12Sign'
-  | 'd16Sign'
-  | 'd20Sign'
-  | 'd24Sign'
-  | 'd27Sign'
-  | 'd30Sign'
-  | 'd40Sign'
-  | 'd45Sign'
-  | 'd60Sign';
-
-type PlanetHouseKey =
-  | 'house'
-  | 'navamsaHouse'
-  | 'd7House'
-  | 'd10House'
-  | 'd12House'
-  | 'd16House'
-  | 'd20House'
-  | 'd24House'
-  | 'd27House'
-  | 'd30House'
-  | 'd40House'
-  | 'd45House'
-  | 'd60House';
-
-type AscKey =
-  | 'ascSign'
-  | 'ascD2'
-  | 'ascD3'
-  | 'ascD4'
-  | 'ascD7'
-  | 'ascNavamsa'
-  | 'ascD10'
-  | 'ascD12'
-  | 'ascD16'
-  | 'ascD20'
-  | 'ascD24'
-  | 'ascD27'
-  | 'ascD30'
-  | 'ascD40'
-  | 'ascD45'
-  | 'ascD60';
-
-interface DivisionalMeta {
+export interface DivisionalMeta {
   chart: DivisionalChart;
   label: string;
   divisor: number;
-  signKey: PlanetSignKey;
-  ascKey: AscKey;
   calc: (sign: number, deg: number) => number;
-  houseKey?: PlanetHouseKey;
 }
 
 interface BuildChartFromLocalParams {
@@ -142,78 +89,21 @@ const D10_DEITIES = ['Indra', 'Agni', 'Yama', 'Rakshasa', 'Varuna', 'Vayu', 'Kub
 const D12_DEITIES = ['Ganesa', 'Aswini Kumara', 'Yama', 'Sarpa'] as const;
 const D16_DEITIES = ['Brahma', 'Vishnu', 'Siva', 'Sun'] as const;
 const D20_ODD_DEITIES = [
-  'Kaali',
-  'Gauri',
-  'Jaya',
-  'Lakshmi',
-  'Vijaya',
-  'Vimala',
-  'Sati',
-  'Tara',
-  'Jvala-Mukhi',
-  'Sveta',
-  'Lalita',
-  'Bagala-mukhi',
-  'Pratyangira',
-  'Sachi',
-  'Raudri',
-  'Bhavani',
-  'Varada',
-  'Jaya',
-  'Tripura',
-  'Sumukhi',
+  'Kaali', 'Gauri', 'Jaya', 'Lakshmi', 'Vijaya', 'Vimala', 'Sati', 'Tara',
+  'Jvala-Mukhi', 'Sveta', 'Lalita', 'Bagala-mukhi', 'Pratyangira', 'Sachi',
+  'Raudri', 'Bhavani', 'Varada', 'Jaya', 'Tripura', 'Sumukhi',
 ] as const;
 const D20_EVEN_DEITIES = [
-  'Daya',
-  'Megha',
-  'Chinnasi',
-  'Pisachini',
-  'Dhoomavathi',
-  'Matangi',
-  'Bala',
-  'Bhadra',
-  'Aruna',
-  'Anala',
-  'Pingala',
-  'Chuchchuka',
-  'Ghora',
-  'Vaarahi',
-  'Vaishnavi',
-  'Sita',
-  'Bhuvanesvari',
-  'Bhairavi',
-  'Mangala',
-  'Aparajita',
+  'Daya', 'Megha', 'Chinnasi', 'Pisachini', 'Dhoomavathi', 'Matangi', 'Bala',
+  'Bhadra', 'Aruna', 'Anala', 'Pingala', 'Chuchchuka', 'Ghora', 'Vaarahi',
+  'Vaishnavi', 'Sita', 'Bhuvanesvari', 'Bhairavi', 'Mangala', 'Aparajita',
 ] as const;
 const D24_DEITIES = ['Skanda', 'Parsudhara', 'Anala', 'Viswakarma', 'Bhaga', 'Mitra', 'Maya', 'Antaka', 'Vrisha-dhwaja', 'Govinda', 'Madana', 'Bhima'] as const;
 const D27_DEITIES = [
-  'Dastra (Aswini Kumara)',
-  'Yama',
-  'Agni',
-  'Brahma',
-  'Chandra',
-  'Isa',
-  'Aditi',
-  'Jiva',
-  'Ahi',
-  'Pitara',
-  'Bhaga',
-  'Aryama',
-  'Surya',
-  'Tvashta',
-  'Marut',
-  'Sakragni',
-  'Mitra',
-  'Vasava',
-  'Rakshasa',
-  'Varina',
-  'Visvadeva',
-  'Govinda',
-  'Vasu',
-  'Varuna',
-  'Ajapa',
-  'Ahirbudhanya',
-  'Pusha',
+  'Dastra (Aswini Kumara)', 'Yama', 'Agni', 'Brahma', 'Chandra', 'Isa', 'Aditi',
+  'Jiva', 'Ahi', 'Pitara', 'Bhaga', 'Aryama', 'Surya', 'Tvashta', 'Marut',
+  'Sakragni', 'Mitra', 'Vasava', 'Rakshasa', 'Varina', 'Visvadeva', 'Govinda',
+  'Vasu', 'Varuna', 'Ajapa', 'Ahirbudhanya', 'Pusha',
 ] as const;
 const D30_DEITIES = ['Agni', 'Vayu', 'Indra', 'Kubera', 'Varuna'] as const;
 const D40_DEITIES = ['Vishnu', 'Chandra', 'Marichi', 'Tvashta', 'Dhata', 'Siva', 'Ravi', 'Yama', 'Yaksha', 'Gandharva', 'Kala', 'Varuna'] as const;
@@ -248,7 +138,7 @@ const pickFromParts = (deities: readonly string[], longitude: number, parts = de
 const pickFromReversedParts = (deities: readonly string[], longitude: number, parts = deities.length) =>
   deities[deities.length - 1 - boundedPartIndex(longitude, parts)];
 
-function toPlanetMap<T>(planets: PlanetData[], getValue: (planet: PlanetData) => T) {
+function toPlanetMap<T>(planets: PlanetData[], getValue: (planet: PlanetData) => T): Record<PlanetName, T> {
   const result = {} as Record<PlanetName, T>;
   for (const planet of planets) result[planet.name] = getValue(planet);
   return result;
@@ -270,28 +160,112 @@ function rankKarakasFromLongitudes(getLongitude: (planet: PlanetName) => number)
   })));
 }
 
-function divisionalSignsFor(sign: number, deg: number) {
-  const result = {} as Record<PlanetSignKey, number>;
-  for (const { signKey, calc } of DIVISIONAL_CHARTS) result[signKey] = calc(sign, deg);
-  return result;
+// ── Divisional sign calculators ──────────────────────────────────────
+
+export function getNavamsaSign(sign: number, deg: number): number {
+  return advanceSign(NAVAMSA_START_SIGNS[sign - 1], partIndex(deg, 9));
+}
+export function getD7Sign(sign: number, deg: number): number {
+  return advanceSign(sign, partIndex(deg, 7) + (isOddSign(sign) ? 0 : 7));
+}
+export function getD2Sign(sign: number, deg: number): number {
+  if (isOddSign(sign)) return deg < 15 ? 5 : 4;
+  return deg < 15 ? 4 : 5;
+}
+export function getD3Sign(sign: number, deg: number): number {
+  return advanceSign(sign, D3_OFFSETS[partIndex(deg, 3)]);
+}
+export function getD4Sign(sign: number, deg: number): number {
+  return advanceSign(sign, partIndex(deg, 4) * 3);
+}
+export function getD10Sign(sign: number, deg: number): number {
+  return advanceSign(sign, partIndex(deg, 10) + (isOddSign(sign) ? 0 : 8));
+}
+export function getD12Sign(sign: number, deg: number): number {
+  return advanceSign(sign, partIndex(deg, 12));
+}
+export function getD16Sign(sign: number, deg: number): number {
+  return advanceSign(startByModality(sign, MODALITY_STARTS.d16), partIndex(deg, 16));
+}
+export function getD20Sign(sign: number, deg: number): number {
+  return advanceSign(startByModality(sign, MODALITY_STARTS.d20), partIndex(deg, 20));
+}
+export function getD24Sign(sign: number, deg: number): number {
+  return advanceSign(isOddSign(sign) ? 5 : 4, partIndex(deg, 24));
+}
+export function getD27Sign(sign: number, deg: number): number {
+  return advanceSign(startByElement(sign), partIndex(deg, 27));
+}
+export function getD30Sign(sign: number, deg: number): number {
+  return segmentSign(deg, isOddSign(sign) ? D30_ODD : D30_EVEN);
+}
+export function getD40Sign(sign: number, deg: number): number {
+  return advanceSign(isOddSign(sign) ? 1 : 7, partIndex(deg, 40));
+}
+export function getD45Sign(sign: number, deg: number): number {
+  return advanceSign(startByModality(sign, MODALITY_STARTS.d45), partIndex(deg, 45));
+}
+export function getD60Sign(sign: number, deg: number): number {
+  return advanceSign(sign, (Math.floor(deg * 2) % 12));
 }
 
-function ascSignsFor(sign: number, deg: number) {
-  const result = {} as Record<AscKey, number>;
-  for (const { ascKey, calc } of DIVISIONAL_CHARTS) result[ascKey] = calc(sign, deg);
-  return result;
+export function getD60Shashtiamsa(sign: number, deg: number): ShashtiamsaInfo {
+  const index = Math.min(Math.floor(deg / 0.5), 59);
+  const entry = isOddSign(sign) ? SHASHTIAMSA_DATA[index] : SHASHTIAMSA_DATA[59 - index];
+  return { number: entry.number, name: entry.name, nature: entry.nature, description: entry.description };
 }
 
-function houseMapFor(
-  signs: Record<PlanetSignKey, number>,
-  ascSigns: Record<AscKey, number>,
-) {
-  const result = {} as Record<PlanetHouseKey, number>;
-  for (const { signKey, ascKey, houseKey } of DIVISIONAL_CHARTS) {
-    if (houseKey) result[houseKey] = signToHouse(signs[signKey], ascSigns[ascKey]);
+export function getDivisionalDeity(
+  varga: DivisionalChart,
+  divSign: number,
+  divLon: number,
+  sourceSign = divSign,
+  sourceDeg = normalizeDegreeInSign(divLon),
+): string | null {
+  switch (varga) {
+    case 'D3': return pickFromParts(D3_DEITIES, divLon);
+    case 'D4': return pickFromParts(D4_DEITIES, divLon);
+    case 'D7': return isOddSign(divSign) ? pickFromParts(D7_DEITIES, divLon) : pickFromReversedParts(D7_DEITIES, divLon);
+    case 'D9': return pickFromParts(D9_DEITY_ORDERS[signModality(divSign)], divLon);
+    case 'D10': return isOddSign(divSign) ? pickFromParts(D10_DEITIES, divLon) : pickFromReversedParts(D10_DEITIES, divLon);
+    case 'D12': return pickFromParts(D12_DEITIES, divLon);
+    case 'D16': return isOddSign(divSign) ? pickFromParts(D16_DEITIES, divLon) : pickFromReversedParts(D16_DEITIES, divLon);
+    case 'D20': return pickFromParts(isOddSign(sourceSign) ? D20_ODD_DEITIES : D20_EVEN_DEITIES, sourceDeg);
+    case 'D24': return isOddSign(divSign) ? pickFromParts(D24_DEITIES, divLon) : pickFromReversedParts(D24_DEITIES, divLon);
+    case 'D27': return isOddSign(divSign) ? pickFromParts(D27_DEITIES, divLon) : pickFromReversedParts(D27_DEITIES, divLon);
+    case 'D30': return isOddSign(divSign) ? pickFromParts(D30_DEITIES, divLon) : pickFromReversedParts(D30_DEITIES, divLon);
+    case 'D40': return pickFromParts(D40_DEITIES, divLon);
+    case 'D45': return D45_DEITY_ORDERS[signModality(sourceSign)][boundedPartIndex(sourceDeg, 45) % 3];
+    default: return null;
   }
-  return result;
 }
+
+// ── Divisional chart metadata ────────────────────────────────────────
+
+export const DIVISIONAL_CHARTS: readonly DivisionalMeta[] = [
+  { chart: 'D1', label: 'D1 (Rasi)', divisor: 1, calc: (sign) => sign },
+  { chart: 'D2', label: 'D2 (Hora)', divisor: 2, calc: getD2Sign },
+  { chart: 'D3', label: 'D3 (Drekkana)', divisor: 3, calc: getD3Sign },
+  { chart: 'D4', label: 'D4 (Chaturthamsa)', divisor: 4, calc: getD4Sign },
+  { chart: 'D7', label: 'D7 (Saptamsa)', divisor: 7, calc: getD7Sign },
+  { chart: 'D9', label: 'D9 (Navamsa)', divisor: 9, calc: getNavamsaSign },
+  { chart: 'D10', label: 'D10 (Dasamsa)', divisor: 10, calc: getD10Sign },
+  { chart: 'D12', label: 'D12 (Dvadasamsa)', divisor: 12, calc: getD12Sign },
+  { chart: 'D16', label: 'D16 (Shodasamsa)', divisor: 16, calc: getD16Sign },
+  { chart: 'D20', label: 'D20 (Vimsamsa)', divisor: 20, calc: getD20Sign },
+  { chart: 'D24', label: 'D24 (Siddhamsa)', divisor: 24, calc: getD24Sign },
+  { chart: 'D27', label: 'D27 (Bhamsa)', divisor: 27, calc: getD27Sign },
+  { chart: 'D30', label: 'D30 (Trimsamsa)', divisor: 30, calc: getD30Sign },
+  { chart: 'D40', label: 'D40 (Khavedamsa)', divisor: 40, calc: getD40Sign },
+  { chart: 'D45', label: 'D45 (Akshavedamsa)', divisor: 45, calc: getD45Sign },
+  { chart: 'D60', label: 'D60 (Shashtiamsa)', divisor: 60, calc: getD60Sign },
+];
+
+const DIVISIONAL_META = Object.fromEntries(
+  DIVISIONAL_CHARTS.map((meta) => [meta.chart, meta]),
+) as Record<DivisionalChart, DivisionalMeta>;
+
+// ── Core astrology functions ─────────────────────────────────────────
 
 export function dms(degFloat: number): DMS {
   const absDeg = Math.abs(degFloat);
@@ -320,152 +294,6 @@ export function getNakshatraPada(longitude: number): NakshatraPada {
     pada: Math.floor((normalized % (40 / 3)) / (10 / 3)) + 1,
   };
 }
-
-export function getNavamsaSign(sign: number, deg: number): number {
-  return advanceSign(NAVAMSA_START_SIGNS[sign - 1], partIndex(deg, 9));
-}
-
-export function getD7Sign(sign: number, deg: number): number {
-  return advanceSign(sign, partIndex(deg, 7) + (isOddSign(sign) ? 0 : 7));
-}
-
-export function getD2Sign(sign: number, deg: number): number {
-  if (isOddSign(sign)) return deg < 15 ? 5 : 4;
-  return deg < 15 ? 4 : 5;
-}
-
-export function getD3Sign(sign: number, deg: number): number {
-  return advanceSign(sign, D3_OFFSETS[partIndex(deg, 3)]);
-}
-
-export function getD4Sign(sign: number, deg: number): number {
-  return advanceSign(sign, partIndex(deg, 4) * 3);
-}
-
-export function getD10Sign(sign: number, deg: number): number {
-  return advanceSign(sign, partIndex(deg, 10) + (isOddSign(sign) ? 0 : 8));
-}
-
-export function getD12Sign(sign: number, deg: number): number {
-  return advanceSign(sign, partIndex(deg, 12));
-}
-
-export function getD16Sign(sign: number, deg: number): number {
-  return advanceSign(startByModality(sign, MODALITY_STARTS.d16), partIndex(deg, 16));
-}
-
-export function getD20Sign(sign: number, deg: number): number {
-  return advanceSign(startByModality(sign, MODALITY_STARTS.d20), partIndex(deg, 20));
-}
-
-export function getD24Sign(sign: number, deg: number): number {
-  return advanceSign(isOddSign(sign) ? 5 : 4, partIndex(deg, 24));
-}
-
-export function getD27Sign(sign: number, deg: number): number {
-  return advanceSign(startByElement(sign), partIndex(deg, 27));
-}
-
-export function getD30Sign(sign: number, deg: number): number {
-  return segmentSign(deg, isOddSign(sign) ? D30_ODD : D30_EVEN);
-}
-
-export function getD40Sign(sign: number, deg: number): number {
-  return advanceSign(isOddSign(sign) ? 1 : 7, partIndex(deg, 40));
-}
-
-export function getD45Sign(sign: number, deg: number): number {
-  return advanceSign(startByModality(sign, MODALITY_STARTS.d45), partIndex(deg, 45));
-}
-
-export function getD60Sign(sign: number, deg: number): number {
-  return advanceSign(sign, (Math.floor(deg * 2) % 12));
-}
-
-export function getD60Shashtiamsa(sign: number, deg: number): ShashtiamsaInfo {
-  const index = Math.min(Math.floor(deg / 0.5), 59);
-  const entry = isOddSign(sign) ? SHASHTIAMSA_DATA[index] : SHASHTIAMSA_DATA[59 - index];
-  return {
-    number: entry.number,
-    name: entry.name,
-    nature: entry.nature,
-    description: entry.description,
-  };
-}
-
-export function getDivisionalDeity(
-  varga: DivisionalChart,
-  divSign: number,
-  divLon: number,
-  sourceSign = divSign,
-  sourceDeg = normalizeDegreeInSign(divLon),
-): string | null {
-  switch (varga) {
-    case 'D3':
-      return pickFromParts(D3_DEITIES, divLon);
-    case 'D4':
-      return pickFromParts(D4_DEITIES, divLon);
-    case 'D7':
-      return isOddSign(divSign)
-        ? pickFromParts(D7_DEITIES, divLon)
-        : pickFromReversedParts(D7_DEITIES, divLon);
-    case 'D9':
-      return pickFromParts(D9_DEITY_ORDERS[signModality(divSign)], divLon);
-    case 'D10':
-      return isOddSign(divSign)
-        ? pickFromParts(D10_DEITIES, divLon)
-        : pickFromReversedParts(D10_DEITIES, divLon);
-    case 'D12':
-      return pickFromParts(D12_DEITIES, divLon);
-    case 'D16':
-      return isOddSign(divSign)
-        ? pickFromParts(D16_DEITIES, divLon)
-        : pickFromReversedParts(D16_DEITIES, divLon);
-    case 'D20':
-      return pickFromParts(isOddSign(sourceSign) ? D20_ODD_DEITIES : D20_EVEN_DEITIES, sourceDeg);
-    case 'D24':
-      return isOddSign(divSign)
-        ? pickFromParts(D24_DEITIES, divLon)
-        : pickFromReversedParts(D24_DEITIES, divLon);
-    case 'D27':
-      return isOddSign(divSign)
-        ? pickFromParts(D27_DEITIES, divLon)
-        : pickFromReversedParts(D27_DEITIES, divLon);
-    case 'D30':
-      return isOddSign(divSign)
-        ? pickFromParts(D30_DEITIES, divLon)
-        : pickFromReversedParts(D30_DEITIES, divLon);
-    case 'D40':
-      return pickFromParts(D40_DEITIES, divLon);
-    case 'D45':
-      return D45_DEITY_ORDERS[signModality(sourceSign)][boundedPartIndex(sourceDeg, 45) % 3];
-    default:
-      return null;
-  }
-}
-
-export const DIVISIONAL_CHARTS: readonly DivisionalMeta[] = [
-  { chart: 'D1', label: 'D1 (Rasi)', divisor: 1, signKey: 'sign', ascKey: 'ascSign', houseKey: 'house', calc: (sign) => sign },
-  { chart: 'D2', label: 'D2 (Hora)', divisor: 2, signKey: 'd2Sign', ascKey: 'ascD2', calc: getD2Sign },
-  { chart: 'D3', label: 'D3 (Drekkana)', divisor: 3, signKey: 'd3Sign', ascKey: 'ascD3', calc: getD3Sign },
-  { chart: 'D4', label: 'D4 (Chaturthamsa)', divisor: 4, signKey: 'd4Sign', ascKey: 'ascD4', calc: getD4Sign },
-  { chart: 'D7', label: 'D7 (Saptamsa)', divisor: 7, signKey: 'd7Sign', ascKey: 'ascD7', houseKey: 'd7House', calc: getD7Sign },
-  { chart: 'D9', label: 'D9 (Navamsa)', divisor: 9, signKey: 'navamsaSign', ascKey: 'ascNavamsa', houseKey: 'navamsaHouse', calc: getNavamsaSign },
-  { chart: 'D10', label: 'D10 (Dasamsa)', divisor: 10, signKey: 'd10Sign', ascKey: 'ascD10', houseKey: 'd10House', calc: getD10Sign },
-  { chart: 'D12', label: 'D12 (Dvadasamsa)', divisor: 12, signKey: 'd12Sign', ascKey: 'ascD12', houseKey: 'd12House', calc: getD12Sign },
-  { chart: 'D16', label: 'D16 (Shodasamsa)', divisor: 16, signKey: 'd16Sign', ascKey: 'ascD16', houseKey: 'd16House', calc: getD16Sign },
-  { chart: 'D20', label: 'D20 (Vimsamsa)', divisor: 20, signKey: 'd20Sign', ascKey: 'ascD20', houseKey: 'd20House', calc: getD20Sign },
-  { chart: 'D24', label: 'D24 (Siddhamsa)', divisor: 24, signKey: 'd24Sign', ascKey: 'ascD24', houseKey: 'd24House', calc: getD24Sign },
-  { chart: 'D27', label: 'D27 (Bhamsa)', divisor: 27, signKey: 'd27Sign', ascKey: 'ascD27', houseKey: 'd27House', calc: getD27Sign },
-  { chart: 'D30', label: 'D30 (Trimsamsa)', divisor: 30, signKey: 'd30Sign', ascKey: 'ascD30', houseKey: 'd30House', calc: getD30Sign },
-  { chart: 'D40', label: 'D40 (Khavedamsa)', divisor: 40, signKey: 'd40Sign', ascKey: 'ascD40', houseKey: 'd40House', calc: getD40Sign },
-  { chart: 'D45', label: 'D45 (Akshavedamsa)', divisor: 45, signKey: 'd45Sign', ascKey: 'ascD45', houseKey: 'd45House', calc: getD45Sign },
-  { chart: 'D60', label: 'D60 (Shashtiamsa)', divisor: 60, signKey: 'd60Sign', ascKey: 'ascD60', houseKey: 'd60House', calc: getD60Sign },
-];
-
-const DIVISIONAL_META = Object.fromEntries(
-  DIVISIONAL_CHARTS.map((meta) => [meta.chart, meta]),
-) as Record<DivisionalChart, DivisionalMeta>;
 
 export function isCombust(
   planet: PlanetName,
@@ -504,99 +332,7 @@ export function signToHouse(sign: number, ascSign: number): number {
   return ((sign - ascSign + 12) % 12) + 1;
 }
 
-/**
- * Computes an Arudha Pada from the sign occupied by a house and the sign occupied by that house lord.
- * Callers working with house numbers should derive the house sign first, or use `getArudhaPada`.
- */
-export function computeArudhaPada(houseIndex: number, houseLordSignIndex: number): number {
-  assertIndexInRange(houseIndex, 'House sign');
-  assertIndexInRange(houseLordSignIndex, 'House lord sign');
-
-  const distance = ((houseLordSignIndex - houseIndex + 12) % 12) + 1;
-  const pada = advanceSign(houseLordSignIndex, distance - 1);
-  const seventhFromHouse = advanceSign(houseIndex, 6);
-
-  if (pada === houseIndex) return advanceSign(houseIndex, 9);
-  if (pada === seventhFromHouse) return advanceSign(houseIndex, 3);
-  return pada;
-}
-
-/**
- * Computes Graha Arudhas directly from a planet's current sign to each of its owned signs.
- * This follows raw graha-arudha counting and intentionally does not apply bhava-pada exception rules.
- */
-export function computeGrahaArudhas(
-  planetSign: number,
-  planetName: string,
-  signOwnerships: Record<string, number[] | undefined> = RULERSHIPS as Record<string, number[] | undefined>,
-): number[] | null {
-  if (!Number.isInteger(planetSign) || planetSign < 1 || planetSign > 12) return null;
-
-  const ownedSigns = (signOwnerships[planetName] || []).filter(
-    (sign): sign is number => Number.isInteger(sign) && sign >= 1 && sign <= 12,
-  );
-  if (ownedSigns.length === 0) return null;
-
-  return ownedSigns.map((ownedSign) => {
-    const distance = ((ownedSign - planetSign + 12) % 12) + 1;
-    return ((ownedSign + distance - 2) % 12) + 1;
-  });
-}
-
-export function getArudhaPada(
-  data: ChartData,
-  house: number,
-  chart: DivisionalChart = 'D1',
-): number {
-  const ascSign = getAscSignForChart(data, chart);
-  const houseSign = houseToSign(house, ascSign);
-  const divSigns = getDivisionalSigns(data.planetData, chart);
-  const houseLord = SIGN_LORDS[houseSign - 1];
-  return computeArudhaPada(houseSign, divSigns[houseLord]);
-}
-
-export function getArudhaPadas(
-  data: ChartData,
-  chart: DivisionalChart = 'D1',
-): number[] {
-  const ascSign = getAscSignForChart(data, chart);
-  const divSigns = getDivisionalSigns(data.planetData, chart);
-
-  return Array.from({ length: 12 }, (_, index) => {
-    const house = index + 1;
-    const houseSign = houseToSign(house, ascSign);
-    const houseLord = SIGN_LORDS[houseSign - 1];
-    return computeArudhaPada(houseSign, divSigns[houseLord]);
-  });
-}
-
-export function getArudhasForAllCharts(
-  data: ChartData,
-): Record<DivisionalChart, number[]> {
-  return Object.fromEntries(
-    DIVISIONAL_CHARTS.map(({ chart }) => [chart, getArudhaPadas(data, chart)]),
-  ) as Record<DivisionalChart, number[]>;
-}
-
-export function getArudhaLagna(
-  data: ChartData,
-  chart: DivisionalChart = 'D1',
-): number {
-  return getArudhaPadas(data, chart)[0];
-}
-
-export function getGrahaArudhas(
-  data: ChartData,
-  chart: DivisionalChart = 'D1',
-  signOwnerships: Record<string, number[] | undefined> = RULERSHIPS as Record<string, number[] | undefined>,
-): Record<PlanetName, number[] | null> {
-  const divSigns = getDivisionalSigns(data.planetData, chart);
-
-  return PLANET_LIST.reduce((result, planet) => {
-    result[planet] = computeGrahaArudhas(divSigns[planet], planet, signOwnerships);
-    return result;
-  }, {} as Record<PlanetName, number[] | null>);
-}
+// ── Relationships & aspects ──────────────────────────────────────────
 
 export function getTemporaryRelationship(fromSign: number, toSign: number): RelationshipType {
   const diff = ((toSign - fromSign + 12) % 12) + 1;
@@ -621,6 +357,8 @@ export function getCompoundRelationship(
   return 'Neutral';
 }
 
+// ── Karakas ──────────────────────────────────────────────────────────
+
 export function getCharaKarakas(
   positions: Record<PlanetName, PlanetPosition>,
 ): Partial<Record<PlanetName, KarakaName>> {
@@ -633,6 +371,58 @@ export function getCharaKarakasFromLongitudes(
   return rankKarakasFromLongitudes((planet) => lons[planet]);
 }
 
+// ── Sphuta Drishti (aspects) ─────────────────────────────────────────
+
+function defaultAspect(a: number): number | null {
+  if (a < 30) return 0;
+  if (a < 60) return (a - 30) / 2;
+  if (a < 90) return a - 45;
+  if (a < 120) return 30 + (120 - a) / 2;
+  if (a < 150) return 150 - a;
+  if (a < 300) return (300 - a) / 2;
+  return 0;
+}
+function marsAspect(a: number): number | null {
+  if (a < 30) return 0;
+  if (a < 60) return null;
+  if (a < 90) return a - 45;
+  if (a < 120) return 45 + (a - 90) / 2;
+  if (a < 180) return 2 * (150 - a);
+  if (a < 210) return 60;
+  if (a < 240) return 270 - a;
+  if (a < 270) return 0;
+  if (a < 300) return (300 - a) / 2;
+  return 0;
+}
+function jupiterAspect(a: number): number | null {
+  if (a < 30) return 0;
+  if (a < 60) return (a - 30) / 2;
+  if (a < 90) return null;
+  if (a < 120) return 45 + (a - 90) / 2;
+  if (a < 150) return 2 * (150 - a);
+  if (a < 180) return null;
+  if (a < 210) return null;
+  if (a < 240) return 45 + (a - 210) / 2;
+  if (a < 270) return 15 + 2 * (270 - a) / 3;
+  if (a < 300) return null;
+  return 0;
+}
+function saturnAspect(a: number): number | null {
+  if (a < 30) return null;
+  if (a < 60) return (a - 30) * 2;
+  if (a < 90) return 45 + (90 - a) / 2;
+  if (a < 120) return 30 + (120 - a) / 2;
+  if (a < 150) return null;
+  if (a < 300) return (300 - a) / 2;
+  return 0;
+}
+
+const ASPECT_FN: Partial<Record<PlanetName, (a: number) => number | null>> = {
+  Mars: marsAspect,
+  Jupiter: jupiterAspect,
+  Saturn: saturnAspect,
+};
+
 export function sphutaDrishti(
   asp: PlanetName,
   _aspected: PlanetName,
@@ -640,255 +430,201 @@ export function sphutaDrishti(
   aspectedLon: number,
 ): number | null {
   const a = ((aspectedLon - aspLon) % 360 + 360) % 360;
+  return (ASPECT_FN[asp] ?? defaultAspect)(a);
+}
 
-  if (asp === 'Mars') {
-    if (a >= 30 && a < 60) return null;
-    if (a >= 90 && a < 120) return 45 + (a - 90) / 2;
-    if (a >= 120 && a < 180) return 2 * (150 - a);
-    if (a >= 180 && a < 210) return 60;
-    if (a >= 210 && a < 240) return 270 - a;
-    if (a >= 240 && a < 270) return 0;
-  }
+// ── Arudha Padas ─────────────────────────────────────────────────────
 
-  if (asp === 'Jupiter') {
-    if (a >= 60 && a < 90) return null;
-    if (a >= 90 && a < 120) return 45 + (a - 90) / 2;
-    if (a >= 120 && a < 150) return 2 * (150 - a);
-    if (a >= 150 && a < 180) return null;
-    if (a >= 180 && a < 210) return null;
-    if (a >= 210 && a < 240) return 45 + (a - 210) / 2;
-    if (a >= 240 && a < 270) return 15 + 2 * (270 - a) / 3;
-    if (a >= 270 && a < 300) return null;
-  }
+export function computeArudhaPada(houseIndex: number, houseLordSignIndex: number): number {
+  assertIndexInRange(houseIndex, 'House sign');
+  assertIndexInRange(houseLordSignIndex, 'House lord sign');
+  const distance = ((houseLordSignIndex - houseIndex + 12) % 12) + 1;
+  const pada = advanceSign(houseLordSignIndex, distance - 1);
+  const seventhFromHouse = advanceSign(houseIndex, 6);
+  if (pada === houseIndex) return advanceSign(houseIndex, 9);
+  if (pada === seventhFromHouse) return advanceSign(houseIndex, 3);
+  return pada;
+}
 
-  if (asp === 'Saturn') {
-    if (a >= 0 && a < 30) return null;
-    if (a >= 30 && a < 60) return (a - 30) * 2;
-    if (a >= 60 && a < 90) return 45 + (90 - a) / 2;
-    if (a >= 120 && a < 150) return null;
-    if (a >= 210 && a < 240) return null;
-    if (a >= 240 && a < 270) return a - 210;
-    if (a >= 270 && a < 300) return 2 * (300 - a);
-  }
+export function computeGrahaArudhas(
+  planetSign: number,
+  planetName: string,
+  signOwnerships: Record<string, number[] | undefined> = RULERSHIPS as Record<string, number[] | undefined>,
+): number[] | null {
+  if (!Number.isInteger(planetSign) || planetSign < 1 || planetSign > 12) return null;
+  const ownedSigns = (signOwnerships[planetName] || []).filter(
+    (sign): sign is number => Number.isInteger(sign) && sign >= 1 && sign <= 12,
+  );
+  if (ownedSigns.length === 0) return null;
+  return ownedSigns.map((ownedSign) => {
+    const distance = ((ownedSign - planetSign + 12) % 12) + 1;
+    return ((ownedSign + distance - 2) % 12) + 1;
+  });
+}
 
-  if (a >= 0 && a < 30) return 0;
-  if (a >= 30 && a < 60) return asp === 'Saturn' ? (a - 30) * 2 : (a - 30) / 2;
-  if (a >= 60 && a < 90) return asp === 'Saturn' ? 45 + (90 - a) / 2 : a - 45;
-  if (a >= 90 && a < 120) return (asp === 'Mars' || asp === 'Jupiter') ? 45 + (a - 90) / 2 : 30 + (120 - a) / 2;
-  if (a >= 120 && a < 150) return (asp === 'Mars' || asp === 'Jupiter') ? 2 * (150 - a) : 150 - a;
-  if (a >= 150 && a < 180) return (asp === 'Mars' || asp === 'Jupiter') ? 2 * (150 - a) : (300 - a) / 2;
-  if (a >= 180 && a < 210) return asp === 'Mars' ? 60 : (300 - a) / 2;
-  if (a >= 210 && a < 240) {
-    if (asp === 'Mars') return 270 - a;
-    if (asp === 'Jupiter') return 45 + (a - 210) / 2;
-    return (300 - a) / 2;
+export function getArudhaPada(data: ChartData, house: number, chart: DivisionalChart = 'D1'): number {
+  const ascSign = getAscSignForChart(data, chart);
+  const houseSign = houseToSign(house, ascSign);
+  const divSigns = getDivisionalSigns(data.planetData, chart);
+  return computeArudhaPada(houseSign, divSigns[SIGN_LORDS[houseSign - 1]]);
+}
+
+export function getArudhaPadas(data: ChartData, chart: DivisionalChart = 'D1'): number[] {
+  const ascSign = getAscSignForChart(data, chart);
+  const divSigns = getDivisionalSigns(data.planetData, chart);
+  return Array.from({ length: 12 }, (_, i) => {
+    const houseSign = houseToSign(i + 1, ascSign);
+    return computeArudhaPada(houseSign, divSigns[SIGN_LORDS[houseSign - 1]]);
+  });
+}
+
+export function getArudhasForAllCharts(data: ChartData): Record<DivisionalChart, number[]> {
+  return Object.fromEntries(
+    DIVISIONAL_CHARTS.map(({ chart }) => [chart, getArudhaPadas(data, chart)]),
+  ) as Record<DivisionalChart, number[]>;
+}
+
+export function getArudhaLagna(data: ChartData, chart: DivisionalChart = 'D1'): number {
+  return getArudhaPadas(data, chart)[0];
+}
+
+export function getGrahaArudhas(
+  data: ChartData,
+  chart: DivisionalChart = 'D1',
+  signOwnerships: Record<string, number[] | undefined> = RULERSHIPS as Record<string, number[] | undefined>,
+): Record<PlanetName, number[] | null> {
+  const divSigns = getDivisionalSigns(data.planetData, chart);
+  return PLANET_LIST.reduce((result, planet) => {
+    result[planet] = computeGrahaArudhas(divSigns[planet], planet, signOwnerships);
+    return result;
+  }, {} as Record<PlanetName, number[] | null>);
+}
+
+// ── Chart building ───────────────────────────────────────────────────
+
+function computeDivisionalPlacements(
+  sign: number,
+  deg: number,
+  ascDivisional: Record<DivisionalChart, number>,
+): Record<DivisionalChart, DivisionalPlacement> {
+  const result = {} as Record<DivisionalChart, DivisionalPlacement>;
+  for (const { chart, calc } of DIVISIONAL_CHARTS) {
+    const divSign = calc(sign, deg);
+    result[chart] = { sign: divSign, house: signToHouse(divSign, ascDivisional[chart]) };
   }
-  if (a >= 240 && a < 270) {
-    if (asp === 'Jupiter') return 15 + 2 * (270 - a) / 3;
-    if (asp === 'Saturn') return a - 210;
-    return (300 - a) / 2;
+  return result;
+}
+
+function computeAscDivisional(ascSign: number, ascDeg: number): Record<DivisionalChart, number> {
+  const result = {} as Record<DivisionalChart, number>;
+  for (const { chart, calc } of DIVISIONAL_CHARTS) {
+    result[chart] = calc(ascSign, ascDeg);
   }
-  if (a >= 270 && a < 300) return asp === 'Saturn' ? 2 * (300 - a) : (300 - a) / 2;
-  if (a >= 300 && a < 330) return 0;
-  if (a >= 330 && a < 360) return 0;
-  return 0;
+  return result;
 }
 
 export function buildChartData({
-  year,
-  month,
-  day,
-  hour,
-  lat,
-  lon,
-  weekday,
-  localYear,
-  localMonth,
-  localDay,
+  year, month, day, hour, lat, lon,
 }: BuildChartParams): ChartData {
   const assertFiniteNumber = (value: number, label: string) => {
     if (!Number.isFinite(value)) throw new RangeError(`${label} must be a finite number.`);
   };
-
   assertFiniteNumber(year, 'Year');
   assertFiniteNumber(month, 'Month');
   assertFiniteNumber(day, 'Day');
   assertFiniteNumber(hour, 'Hour');
   assertFiniteNumber(lat, 'Latitude');
   assertFiniteNumber(lon, 'Longitude');
-
   if (!Number.isInteger(year)) throw new RangeError('Year must be an integer.');
-  if (!Number.isInteger(month) || month < 1 || month > 12) {
-    throw new RangeError('Month must be an integer from 1 to 12.');
-  }
-  if (!Number.isInteger(day) || day < 1 || day > 31) {
-    throw new RangeError('Day must be an integer from 1 to 31.');
-  }
+  if (!Number.isInteger(month) || month < 1 || month > 12) throw new RangeError('Month must be an integer from 1 to 12.');
+  if (!Number.isInteger(day) || day < 1 || day > 31) throw new RangeError('Day must be an integer from 1 to 31.');
   if (hour < 0 || hour >= 24) throw new RangeError('Hour must be in the range [0, 24).');
   if (lat < -90 || lat > 90) throw new RangeError('Latitude must be between -90 and 90.');
   if (lon < -180 || lon > 180) throw new RangeError('Longitude must be between -180 and 180.');
-
   const utcDate = new Date(Date.UTC(year, month - 1, day));
-  if (
-    utcDate.getUTCFullYear() !== year
-    || utcDate.getUTCMonth() !== month - 1
-    || utcDate.getUTCDate() !== day
-  ) {
+  if (utcDate.getUTCFullYear() !== year || utcDate.getUTCMonth() !== month - 1 || utcDate.getUTCDate() !== day) {
     throw new RangeError('Day is out of range for the given month and year.');
   }
 
   const jd = julianDay(year, month, day, hour);
   const { positions, ayanamsa, ascSid, ascSign, ascDeg } = computeAllPositions(jd, lat, lon);
-  const ascSigns = ascSignsFor(ascSign, ascDeg);
+  const ascDivisional = computeAscDivisional(ascSign, ascDeg);
   const { nakshatra: ascNak, pada: ascPada } = getNakshatraPada(ascSid);
   const karakas = getCharaKarakas(positions);
   const sunLon = positions.Sun.lon;
   const upagrahas = computeUpagrahas(sunLon);
   const upagrahasFormatted = formatUpagrahas(upagrahas);
-  void weekday;
-  void localYear;
-  void localMonth;
-  void localDay;
   const arudhaLagna = computeArudhaPada(ascSign, positions[SIGN_LORDS[ascSign - 1]].sign);
 
-  const planetData = PLANET_LIST.map((name) => {
+  const planetData: PlanetData[] = PLANET_LIST.map((name) => {
     const { lon: pLon, sign, deg, motion } = positions[name];
-    const divisionalSigns = divisionalSignsFor(sign, deg);
-    const { sign: _sign, ...otherSigns } = divisionalSigns;
-    const houses = houseMapFor(divisionalSigns, ascSigns);
+    const divisional = computeDivisionalPlacements(sign, deg, ascDivisional);
     const { nakshatra, pada } = getNakshatraPada(pLon);
-
     return {
-      name,
-      lon: pLon,
-      sign,
-      deg,
-      motion,
-      ...houses,
-      ...otherSigns,
+      name, lon: pLon, sign, deg, motion, divisional,
       d60Shashtiamsa: getD60Shashtiamsa(sign, deg),
       lordships: getLordships(name, ascSign),
       role: getFunctionalRole(name, ascSign),
       combust: name !== 'Sun' && !!COMBUSTION_LIMITS[name] && isCombust(name, sunLon, pLon, motion),
-      nakshatra,
-      pada,
+      nakshatra, pada,
       nakLord: NAKSHATRA_LORDS[nakshatra],
       signLord: SIGN_LORDS[sign - 1],
       karaka: karakas[name] || null,
-    } as PlanetData;
+    };
   });
 
-  const { ascSign: _ascSign, ...otherAscSigns } = ascSigns;
   return {
-    jd,
-    lat,
-    lon,
-    ayanamsa,
-    ascSid,
-    ascSign,
-    ascDeg,
-    arudhaLagna,
-    ...otherAscSigns,
-    ascNak,
-    ascPada,
-    positions,
-    planetData,
-    karakas,
-    upagrahas,
-    upagrahasFormatted,
-  } as ChartData;
+    jd, lat, lon, ayanamsa, ascSid, ascSign, ascDeg, arudhaLagna,
+    ascDivisional, ascNak, ascPada, positions, planetData, karakas,
+    upagrahas, upagrahasFormatted,
+  };
 }
 
 export function buildChartDataFromLocalInput({
-  date,
-  time,
-  tzOffsetHours,
-  lat,
-  lon,
+  date, time, tzOffsetHours, lat, lon,
 }: BuildChartFromLocalParams): { data: ChartData; utcStr: string } {
   const [yearStr, monthStr, dayStr] = date.split('-');
   const [hourStr, minuteStr, secondStr = '0'] = time.split(':');
-  const year = Number(yearStr);
-  const month = Number(monthStr);
-  const day = Number(dayStr);
-  const hour = Number(hourStr);
-  const minute = Number(minuteStr);
-  const second = Number(secondStr);
+  const year = Number(yearStr), month = Number(monthStr), day = Number(dayStr);
+  const hour = Number(hourStr), minute = Number(minuteStr), second = Number(secondStr);
 
-  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
-    throw new RangeError('Date must be in YYYY-MM-DD format.');
-  }
-  if (!Number.isFinite(hour) || !Number.isFinite(minute) || !Number.isFinite(second)) {
-    throw new RangeError('Time must be in HH:MM[:SS] format.');
-  }
-  if (!Number.isFinite(tzOffsetHours)) {
-    throw new RangeError('Timezone offset must be a finite number.');
-  }
-  if (tzOffsetHours < -12 || tzOffsetHours > 14) {
-    throw new RangeError('Timezone offset must be between -12 and +14 hours.');
-  }
+  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) throw new RangeError('Date must be in YYYY-MM-DD format.');
+  if (!Number.isFinite(hour) || !Number.isFinite(minute) || !Number.isFinite(second)) throw new RangeError('Time must be in HH:MM[:SS] format.');
+  if (!Number.isFinite(tzOffsetHours)) throw new RangeError('Timezone offset must be a finite number.');
+  if (tzOffsetHours < -12 || tzOffsetHours > 14) throw new RangeError('Timezone offset must be between -12 and +14 hours.');
   if (!Number.isInteger(year)) throw new RangeError('Year must be an integer.');
-  if (!Number.isInteger(month) || month < 1 || month > 12) {
-    throw new RangeError('Month must be an integer from 1 to 12.');
-  }
-  if (!Number.isInteger(day) || day < 1 || day > 31) {
-    throw new RangeError('Day must be an integer from 1 to 31.');
-  }
-  if (!Number.isInteger(hour) || hour < 0 || hour > 23) {
-    throw new RangeError('Hour must be an integer from 0 to 23.');
-  }
-  if (!Number.isInteger(minute) || minute < 0 || minute > 59) {
-    throw new RangeError('Minute must be an integer from 0 to 59.');
-  }
-  if (!Number.isInteger(second) || second < 0 || second > 59) {
-    throw new RangeError('Second must be an integer from 0 to 59.');
-  }
-
+  if (!Number.isInteger(month) || month < 1 || month > 12) throw new RangeError('Month must be an integer from 1 to 12.');
+  if (!Number.isInteger(day) || day < 1 || day > 31) throw new RangeError('Day must be an integer from 1 to 31.');
+  if (!Number.isInteger(hour) || hour < 0 || hour > 23) throw new RangeError('Hour must be an integer from 0 to 23.');
+  if (!Number.isInteger(minute) || minute < 0 || minute > 59) throw new RangeError('Minute must be an integer from 0 to 59.');
+  if (!Number.isInteger(second) || second < 0 || second > 59) throw new RangeError('Second must be an integer from 0 to 59.');
   const localDate = new Date(Date.UTC(year, month - 1, day));
-  if (
-    localDate.getUTCFullYear() !== year
-    || localDate.getUTCMonth() !== month - 1
-    || localDate.getUTCDate() !== day
-  ) {
+  if (localDate.getUTCFullYear() !== year || localDate.getUTCMonth() !== month - 1 || localDate.getUTCDate() !== day) {
     throw new RangeError('Day is out of range for the given month and year.');
   }
 
   const localAsUtcMs = Date.UTC(year, month - 1, day, hour, minute, second);
   const utcDate = new Date(localAsUtcMs - tzOffsetHours * 3600000);
-  const utcYear = utcDate.getUTCFullYear();
-  const utcMonth = utcDate.getUTCMonth() + 1;
-  const utcDay = utcDate.getUTCDate();
+  const utcYear = utcDate.getUTCFullYear(), utcMonth = utcDate.getUTCMonth() + 1, utcDay = utcDate.getUTCDate();
   const utcHour = utcDate.getUTCHours() + utcDate.getUTCMinutes() / 60 + utcDate.getUTCSeconds() / 3600;
   const utcStr = `${utcYear}-${String(utcMonth).padStart(2, '0')}-${String(utcDay).padStart(2, '0')} `
     + `${String(utcDate.getUTCHours()).padStart(2, '0')}:`
     + `${String(utcDate.getUTCMinutes()).padStart(2, '0')}:`
     + `${String(utcDate.getUTCSeconds()).padStart(2, '0')} UTC`;
 
-  const data = buildChartData({
-    year: utcYear,
-    month: utcMonth,
-    day: utcDay,
-    hour: utcHour,
-    lat,
-    lon,
-    localYear: year,
-    localMonth: month,
-    localDay: day,
-    weekday: new Date(Date.UTC(year, month - 1, day, hour, minute, second)).getUTCDay(),
-  });
-
-  return { data, utcStr };
+  return { data: buildChartData({ year: utcYear, month: utcMonth, day: utcDay, hour: utcHour, lat, lon }), utcStr };
 }
 
+// ── Divisional chart accessors ───────────────────────────────────────
+
 export function getAscSignForChart(data: ChartData, chart: DivisionalChart): number {
-  return data[DIVISIONAL_META[chart].ascKey];
+  return data.ascDivisional[chart];
 }
 
 export function getAscDivisionalLongitude(data: ChartData, chart: DivisionalChart): number {
   if (chart === 'D1') return data.ascSid;
-
-  const { divisor, ascKey } = DIVISIONAL_META[chart];
-  const ascDivSign = data[ascKey];
+  const { divisor } = DIVISIONAL_META[chart];
+  const ascDivSign = data.ascDivisional[chart];
   const partSize = 30 / divisor;
   const degInPart = data.ascDeg % partSize;
   return ((ascDivSign - 1) * 30) + (degInPart * divisor);
@@ -898,8 +634,7 @@ export function getDivisionalSigns(
   planets: PlanetData[],
   chart: DivisionalChart,
 ): Record<PlanetName, number> {
-  const { signKey } = DIVISIONAL_META[chart];
-  return toPlanetMap(planets, (planet) => planet[signKey] as number);
+  return toPlanetMap(planets, (planet) => planet.divisional[chart].sign);
 }
 
 export function getDivisionalCombustion(
@@ -910,9 +645,7 @@ export function getDivisionalCombustion(
   return toPlanetMap(
     planets,
     ({ name, motion }) =>
-      name !== 'Sun' &&
-      !!COMBUSTION_LIMITS[name] &&
-      isCombust(name, sunLon, divisionalLongitudes[name], motion),
+      name !== 'Sun' && !!COMBUSTION_LIMITS[name] && isCombust(name, sunLon, divisionalLongitudes[name], motion),
   );
 }
 
@@ -920,12 +653,11 @@ export function getDivisionalLongitudes(
   planets: PlanetData[],
   chart: DivisionalChart,
 ): Record<PlanetName, number> {
-  const { divisor, signKey } = DIVISIONAL_META[chart];
+  const { divisor } = DIVISIONAL_META[chart];
   if (chart === 'D1') return toPlanetMap(planets, ({ lon }) => lon);
-
   const partSize = 30 / divisor;
   return toPlanetMap(
     planets,
-    (planet) => ((planet[signKey] as number) - 1) * 30 + (planet.deg % partSize) * divisor,
+    (planet) => (planet.divisional[chart].sign - 1) * 30 + (planet.deg % partSize) * divisor,
   );
 }

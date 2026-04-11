@@ -53,40 +53,20 @@ export interface ShashtiamsaInfo {
   description: string;
 }
 
+/** Per-divisional-chart sign and house placement for a planet. */
+export interface DivisionalPlacement {
+  sign: number;
+  house: number;
+}
+
 export interface PlanetData {
   name: PlanetName;
   lon: number;
   sign: number;
   deg: number;
   motion: MotionType;
-  house: number;
-  navamsaSign: number;
-  navamsaHouse: number;
-  d7Sign: number;
-  d7House: number;
-  d2Sign: number;
-  d3Sign: number;
-  d4Sign: number;
-  d10Sign: number;
-  d10House: number;
-  d12Sign: number;
-  d12House: number;
-  d16Sign: number;
-  d16House: number;
-  d20Sign: number;
-  d20House: number;
-  d24Sign: number;
-  d24House: number;
-  d27Sign: number;
-  d27House: number;
-  d30Sign: number;
-  d30House: number;
-  d40Sign: number;
-  d40House: number;
-  d45Sign: number;
-  d45House: number;
-  d60Sign: number;
-  d60House: number;
+  /** Divisional chart placements keyed by chart name. */
+  divisional: Record<DivisionalChart, DivisionalPlacement>;
   d60Shashtiamsa: ShashtiamsaInfo;
   lordships: number[];
   role: FunctionalRole;
@@ -107,21 +87,8 @@ export interface ChartData {
   ascSign: number;
   ascDeg: number;
   arudhaLagna: number;
-  ascNavamsa: number;
-  ascD7: number;
-  ascD2: number;
-  ascD3: number;
-  ascD4: number;
-  ascD10: number;
-  ascD12: number;
-  ascD16: number;
-  ascD20: number;
-  ascD24: number;
-  ascD27: number;
-  ascD30: number;
-  ascD40: number;
-  ascD45: number;
-  ascD60: number;
+  /** Ascendant sign in each divisional chart. */
+  ascDivisional: Record<DivisionalChart, number>;
   ascNak: NakshatraName;
   ascPada: number;
   positions: Record<PlanetName, PlanetPosition>;
@@ -158,8 +125,4 @@ export interface BuildChartParams {
   hour: number;
   lat: number;
   lon: number;
-  weekday?: number;
-  localYear?: number;
-  localMonth?: number;
-  localDay?: number;
 }
