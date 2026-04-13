@@ -793,6 +793,16 @@ body {
   line-height: 1.45;
 }
 
+.dasha-toggle {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  padding: 0;
+}
+
 .mode-toggle {
   display: flex;
   gap: 0.5rem;

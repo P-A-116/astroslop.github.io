@@ -1,4 +1,4 @@
-import { For, createMemo } from 'solid-js';
+import { For, Show, createMemo, createSignal } from 'solid-js';
 import type { DashaTimeline, DivisionalChart } from '../types';
 import { generateDashaTimelineFromMoonLongitude, getMahadashaBalance } from '../astrology';
 
@@ -21,10 +21,14 @@ const dateFmt = new Intl.DateTimeFormat('en-GB', {
 const roundYear = (value: number) => value.toFixed(6);
 
 export default function DashaCard(props: Props) {
+  const [expandedMahadasha, setExpandedMahadasha] = createSignal<string | null>(null);
   const timeline = createMemo<DashaTimeline>(() =>
     generateDashaTimelineFromMoonLongitude(props.jd, props.moonLongitude),
   );
   const birthBalance = createMemo(() => getMahadashaBalance(props.moonLongitude));
+  const toggleMahadasha = (key: string) => {
+    setExpandedMahadasha((current) => (current === key ? null : key));
+  };
 
   return (
     <div class="dasha-tab">
@@ -39,23 +43,32 @@ export default function DashaCard(props: Props) {
           <For each={timeline()}>
             {(mahadasha, index) => (
               <div class="yoga-card">
-                <div class="yoga-header">
-                  <span class="badge badge-karaka">{`${mahadasha.lord} Mahadasha`}</span>
-                  <span class="yoga-houses">{`${dateFmt.format(mahadasha.start)} \u2192 ${dateFmt.format(mahadasha.end)} UTC`}</span>
-                  <span class="yoga-planets">{`Years: ${roundYear(index() === 0 ? mahadasha.balanceYearsAtBirth : mahadasha.totalYears)}`}</span>
-                </div>
-                <div class="dasha-antardashas">
-                  <For each={mahadasha.antardashas}>
-                    {(antardasha) => (
-                      <div class="arudha-card">
-                        <div class="arudha-label">{antardasha.lord}</div>
-                        <div class="arudha-value dasha-date-range">
-                          {`${dateFmt.format(antardasha.start)} \u2192 ${dateFmt.format(antardasha.end)} UTC`}
+                <button
+                  type="button"
+                  class="dasha-toggle"
+                  onClick={() => toggleMahadasha(`${mahadasha.lord}-${index()}`)}
+                  aria-expanded={expandedMahadasha() === `${mahadasha.lord}-${index()}`}
+                >
+                  <div class="yoga-header">
+                    <span class="badge badge-karaka">{`${mahadasha.lord} Mahadasha`}</span>
+                    <span class="yoga-houses">{`${dateFmt.format(mahadasha.start)} \u2192 ${dateFmt.format(mahadasha.end)} UTC`}</span>
+                    <span class="yoga-planets">{`Years: ${roundYear(index() === 0 ? mahadasha.balanceYearsAtBirth : mahadasha.totalYears)}`}</span>
+                  </div>
+                </button>
+                <Show when={expandedMahadasha() === `${mahadasha.lord}-${index()}`}>
+                  <div class="dasha-antardashas">
+                    <For each={mahadasha.antardashas}>
+                      {(antardasha) => (
+                        <div class="arudha-card">
+                          <div class="arudha-label">{antardasha.lord}</div>
+                          <div class="arudha-value dasha-date-range">
+                            {`${dateFmt.format(antardasha.start)} \u2192 ${dateFmt.format(antardasha.end)} UTC`}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </For>
-                </div>
+                      )}
+                    </For>
+                  </div>
+                </Show>
               </div>
             )}
           </For>
