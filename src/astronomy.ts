@@ -42,10 +42,22 @@ export function julianDay(year: number, month: number, day: number, hour: number
   return CalendarGregorianToJD(year, month, day + hour / 24);
 }
 
-/** Lahiri ayanamsa (degrees) at the given Julian Day. */
+/** Mean Lahiri ayanamsa (degrees) at the given Julian Day. */
 export function lahiriAyanamsa(jd: number): number {
   const T = (jd - 2415020) / 36525;
   return 22.460148 + T * (1.396042 + T * 0.000308084);
+}
+
+/**
+ * True Chitrapaksha (true Lahiri) ayanamsa in degrees.
+ * Applies nutation in longitude projected onto the ecliptic.
+ */
+export function trueChitrapakshaAyanamsa(jd: number): number {
+  const meanLahiri = lahiriAyanamsa(jd);
+  const [deltaPsi] = nutation.nutation(jd);
+  const meanObliquity = nutation.meanObliquity(jd);
+  const correctionDeg = (deltaPsi * Math.cos(meanObliquity)) * DEG;
+  return meanLahiri + correctionDeg;
 }
 
 /**
@@ -127,7 +139,7 @@ export function computeAscendant(jd: number, lat: number, lon: number): number {
 
 export function computeAllPositions(jd: number, lat: number, lon: number): AllPositionsResult {
   const d = jd - 2451543.5;
-  const ayanamsa = lahiriAyanamsa(jd);
+  const ayanamsa = trueChitrapakshaAyanamsa(jd);
   const rahu = rahuTropical(d);
 
   const positions = Object.fromEntries(PLANET_LIST.map((name) => {
