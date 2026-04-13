@@ -31,6 +31,8 @@ declare module 'astronomia/sidereal' {
 declare module 'astronomia/nutation' {
   /** Returns mean obliquity of the ecliptic in radians. */
   export function meanObliquity(jde: number): number;
+  /** Returns nutation in longitude and obliquity in radians. */
+  export function nutation(jde: number): [number, number];
 }
 
 declare module 'astronomia/data/vsop87Bearth' {
