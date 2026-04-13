@@ -164,6 +164,7 @@ export default function App() {
                     ascSign={view().ascSign}
                     rahuSign={view().signs.Rahu}
                     sunLongitude={view().longitudes.Sun}
+                    geoLatitude={view().data.lat}
                     geoLongitude={view().data.lon}
                   />
                 </section>

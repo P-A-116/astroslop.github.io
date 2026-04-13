@@ -53,12 +53,12 @@ describe('ashtottari paksha and day/night condition', () => {
   it('applies day+Krishna and night+Shukla eligibility rule', () => {
     const dayJd = 2451545;
     const nightJd = 2451545.6;
-    expect(isDayBirth(dayJd, 0)).toBe(true);
-    expect(isDayBirth(nightJd, 0)).toBe(false);
-    expect(isAshtottariEligibleByPakshaAndTime(dayJd, 0, 10, 220)).toBe(true);
-    expect(isAshtottariEligibleByPakshaAndTime(dayJd, 0, 10, 100)).toBe(false);
-    expect(isAshtottariEligibleByPakshaAndTime(nightJd, 0, 10, 100)).toBe(true);
-    expect(isAshtottariEligibleByPakshaAndTime(nightJd, 0, 10, 220)).toBe(false);
+    expect(isDayBirth(dayJd, 0, 0)).toBe(true);
+    expect(isDayBirth(nightJd, 0, 0)).toBe(false);
+    expect(isAshtottariEligibleByPakshaAndTime(dayJd, 0, 0, 10, 220)).toBe(true);
+    expect(isAshtottariEligibleByPakshaAndTime(dayJd, 0, 0, 10, 100)).toBe(false);
+    expect(isAshtottariEligibleByPakshaAndTime(nightJd, 0, 0, 10, 100)).toBe(true);
+    expect(isAshtottariEligibleByPakshaAndTime(nightJd, 0, 0, 10, 220)).toBe(false);
   });
 });
 

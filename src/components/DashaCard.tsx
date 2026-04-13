@@ -18,6 +18,7 @@ interface Props {
   ascSign: number;
   rahuSign: number;
   sunLongitude: number;
+  geoLatitude: number;
   geoLongitude: number;
 }
 
@@ -46,10 +47,16 @@ export default function DashaCard(props: Props) {
   );
   const rahuHouse = createMemo(() => getRahuHouseFromAsc(props.ascSign, props.rahuSign));
   const paksha = createMemo(() => getPakshaFromLongitudes(props.sunLongitude, props.moonLongitude));
-  const dayBirth = createMemo(() => isDayBirth(props.jd, props.geoLongitude));
+  const dayBirth = createMemo(() => isDayBirth(props.jd, props.geoLatitude, props.geoLongitude));
   const houseEligible = createMemo(() => isAshtottariEligibleByHouse(rahuHouse()));
   const pakshaTimeEligible = createMemo(() =>
-    isAshtottariEligibleByPakshaAndTime(props.jd, props.geoLongitude, props.sunLongitude, props.moonLongitude),
+    isAshtottariEligibleByPakshaAndTime(
+      props.jd,
+      props.geoLatitude,
+      props.geoLongitude,
+      props.sunLongitude,
+      props.moonLongitude,
+    ),
   );
   const ashtottariEligible = createMemo(() => houseEligible() && pakshaTimeEligible());
   const toggleMahadasha = (key: string) => {

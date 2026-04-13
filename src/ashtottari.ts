@@ -38,6 +38,8 @@ interface SegmentDefinition {
 
 const EPSILON = 1e-9;
 const YEAR_MS = 365.2425 * 86400000;
+const DEG = 180 / Math.PI;
+const RAD = Math.PI / 180;
 const NAKSHATRA_SIZE = 360 / 27;
 const PADA_SIZE = NAKSHATRA_SIZE / 4;
 const SHRAVANA_PORTION_FOR_ABHIJIT = NAKSHATRA_SIZE / 15;
@@ -220,19 +222,61 @@ export function getPakshaFromLongitudes(sunLongitude: number, moonLongitude: num
   return phase < 180 ? 'Shukla' : 'Krishna';
 }
 
-export function isDayBirth(jd: number, longitude: number): boolean {
-  const localSolarHours = ((((jd + 0.5) % 1 + 1) % 1) * 24) + (longitude / 15);
-  const normalizedHours = ((localSolarHours % 24) + 24) % 24;
-  return normalizedHours >= 6 && normalizedHours < 18;
+function dayOfYearUtc(date: Date): number {
+  const start = Date.UTC(date.getUTCFullYear(), 0, 0);
+  const now = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+  return Math.floor((now - start) / 86400000);
+}
+
+function solarEquationAndDeclination(jd: number): { eqTimeMinutes: number; declinationRad: number } {
+  const date = jdToDate(jd);
+  const utcHour = date.getUTCHours() + date.getUTCMinutes() / 60 + date.getUTCSeconds() / 3600;
+  const n = dayOfYearUtc(date);
+  const gamma = (2 * Math.PI / 365) * (n - 1 + (utcHour - 12) / 24);
+  const eqTimeMinutes = 229.18 * (
+    0.000075
+    + 0.001868 * Math.cos(gamma)
+    - 0.032077 * Math.sin(gamma)
+    - 0.014615 * Math.cos(2 * gamma)
+    - 0.040849 * Math.sin(2 * gamma)
+  );
+  const declinationRad = 0.006918
+    - 0.399912 * Math.cos(gamma)
+    + 0.070257 * Math.sin(gamma)
+    - 0.006758 * Math.cos(2 * gamma)
+    + 0.000907 * Math.sin(2 * gamma)
+    - 0.002697 * Math.cos(3 * gamma)
+    + 0.00148 * Math.sin(3 * gamma);
+  return { eqTimeMinutes, declinationRad };
+}
+
+export function isDayBirth(jd: number, latitude: number, longitude: number): boolean {
+  const date = jdToDate(jd);
+  const utcMinutes = date.getUTCHours() * 60 + date.getUTCMinutes() + date.getUTCSeconds() / 60;
+  const { eqTimeMinutes, declinationRad } = solarEquationAndDeclination(jd);
+  const latRad = latitude * RAD;
+  const zenithRad = 90.833 * RAD;
+  const cosHourAngle = (
+    (Math.cos(zenithRad) / (Math.cos(latRad) * Math.cos(declinationRad)))
+    - Math.tan(latRad) * Math.tan(declinationRad)
+  );
+  if (cosHourAngle <= -1) return true; // polar day
+  if (cosHourAngle >= 1) return false; // polar night
+  const hourAngleDeg = Math.acos(cosHourAngle) * DEG;
+  const solarNoonUtcMinutes = 720 - 4 * longitude - eqTimeMinutes;
+  const sunriseUtcMinutes = solarNoonUtcMinutes - 4 * hourAngleDeg;
+  const sunsetUtcMinutes = solarNoonUtcMinutes + 4 * hourAngleDeg;
+  return utcMinutes >= sunriseUtcMinutes && utcMinutes < sunsetUtcMinutes;
 }
 
 export function isAshtottariEligibleByPakshaAndTime(
   jd: number,
+  latitude: number,
   longitude: number,
   sunLongitude: number,
   moonLongitude: number,
 ): boolean {
-  const dayBirth = isDayBirth(jd, longitude);
+  const dayBirth = isDayBirth(jd, latitude, longitude);
   const paksha = getPakshaFromLongitudes(sunLongitude, moonLongitude);
   return (dayBirth && paksha === 'Krishna') || (!dayBirth && paksha === 'Shukla');
 }
