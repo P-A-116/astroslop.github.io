@@ -193,7 +193,10 @@ export default function DashaCard(props: Props) {
             </For>
           </div>
         </Show>
-        <Show when={system() === 'Shodottari' && shodottariEligible()}>
+        <Show when={system() === 'Shodottari'}>
+          <Show when={!shodottariEligible()}>
+            <p class="analysis-empty">Showing Shodottari timeline for reference even though eligibility conditions are not met.</p>
+          </Show>
           <div class="yoga-list">
             <For each={shodottari().timeline}>
               {(mahadasha, index) => (
