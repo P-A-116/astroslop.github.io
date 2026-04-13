@@ -110,6 +110,20 @@ export interface ChartData {
   };
 }
 
+export interface DashaAntardashaEntry {
+  start: Date;
+  end: Date;
+  lord: PlanetName;
+}
+
+export interface DashaMahadashaEntry extends DashaAntardashaEntry {
+  totalYears: number;
+  balanceYearsAtBirth: number;
+  antardashas: DashaAntardashaEntry[];
+}
+
+export type DashaTimeline = DashaMahadashaEntry[];
+
 export interface ParivartanaYoga {
   houseA: number;
   houseB: number;

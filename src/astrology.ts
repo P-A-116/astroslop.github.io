@@ -36,6 +36,9 @@ import type {
   DivisionalChart,
   ShashtiamsaInfo,
   DivisionalPlacement,
+  DashaTimeline,
+  DashaAntardashaEntry,
+  DashaMahadashaEntry,
 } from './types';
 
 export interface DivisionalMeta {
@@ -112,6 +115,24 @@ const D45_DEITY_ORDERS = {
   fixed: ['Siva', 'Vishnu', 'Brahma'],
   dual: ['Vishnu', 'Brahma', 'Siva'],
 } as const;
+const EPSILON = 1e-9;
+const NAKSHATRA_SIZE = 360 / 27;
+const UNIX_EPOCH_JD = 2440587.5;
+const MS_PER_DAY = 86400000;
+const YEAR_MS = 365.2425 * MS_PER_DAY;
+const VIMSHOTTARI_ORDER = ['Ketu', 'Venus', 'Sun', 'Moon', 'Mars', 'Rahu', 'Jupiter', 'Saturn', 'Mercury'] as const satisfies readonly PlanetName[];
+const VIMSHOTTARI_DASHA_YEARS = {
+  Ketu: 7,
+  Venus: 20,
+  Sun: 6,
+  Moon: 10,
+  Mars: 7,
+  Rahu: 18,
+  Jupiter: 16,
+  Saturn: 19,
+  Mercury: 17,
+} as const satisfies Record<PlanetName, number>;
+const VIMSHOTTARI_CYCLE_YEARS = VIMSHOTTARI_ORDER.reduce((sum, lord) => sum + VIMSHOTTARI_DASHA_YEARS[lord], 0);
 
 const partIndex = (deg: number, parts: number) => Math.floor(deg / (30 / parts));
 const advanceSign = (sign: number, offset: number) => ((sign - 1 + offset) % 12) + 1;
@@ -284,6 +305,88 @@ export function formatDms(degFloat: number): string {
 export function getNakshatraName(longitude: number): NakshatraName {
   const normalized = ((longitude % 360) + 360) % 360;
   return NAKSHATRA_LIST[Math.floor(normalized / (40 / 3))];
+}
+
+export function getNakshatraIndex(moonLongitude: number): number {
+  const normalized = ((moonLongitude % 360) + 360) % 360;
+  const quotient = normalized / NAKSHATRA_SIZE;
+  const boundaryIndex = Math.round(quotient);
+  if (Math.abs(quotient - boundaryIndex) < EPSILON) return boundaryIndex % 27;
+  return Math.min(26, Math.floor(quotient));
+}
+
+export function getNakshatraFraction(moonLongitude: number): number {
+  const index = getNakshatraIndex(moonLongitude);
+  const normalized = ((moonLongitude % 360) + 360) % 360;
+  const nakStart = index * NAKSHATRA_SIZE;
+  let fraction = (normalized - nakStart) / NAKSHATRA_SIZE;
+  if (fraction < 0 && Math.abs(fraction) < EPSILON) fraction = 0;
+  if (fraction > 1 && Math.abs(fraction - 1) < EPSILON) fraction = 1;
+  return Math.min(1, Math.max(0, fraction));
+}
+
+export function getMahadashaBalance(
+  moonLongitude: number,
+): { lord: PlanetName; balance: number; totalYears: number } {
+  const nakshatra = NAKSHATRA_LIST[getNakshatraIndex(moonLongitude)];
+  const lord = NAKSHATRA_LORDS[nakshatra];
+  const totalYears = VIMSHOTTARI_DASHA_YEARS[lord];
+  const fractionInNakshatra = getNakshatraFraction(moonLongitude);
+  const proportionLeft = Math.abs(fractionInNakshatra - 1) < EPSILON ? 0 : (1 - fractionInNakshatra);
+  return { lord, balance: proportionLeft * totalYears, totalYears };
+}
+
+function jdToUtcDate(jd: number): Date {
+  return new Date((jd - UNIX_EPOCH_JD) * MS_PER_DAY);
+}
+
+function getVimshottariSequenceFrom(lord: PlanetName): PlanetName[] {
+  const startIndex = VIMSHOTTARI_ORDER.indexOf(lord);
+  return VIMSHOTTARI_ORDER.map((_, offset) => VIMSHOTTARI_ORDER[(startIndex + offset) % VIMSHOTTARI_ORDER.length]);
+}
+
+function buildAntardashas(startMs: number, mahadashaYears: number, mahadashaLord: PlanetName): DashaAntardashaEntry[] {
+  const antardashas: DashaAntardashaEntry[] = [];
+  const sequence = getVimshottariSequenceFrom(mahadashaLord);
+  let cursorMs = startMs;
+  for (const antardashaLord of sequence) {
+    const years = (mahadashaYears * VIMSHOTTARI_DASHA_YEARS[antardashaLord]) / VIMSHOTTARI_CYCLE_YEARS;
+    const endMs = cursorMs + years * YEAR_MS;
+    antardashas.push({
+      start: new Date(Math.round(cursorMs)),
+      end: new Date(Math.round(endMs)),
+      lord: antardashaLord,
+    });
+    cursorMs = endMs;
+  }
+  return antardashas;
+}
+
+export function generateDashaTimeline(birthData: ChartData): DashaTimeline {
+  const moon = birthData.planetData.find((planet) => planet.name === 'Moon');
+  if (!moon) throw new Error('Moon position was not found in chart data.');
+  const { lord: birthMahadashaLord, balance } = getMahadashaBalance(moon.lon);
+  const sequence = getVimshottariSequenceFrom(birthMahadashaLord);
+  const birthMs = jdToUtcDate(birthData.jd).getTime();
+  const timeline: DashaMahadashaEntry[] = [];
+
+  let cursorMs = birthMs;
+  for (let index = 0; index < sequence.length; index += 1) {
+    const lord = sequence[index];
+    const totalYears = VIMSHOTTARI_DASHA_YEARS[lord];
+    const years = index === 0 ? balance : totalYears;
+    const endMs = cursorMs + years * YEAR_MS;
+    timeline.push({
+      start: new Date(Math.round(cursorMs)),
+      end: new Date(Math.round(endMs)),
+      lord,
+      totalYears,
+      balanceYearsAtBirth: years,
+      antardashas: buildAntardashas(cursorMs, years, lord),
+    });
+    cursorMs = endMs;
+  }
+  return timeline;
 }
 
 export function getNakshatraPada(longitude: number): NakshatraPada {

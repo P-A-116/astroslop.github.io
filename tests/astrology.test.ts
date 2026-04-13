@@ -22,6 +22,10 @@ import {
   getDivisionalLongitudes,
   getDivisionalCombustion,
   DIVISIONAL_CHARTS,
+  generateDashaTimeline,
+  getMahadashaBalance,
+  getNakshatraFraction,
+  getNakshatraIndex,
 } from '../src/astrology';
 import { PLANET_LIST, SIGN_LORDS } from '../src/constants';
 import type { ChartData, DivisionalChart, DivisionalPlacement, MotionType, PlanetData, PlanetName } from '../src/types';
@@ -245,6 +249,32 @@ describe('getNakshatraPada', () => {
   it('normalizes negative longitude', () => {
     expect(getNakshatraPada(-0.1).nakshatra).toBe('Revati');
     expect(getNakshatraName(-0.1)).toBe('Revati');
+  });
+});
+
+describe('vimshottari dasha', () => {
+  it('maps Mrigashira to Mars mahadasha', () => {
+    const mrigashiraStart = 4 * (360 / 27);
+    const balance = getMahadashaBalance(mrigashiraStart + 1);
+    expect(balance.lord).toBe('Mars');
+    expect(balance.totalYears).toBe(7);
+  });
+
+  it('handles boundaries at 0, 13°20\', and 360°', () => {
+    const nakSize = 360 / 27;
+    expect(getNakshatraIndex(0)).toBe(0);
+    expect(getNakshatraFraction(0)).toBe(0);
+    expect(getNakshatraIndex(nakSize)).toBe(1);
+    expect(getNakshatraFraction(nakSize)).toBe(0);
+    expect(getNakshatraIndex(360)).toBe(0);
+    expect(getNakshatraFraction(360)).toBe(0);
+  });
+
+  it('keeps vimshottari cycle duration at exactly 120 years', () => {
+    const chart = buildChartData({ year: 2002, month: 10, day: 6, hour: 17 + 10 / 60, lat: 40.38, lon: 23.43 });
+    const timeline = generateDashaTimeline(chart);
+    const totalYears = timeline.reduce((sum, entry) => sum + entry.totalYears, 0);
+    expect(totalYears).toBe(120);
   });
 });
 
