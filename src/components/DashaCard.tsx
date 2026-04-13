@@ -77,11 +77,20 @@ export default function DashaCard(props: Props) {
     <div class="dasha-tab">
       <div class="analysis-section">
         <h3 class="analysis-subtitle">{`Dasha System (${props.selectedChart})`}</h3>
-        <p class="analysis-empty">
-          {ashtottariEligible()
-            ? `Ashtottari condition: Met (Rahu house ${rahuHouse()} from Lagna; ${dayBirth() ? 'day' : 'night'} birth in ${paksha()} paksha).`
-            : `Ashtottari condition: Not met (${!houseEligible() ? `Rahu in blocked house ${rahuHouse()} (1, 4, 5, 7, 9, 10)` : `requires day+Krishna or night+Shukla; got ${dayBirth() ? 'day' : 'night'}+${paksha()}`}).`}
-        </p>
+        <Show when={system() === 'Ashtottari'}>
+          <p class="analysis-empty">
+            {ashtottariEligible()
+              ? `Ashtottari condition: Met (Rahu house ${rahuHouse()} from Lagna; ${dayBirth() ? 'day' : 'night'} birth in ${paksha()} paksha).`
+              : `Ashtottari condition: Not met (${!houseEligible() ? `Rahu in blocked house ${rahuHouse()} (1, 4, 5, 7, 9, 10)` : `requires day+Krishna or night+Shukla; got ${dayBirth() ? 'day' : 'night'}+${paksha()}`}).`}
+          </p>
+        </Show>
+        <Show when={system() === 'Shodottari'}>
+          <p class="analysis-empty">
+            {shodottariEligible()
+              ? `Shodottari condition: Met (D2 Asc sign ${props.d2AscSign} with ${paksha()} Paksha).`
+              : `Shodottari condition: Not met (requires D2 Asc in Cancer with Krishna Paksha, or D2 Asc in Leo with Shukla Paksha; got D2 sign ${props.d2AscSign} with ${paksha()} Paksha).`}
+          </p>
+        </Show>
         <div class="mode-toggle">
           <button
             type="button"
