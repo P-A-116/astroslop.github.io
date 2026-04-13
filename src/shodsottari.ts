@@ -99,7 +99,7 @@ function buildPlanetSequence(startPlanet: ShodsottariPlanet): ShodsottariPlanet[
 }
 
 /**
- * Derives the Shodaottari dasha start planet from the Janma Nakshatra.
+ * Derives the Shodsottari dasha start planet from the Janma Nakshatra.
  *
  * BPHS rule: count nakshatras from Pushyami to the Janma Nakshatra (inclusive),
  * divide by 8, and the remainder maps to the planet order (1=Sun … 0=Venus).
