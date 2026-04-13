@@ -365,9 +365,16 @@ function buildAntardashas(startMs: number, mahadashaYears: number, mahadashaLord
 export function generateDashaTimeline(birthData: ChartData): DashaTimeline {
   const moon = birthData.planetData.find((planet) => planet.name === 'Moon');
   if (!moon) throw new Error('Moon position was not found in chart data.');
-  const { lord: birthMahadashaLord, balance } = getMahadashaBalance(moon.lon);
+  return generateDashaTimelineFromMoonLongitude(birthData.jd, moon.lon);
+}
+
+export function generateDashaTimelineFromMoonLongitude(
+  birthJd: number,
+  moonLongitude: number,
+): DashaTimeline {
+  const { lord: birthMahadashaLord, balance } = getMahadashaBalance(moonLongitude);
   const sequence = getVimshottariSequenceFrom(birthMahadashaLord);
-  const birthMs = jdToUtcDate(birthData.jd).getTime();
+  const birthMs = jdToUtcDate(birthJd).getTime();
   const timeline: DashaMahadashaEntry[] = [];
 
   let cursorMs = birthMs;

@@ -26,6 +26,7 @@ import {
   getMahadashaBalance,
   getNakshatraFraction,
   getNakshatraIndex,
+  generateDashaTimelineFromMoonLongitude,
 } from '../src/astrology';
 import { PLANET_LIST, SIGN_LORDS } from '../src/constants';
 import type { ChartData, DivisionalChart, DivisionalPlacement, MotionType, PlanetData, PlanetName } from '../src/types';
@@ -275,6 +276,13 @@ describe('vimshottari dasha', () => {
     const timeline = generateDashaTimeline(chart);
     const totalYears = timeline.reduce((sum, entry) => sum + entry.totalYears, 0);
     expect(totalYears).toBe(120);
+  });
+
+  it('changes mahadasha lord when moon longitude changes', () => {
+    const fromAshwini = generateDashaTimelineFromMoonLongitude(2451545, 0);
+    const fromBharani = generateDashaTimelineFromMoonLongitude(2451545, 360 / 27);
+    expect(fromAshwini[0].lord).toBe('Ketu');
+    expect(fromBharani[0].lord).toBe('Venus');
   });
 });
 

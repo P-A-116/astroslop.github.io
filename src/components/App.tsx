@@ -8,6 +8,7 @@ import AnalysisTab from './AnalysisTab';
 import DivisionalChartTabs from './DivisionalChartTabs';
 import PlanetCard from './PlanetCard';
 import VedicChartView from './VedicChartView';
+import DashaCard from './DashaCard';
 import {
   getDivisionalSigns,
   getDivisionalLongitudes,
@@ -150,6 +151,15 @@ export default function App() {
                   <h2 class="section-title">Analysis</h2>
                   <AnalysisTab
                     data={view().data}
+                    selectedChart={view().chart}
+                  />
+                </section>
+
+                <section class="card fade-in" id="dasha-section" style="animation-delay: 0.26s">
+                  <h2 class="section-title">Dasha</h2>
+                  <DashaCard
+                    jd={view().data.jd}
+                    moonLongitude={view().longitudes.Moon}
                     selectedChart={view().chart}
                   />
                 </section>
