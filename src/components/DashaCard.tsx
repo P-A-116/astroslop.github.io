@@ -3,7 +3,10 @@ import type { DashaTimeline, DivisionalChart } from '../types';
 import { generateDashaTimelineFromMoonLongitude, getMahadashaBalance } from '../astrology';
 import {
   computeAshtottariDasha,
+  getPakshaFromLongitudes,
   getRahuHouseFromAsc,
+  isAshtottariEligibleByPakshaAndTime,
+  isDayBirth,
   isAshtottariEligibleByHouse,
   type AshtottariResult,
 } from '../ashtottari';
@@ -14,6 +17,8 @@ interface Props {
   selectedChart: DivisionalChart;
   ascSign: number;
   rahuSign: number;
+  sunLongitude: number;
+  geoLongitude: number;
 }
 
 const dateFmt = new Intl.DateTimeFormat('en-GB', {
@@ -40,7 +45,13 @@ export default function DashaCard(props: Props) {
     computeAshtottariDasha(props.jd, props.moonLongitude),
   );
   const rahuHouse = createMemo(() => getRahuHouseFromAsc(props.ascSign, props.rahuSign));
-  const ashtottariEligible = createMemo(() => isAshtottariEligibleByHouse(rahuHouse()));
+  const paksha = createMemo(() => getPakshaFromLongitudes(props.sunLongitude, props.moonLongitude));
+  const dayBirth = createMemo(() => isDayBirth(props.jd, props.geoLongitude));
+  const houseEligible = createMemo(() => isAshtottariEligibleByHouse(rahuHouse()));
+  const pakshaTimeEligible = createMemo(() =>
+    isAshtottariEligibleByPakshaAndTime(props.jd, props.geoLongitude, props.sunLongitude, props.moonLongitude),
+  );
+  const ashtottariEligible = createMemo(() => houseEligible() && pakshaTimeEligible());
   const toggleMahadasha = (key: string) => {
     setExpandedMahadasha((current) => (current === key ? null : key));
   };
@@ -51,8 +62,8 @@ export default function DashaCard(props: Props) {
         <h3 class="analysis-subtitle">{`Dasha System (${props.selectedChart})`}</h3>
         <p class="analysis-empty">
           {ashtottariEligible()
-            ? `Ashtottari condition: Met (Rahu is in house ${rahuHouse()} from Lagna).`
-            : `Ashtottari condition: Not met (Rahu is in house ${rahuHouse()} from Lagna; blocked houses: 1, 4, 5, 7, 9, 10).`}
+            ? `Ashtottari condition: Met (Rahu house ${rahuHouse()} from Lagna; ${dayBirth() ? 'day' : 'night'} birth in ${paksha()} paksha).`
+            : `Ashtottari condition: Not met (${!houseEligible() ? `Rahu in blocked house ${rahuHouse()} (1, 4, 5, 7, 9, 10)` : `requires day+Krishna or night+Shukla; got ${dayBirth() ? 'day' : 'night'}+${paksha()}`}).`}
         </p>
         <div class="mode-toggle">
           <button

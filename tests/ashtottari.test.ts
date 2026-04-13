@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
   computeAshtottariDasha,
   getAshtottariNakshatraRulers,
+  getPakshaFromLongitudes,
   getRahuHouseFromAsc,
+  isAshtottariEligibleByPakshaAndTime,
+  isDayBirth,
   isAshtottariEligibleByHouse,
 } from '../src/ashtottari';
 
@@ -38,6 +41,24 @@ describe('ashtottari mapping', () => {
     expect(rulers.Shatabhisha).toBe('Jupiter');
     expect(rulers.Ashwini).toBe('Rahu');
     expect(rulers.Mrigashira).toBe('Venus');
+  });
+});
+
+describe('ashtottari paksha and day/night condition', () => {
+  it('derives paksha from solar-lunar separation', () => {
+    expect(getPakshaFromLongitudes(10, 100)).toBe('Shukla');
+    expect(getPakshaFromLongitudes(10, 220)).toBe('Krishna');
+  });
+
+  it('applies day+Krishna and night+Shukla eligibility rule', () => {
+    const dayJd = 2451545;
+    const nightJd = 2451545.6;
+    expect(isDayBirth(dayJd, 0)).toBe(true);
+    expect(isDayBirth(nightJd, 0)).toBe(false);
+    expect(isAshtottariEligibleByPakshaAndTime(dayJd, 0, 10, 220)).toBe(true);
+    expect(isAshtottariEligibleByPakshaAndTime(dayJd, 0, 10, 100)).toBe(false);
+    expect(isAshtottariEligibleByPakshaAndTime(nightJd, 0, 10, 100)).toBe(true);
+    expect(isAshtottariEligibleByPakshaAndTime(nightJd, 0, 10, 220)).toBe(false);
   });
 });
 

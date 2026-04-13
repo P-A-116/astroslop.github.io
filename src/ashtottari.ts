@@ -211,6 +211,32 @@ export function isAshtottariEligibleByHouse(rahuHouseFromAsc: number): boolean {
   return ![1, 4, 5, 7, 9, 10].includes(rahuHouseFromAsc);
 }
 
+function normalizedDifference(from: number, to: number): number {
+  return ((to - from) % 360 + 360) % 360;
+}
+
+export function getPakshaFromLongitudes(sunLongitude: number, moonLongitude: number): 'Shukla' | 'Krishna' {
+  const phase = normalizedDifference(sunLongitude, moonLongitude);
+  return phase < 180 ? 'Shukla' : 'Krishna';
+}
+
+export function isDayBirth(jd: number, longitude: number): boolean {
+  const localSolarHours = ((((jd + 0.5) % 1 + 1) % 1) * 24) + (longitude / 15);
+  const normalizedHours = ((localSolarHours % 24) + 24) % 24;
+  return normalizedHours >= 6 && normalizedHours < 18;
+}
+
+export function isAshtottariEligibleByPakshaAndTime(
+  jd: number,
+  longitude: number,
+  sunLongitude: number,
+  moonLongitude: number,
+): boolean {
+  const dayBirth = isDayBirth(jd, longitude);
+  const paksha = getPakshaFromLongitudes(sunLongitude, moonLongitude);
+  return (dayBirth && paksha === 'Krishna') || (!dayBirth && paksha === 'Shukla');
+}
+
 export function computeAshtottariDasha(birthJd: number, moonLongitude: number): AshtottariResult {
   const segment = findSegment(moonLongitude);
   const portionYears = segmentPortionYears(segment.planet);

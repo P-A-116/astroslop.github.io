@@ -163,6 +163,8 @@ export default function App() {
                     selectedChart={view().chart}
                     ascSign={view().ascSign}
                     rahuSign={view().signs.Rahu}
+                    sunLongitude={view().longitudes.Sun}
+                    geoLongitude={view().data.lon}
                   />
                 </section>
               </div>
