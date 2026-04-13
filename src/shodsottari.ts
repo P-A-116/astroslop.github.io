@@ -20,6 +20,13 @@ export interface ShodsottariTimelineEntry {
   planet: ShodsottariPlanet;
   startDate: Date;
   endDate: Date;
+  antardashas: ShodsottariAntardashaEntry[];
+}
+
+export interface ShodsottariAntardashaEntry {
+  planet: ShodsottariPlanet;
+  startDate: Date;
+  endDate: Date;
 }
 
 export interface ShodsottariResult {
@@ -56,6 +63,7 @@ const SHODSOTTARI_YEARS: Record<ShodsottariPlanet, number> = {
   Mercury: 17,
   Venus: 18,
 };
+const SHODSOTTARI_CYCLE_YEARS = 116;
 
 /**
  * Nakshatra lords for the Shodsottari dasha system (distinct from Vimshottari).
@@ -96,6 +104,27 @@ function buildPlanetSequence(startPlanet: ShodsottariPlanet): ShodsottariPlanet[
   return SHODSOTTARI_ORDER.map(
     (_, offset) => SHODSOTTARI_ORDER[(startIndex + offset) % SHODSOTTARI_ORDER.length],
   );
+}
+
+function buildAntardashas(
+  startMs: number,
+  mahadashaYears: number,
+  mahadashaPlanet: ShodsottariPlanet,
+): ShodsottariAntardashaEntry[] {
+  const antardashas: ShodsottariAntardashaEntry[] = [];
+  const sequence = buildPlanetSequence(mahadashaPlanet);
+  let cursorMs = startMs;
+  for (const antardashaPlanet of sequence) {
+    const years = (mahadashaYears * SHODSOTTARI_YEARS[antardashaPlanet]) / SHODSOTTARI_CYCLE_YEARS;
+    const endMs = cursorMs + years * YEAR_MS;
+    antardashas.push({
+      planet: antardashaPlanet,
+      startDate: new Date(Math.round(cursorMs)),
+      endDate: new Date(Math.round(endMs)),
+    });
+    cursorMs = endMs;
+  }
+  return antardashas;
 }
 
 /**
@@ -165,6 +194,7 @@ export function computeShodsottariDasha(
       planet,
       startDate: new Date(Math.round(cursorMs)),
       endDate: new Date(Math.round(endMs)),
+      antardashas: buildAntardashas(cursorMs, years, planet),
     });
     cursorMs = endMs;
   }

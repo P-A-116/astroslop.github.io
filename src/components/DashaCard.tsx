@@ -185,11 +185,32 @@ export default function DashaCard(props: Props) {
             <For each={ashtottari().timeline}>
               {(mahadasha, index) => (
                 <div class="yoga-card">
-                  <div class="yoga-header">
-                    <span class="badge badge-karaka">{`${mahadasha.planet} Mahadasha`}</span>
-                    <span class="yoga-houses">{`${dateFmt.format(mahadasha.startDate)} \u2192 ${dateFmt.format(mahadasha.endDate)} UTC`}</span>
-                    <span class="yoga-planets">{index() === 0 ? 'Birth balance' : 'Full mahadasha'}</span>
-                  </div>
+                  <button
+                    type="button"
+                    class="dasha-toggle"
+                    onClick={() => toggleMahadasha(`ashtottari-${mahadasha.planet}-${index()}`)}
+                    aria-expanded={expandedMahadasha() === `ashtottari-${mahadasha.planet}-${index()}`}
+                  >
+                    <div class="yoga-header">
+                      <span class="badge badge-karaka">{`${mahadasha.planet} Mahadasha`}</span>
+                      <span class="yoga-houses">{`${dateFmt.format(mahadasha.startDate)} \u2192 ${dateFmt.format(mahadasha.endDate)} UTC`}</span>
+                      <span class="yoga-planets">{index() === 0 ? 'Birth balance' : 'Full mahadasha'}</span>
+                    </div>
+                  </button>
+                  <Show when={expandedMahadasha() === `ashtottari-${mahadasha.planet}-${index()}`}>
+                    <div class="dasha-antardashas">
+                      <For each={mahadasha.antardashas}>
+                        {(antardasha) => (
+                          <div class="arudha-card">
+                            <div class="arudha-label">{antardasha.planet}</div>
+                            <div class="arudha-value dasha-date-range">
+                              {`${dateFmt.format(antardasha.startDate)} \u2192 ${dateFmt.format(antardasha.endDate)} UTC`}
+                            </div>
+                          </div>
+                        )}
+                      </For>
+                    </div>
+                  </Show>
                 </div>
               )}
             </For>
@@ -200,11 +221,32 @@ export default function DashaCard(props: Props) {
             <For each={shodsottari().timeline}>
               {(mahadasha, index) => (
                 <div class="yoga-card">
-                  <div class="yoga-header">
-                    <span class="badge badge-karaka">{`${mahadasha.planet} Mahadasha`}</span>
-                    <span class="yoga-houses">{`${dateFmt.format(mahadasha.startDate)} \u2192 ${dateFmt.format(mahadasha.endDate)} UTC`}</span>
-                    <span class="yoga-planets">{index() === 0 ? 'Birth balance' : 'Full mahadasha'}</span>
-                  </div>
+                  <button
+                    type="button"
+                    class="dasha-toggle"
+                    onClick={() => toggleMahadasha(`shodsottari-${mahadasha.planet}-${index()}`)}
+                    aria-expanded={expandedMahadasha() === `shodsottari-${mahadasha.planet}-${index()}`}
+                  >
+                    <div class="yoga-header">
+                      <span class="badge badge-karaka">{`${mahadasha.planet} Mahadasha`}</span>
+                      <span class="yoga-houses">{`${dateFmt.format(mahadasha.startDate)} \u2192 ${dateFmt.format(mahadasha.endDate)} UTC`}</span>
+                      <span class="yoga-planets">{index() === 0 ? 'Birth balance' : 'Full mahadasha'}</span>
+                    </div>
+                  </button>
+                  <Show when={expandedMahadasha() === `shodsottari-${mahadasha.planet}-${index()}`}>
+                    <div class="dasha-antardashas">
+                      <For each={mahadasha.antardashas}>
+                        {(antardasha) => (
+                          <div class="arudha-card">
+                            <div class="arudha-label">{antardasha.planet}</div>
+                            <div class="arudha-value dasha-date-range">
+                              {`${dateFmt.format(antardasha.startDate)} \u2192 ${dateFmt.format(antardasha.endDate)} UTC`}
+                            </div>
+                          </div>
+                        )}
+                      </For>
+                    </div>
+                  </Show>
                 </div>
               )}
             </For>

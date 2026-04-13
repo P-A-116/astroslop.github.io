@@ -20,6 +20,13 @@ export interface AshtottariTimelineEntry {
   planet: AshtottariPlanet;
   startDate: Date;
   endDate: Date;
+  antardashas: AshtottariAntardashaEntry[];
+}
+
+export interface AshtottariAntardashaEntry {
+  planet: AshtottariPlanet;
+  startDate: Date;
+  endDate: Date;
 }
 
 export interface AshtottariResult {
@@ -61,6 +68,7 @@ const ASHTOTTARI_DASHA_YEARS: Record<AshtottariPlanet, number> = {
   Rahu: 12,
   Venus: 21,
 };
+const ASHTOTTARI_CYCLE_YEARS = 108;
 
 export const ASHTOTTARI_PLANET_ORDER: readonly AshtottariPlanet[] = [
   'Sun',
@@ -201,6 +209,27 @@ function buildPlanetSequence(start: AshtottariPlanet): AshtottariPlanet[] {
   return ASHTOTTARI_PLANET_ORDER.map((_, offset) => ASHTOTTARI_PLANET_ORDER[(startIndex + offset) % ASHTOTTARI_PLANET_ORDER.length]);
 }
 
+function buildAntardashas(
+  startMs: number,
+  mahadashaYears: number,
+  mahadashaPlanet: AshtottariPlanet,
+): AshtottariAntardashaEntry[] {
+  const antardashas: AshtottariAntardashaEntry[] = [];
+  const sequence = buildPlanetSequence(mahadashaPlanet);
+  let cursorMs = startMs;
+  for (const antardashaPlanet of sequence) {
+    const years = (mahadashaYears * ASHTOTTARI_DASHA_YEARS[antardashaPlanet]) / ASHTOTTARI_CYCLE_YEARS;
+    const endMs = cursorMs + years * YEAR_MS;
+    antardashas.push({
+      planet: antardashaPlanet,
+      startDate: new Date(Math.round(cursorMs)),
+      endDate: new Date(Math.round(endMs)),
+    });
+    cursorMs = endMs;
+  }
+  return antardashas;
+}
+
 export function getAshtottariNakshatraRulers(): Record<NakshatraName, AshtottariPlanet> {
   return ASHTOTTARI_NAKSHATRA_RULERS;
 }
@@ -303,6 +332,7 @@ export function computeAshtottariDasha(birthJd: number, moonLongitude: number): 
       planet,
       startDate: new Date(Math.round(cursorMs)),
       endDate: new Date(Math.round(endMs)),
+      antardashas: buildAntardashas(cursorMs, years, planet),
     });
     cursorMs = endMs;
   }
