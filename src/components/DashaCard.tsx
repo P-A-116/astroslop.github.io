@@ -11,10 +11,10 @@ import {
   type AshtottariResult,
 } from '../ashtottari';
 import {
-  computeShodottariDasha,
-  isShodottariEligible,
-  type ShodottariResult,
-} from '../shodottari';
+  computeShodsottariDasha,
+  isShodsottariEligible,
+  type ShodsottariResult,
+} from '../shodsottari';
 
 interface Props {
   jd: number;
@@ -39,7 +39,7 @@ const dateFmt = new Intl.DateTimeFormat('en-GB', {
 });
 
 const roundYear = (value: number) => value.toFixed(6);
-type DashaSystem = 'Vimshottari' | 'Ashtottari' | 'Shodottari';
+type DashaSystem = 'Vimshottari' | 'Ashtottari' | 'Shodsottari';
 
 export default function DashaCard(props: Props) {
   const [system, setSystem] = createSignal<DashaSystem>('Vimshottari');
@@ -51,8 +51,8 @@ export default function DashaCard(props: Props) {
   const ashtottari = createMemo<AshtottariResult>(() =>
     computeAshtottariDasha(props.jd, props.moonLongitude),
   );
-  const shodottari = createMemo<ShodottariResult>(() =>
-    computeShodottariDasha(props.jd, props.moonLongitude),
+  const shodsottari = createMemo<ShodsottariResult>(() =>
+    computeShodsottariDasha(props.jd, props.moonLongitude),
   );
   const rahuHouse = createMemo(() => getRahuHouseFromAsc(props.ascSign, props.rahuSign));
   const paksha = createMemo(() => getPakshaFromLongitudes(props.sunLongitude, props.moonLongitude));
@@ -68,7 +68,7 @@ export default function DashaCard(props: Props) {
     ),
   );
   const ashtottariEligible = createMemo(() => houseEligible() && pakshaTimeEligible());
-  const shodottariEligible = createMemo(() => isShodottariEligible(props.d2AscSign, paksha()));
+  const shodsottariEligible = createMemo(() => isShodsottariEligible(props.d2AscSign, paksha()));
   const toggleMahadasha = (key: string) => {
     setExpandedMahadasha((current) => (current === key ? null : key));
   };
@@ -84,9 +84,9 @@ export default function DashaCard(props: Props) {
               : `Ashtottari condition: Not met (${!houseEligible() ? `Rahu in blocked house ${rahuHouse()} (1, 4, 5, 7, 9, 10)` : `requires day+Krishna or night+Shukla; got ${dayBirth() ? 'day' : 'night'}+${paksha()}`}).`}
           </p>
         </Show>
-        <Show when={system() === 'Shodottari'}>
+        <Show when={system() === 'Shodsottari'}>
           <p class="analysis-empty">
-            {shodottariEligible()
+            {shodsottariEligible()
               ? `Shodsottari condition: Met (D2 Asc sign ${props.d2AscSign} with ${paksha()} Paksha).`
               : `Shodsottari condition: Not met (requires D2 Asc in Cancer with Krishna Paksha, or D2 Asc in Leo with Shukla Paksha; got D2 sign ${props.d2AscSign} with ${paksha()} Paksha).`}
           </p>
@@ -108,8 +108,8 @@ export default function DashaCard(props: Props) {
           </button>
           <button
             type="button"
-            class={`toggle-btn ${system() === 'Shodottari' ? 'active' : ''}`}
-            onClick={() => setSystem('Shodottari')}
+            class={`toggle-btn ${system() === 'Shodsottari' ? 'active' : ''}`}
+            onClick={() => setSystem('Shodsottari')}
           >
             Shodsottari
           </button>
@@ -121,7 +121,7 @@ export default function DashaCard(props: Props) {
               when={system() === 'Ashtottari'}
               fallback={
                 <p class="analysis-empty">
-                  {`Birth Mahadasha (Shodsottari): ${shodottari().startPlanet} (Balance ${shodottari().balance.years}y ${shodottari().balance.months}m ${shodottari().balance.days}d)`}
+                  {`Birth Mahadasha (Shodsottari): ${shodsottari().startPlanet} (Balance ${shodsottari().balance.years}y ${shodsottari().balance.months}m ${shodsottari().balance.days}d)`}
                 </p>
               }
             >
@@ -195,9 +195,9 @@ export default function DashaCard(props: Props) {
             </For>
           </div>
         </Show>
-        <Show when={system() === 'Shodottari'}>
+        <Show when={system() === 'Shodsottari'}>
           <div class="yoga-list">
-            <For each={shodottari().timeline}>
+            <For each={shodsottari().timeline}>
               {(mahadasha, index) => (
                 <div class="yoga-card">
                   <div class="yoga-header">
