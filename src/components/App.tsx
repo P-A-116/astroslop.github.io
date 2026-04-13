@@ -161,6 +161,8 @@ export default function App() {
                     jd={view().data.jd}
                     moonLongitude={view().longitudes.Moon}
                     selectedChart={view().chart}
+                    ascSign={view().ascSign}
+                    rahuSign={view().signs.Rahu}
                   />
                 </section>
               </div>
