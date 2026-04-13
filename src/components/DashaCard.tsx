@@ -49,6 +49,11 @@ export default function DashaCard(props: Props) {
     <div class="dasha-tab">
       <div class="analysis-section">
         <h3 class="analysis-subtitle">{`Dasha System (${props.selectedChart})`}</h3>
+        <p class="analysis-empty">
+          {ashtottariEligible()
+            ? `Ashtottari condition: Met (Rahu is in house ${rahuHouse()} from Lagna).`
+            : `Ashtottari condition: Not met (Rahu is in house ${rahuHouse()} from Lagna; blocked houses: 1, 4, 5, 7, 9, 10).`}
+        </p>
         <div class="mode-toggle">
           <button
             type="button"
