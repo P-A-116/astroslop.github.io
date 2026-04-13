@@ -159,6 +159,12 @@ export default function DashaCard(props: Props) {
                       <span class="badge badge-karaka">{`${mahadasha.lord} Mahadasha`}</span>
                       <span class="yoga-houses">{`${dateFmt.format(mahadasha.start)} \u2192 ${dateFmt.format(mahadasha.end)} UTC`}</span>
                       <span class="yoga-planets">{`Years: ${roundYear(index() === 0 ? mahadasha.balanceYearsAtBirth : mahadasha.totalYears)}`}</span>
+                      <span
+                        class={`dasha-chevron ${expandedMahadasha() === `${mahadasha.lord}-${index()}` ? 'expanded' : ''}`}
+                        aria-hidden="true"
+                      >
+                        ▾
+                      </span>
                     </div>
                   </button>
                   <Show when={expandedMahadasha() === `${mahadasha.lord}-${index()}`}>
@@ -195,6 +201,12 @@ export default function DashaCard(props: Props) {
                       <span class="badge badge-karaka">{`${mahadasha.planet} Mahadasha`}</span>
                       <span class="yoga-houses">{`${dateFmt.format(mahadasha.startDate)} \u2192 ${dateFmt.format(mahadasha.endDate)} UTC`}</span>
                       <span class="yoga-planets">{index() === 0 ? 'Birth balance' : 'Full mahadasha'}</span>
+                      <span
+                        class={`dasha-chevron ${expandedMahadasha() === `ashtottari-${mahadasha.planet}-${index()}` ? 'expanded' : ''}`}
+                        aria-hidden="true"
+                      >
+                        ▾
+                      </span>
                     </div>
                   </button>
                   <Show when={expandedMahadasha() === `ashtottari-${mahadasha.planet}-${index()}`}>
@@ -231,6 +243,12 @@ export default function DashaCard(props: Props) {
                       <span class="badge badge-karaka">{`${mahadasha.planet} Mahadasha`}</span>
                       <span class="yoga-houses">{`${dateFmt.format(mahadasha.startDate)} \u2192 ${dateFmt.format(mahadasha.endDate)} UTC`}</span>
                       <span class="yoga-planets">{index() === 0 ? 'Birth balance' : 'Full mahadasha'}</span>
+                      <span
+                        class={`dasha-chevron ${expandedMahadasha() === `shodsottari-${mahadasha.planet}-${index()}` ? 'expanded' : ''}`}
+                        aria-hidden="true"
+                      >
+                        ▾
+                      </span>
                     </div>
                   </button>
                   <Show when={expandedMahadasha() === `shodsottari-${mahadasha.planet}-${index()}`}>
