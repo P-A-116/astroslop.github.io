@@ -166,6 +166,7 @@ export default function App() {
                     sunLongitude={view().longitudes.Sun}
                     geoLatitude={view().data.lat}
                     geoLongitude={view().data.lon}
+                    d2AscSign={view().data.ascDivisional.D2}
                   />
                 </section>
               </div>

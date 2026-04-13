@@ -10,6 +10,11 @@ import {
   isAshtottariEligibleByHouse,
   type AshtottariResult,
 } from '../ashtottari';
+import {
+  computeShodottariDasha,
+  isShodottariEligible,
+  type ShodottariResult,
+} from '../shodottari';
 
 interface Props {
   jd: number;
@@ -20,6 +25,7 @@ interface Props {
   sunLongitude: number;
   geoLatitude: number;
   geoLongitude: number;
+  d2AscSign: number;
 }
 
 const dateFmt = new Intl.DateTimeFormat('en-GB', {
@@ -33,7 +39,7 @@ const dateFmt = new Intl.DateTimeFormat('en-GB', {
 });
 
 const roundYear = (value: number) => value.toFixed(6);
-type DashaSystem = 'Vimshottari' | 'Ashtottari';
+type DashaSystem = 'Vimshottari' | 'Ashtottari' | 'Shodottari';
 
 export default function DashaCard(props: Props) {
   const [system, setSystem] = createSignal<DashaSystem>('Vimshottari');
@@ -44,6 +50,9 @@ export default function DashaCard(props: Props) {
   const birthBalance = createMemo(() => getMahadashaBalance(props.moonLongitude));
   const ashtottari = createMemo<AshtottariResult>(() =>
     computeAshtottariDasha(props.jd, props.moonLongitude),
+  );
+  const shodottari = createMemo<ShodottariResult>(() =>
+    computeShodottariDasha(props.jd, props.moonLongitude),
   );
   const rahuHouse = createMemo(() => getRahuHouseFromAsc(props.ascSign, props.rahuSign));
   const paksha = createMemo(() => getPakshaFromLongitudes(props.sunLongitude, props.moonLongitude));
@@ -59,6 +68,7 @@ export default function DashaCard(props: Props) {
     ),
   );
   const ashtottariEligible = createMemo(() => houseEligible() && pakshaTimeEligible());
+  const shodottariEligible = createMemo(() => isShodottariEligible(props.d2AscSign, paksha()));
   const toggleMahadasha = (key: string) => {
     setExpandedMahadasha((current) => (current === key ? null : key));
   };
@@ -87,19 +97,42 @@ export default function DashaCard(props: Props) {
           >
             Ashtottari
           </button>
+          <button
+            type="button"
+            class={`toggle-btn ${system() === 'Shodottari' ? 'active' : ''}`}
+            onClick={() => setSystem('Shodottari')}
+          >
+            Shodottari
+          </button>
         </div>
         <Show
           when={system() === 'Vimshottari'}
           fallback={
             <Show
-              when={ashtottariEligible()}
+              when={system() === 'Ashtottari'}
               fallback={
-                <p class="analysis-empty">{`Ashtottari not applicable: Rahu is in house ${rahuHouse()} from Lagna (1/4/5/7/9/10 are ineligible).`}</p>
+                <Show
+                  when={shodottariEligible()}
+                  fallback={
+                    <p class="analysis-empty">{`Shodottari not applicable: requires D2 Asc in Cancer with Krishna Paksha, or D2 Asc in Leo with Shukla Paksha (got D2 house sign ${props.d2AscSign}, ${paksha()} Paksha).`}</p>
+                  }
+                >
+                  <p class="analysis-empty">
+                    {`Birth Mahadasha: ${shodottari().startPlanet} (Balance ${shodottari().balance.years}y ${shodottari().balance.months}m ${shodottari().balance.days}d)`}
+                  </p>
+                </Show>
               }
             >
-              <p class="analysis-empty">
-                {`Birth Mahadasha: ${ashtottari().startPlanet} (Balance ${ashtottari().balance.years}y ${ashtottari().balance.months}m ${ashtottari().balance.days}d)`}
-              </p>
+              <Show
+                when={ashtottariEligible()}
+                fallback={
+                  <p class="analysis-empty">{`Ashtottari not applicable: Rahu is in house ${rahuHouse()} from Lagna (1/4/5/7/9/10 are ineligible).`}</p>
+                }
+              >
+                <p class="analysis-empty">
+                  {`Birth Mahadasha: ${ashtottari().startPlanet} (Balance ${ashtottari().balance.years}y ${ashtottari().balance.months}m ${ashtottari().balance.days}d)`}
+                </p>
+              </Show>
             </Show>
           }
         >
@@ -148,6 +181,21 @@ export default function DashaCard(props: Props) {
         <Show when={system() === 'Ashtottari' && ashtottariEligible()}>
           <div class="yoga-list">
             <For each={ashtottari().timeline}>
+              {(mahadasha, index) => (
+                <div class="yoga-card">
+                  <div class="yoga-header">
+                    <span class="badge badge-karaka">{`${mahadasha.planet} Mahadasha`}</span>
+                    <span class="yoga-houses">{`${dateFmt.format(mahadasha.startDate)} \u2192 ${dateFmt.format(mahadasha.endDate)} UTC`}</span>
+                    <span class="yoga-planets">{index() === 0 ? 'Birth balance' : 'Full mahadasha'}</span>
+                  </div>
+                </div>
+              )}
+            </For>
+          </div>
+        </Show>
+        <Show when={system() === 'Shodottari' && shodottariEligible()}>
+          <div class="yoga-list">
+            <For each={shodottari().timeline}>
               {(mahadasha, index) => (
                 <div class="yoga-card">
                   <div class="yoga-header">
