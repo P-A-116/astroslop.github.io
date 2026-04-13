@@ -120,16 +120,9 @@ export default function DashaCard(props: Props) {
             <Show
               when={system() === 'Ashtottari'}
               fallback={
-                <Show
-                  when={shodottariEligible()}
-                  fallback={
-                    <p class="analysis-empty">{`Shodsottari not applicable: requires D2 Asc in Cancer with Krishna Paksha, or D2 Asc in Leo with Shukla Paksha (got D2 house sign ${props.d2AscSign}, ${paksha()} Paksha).`}</p>
-                  }
-                >
-                  <p class="analysis-empty">
-                    {`Birth Mahadasha (Shodsottari): ${shodottari().startPlanet} (Balance ${shodottari().balance.years}y ${shodottari().balance.months}m ${shodottari().balance.days}d)`}
-                  </p>
-                </Show>
+                <p class="analysis-empty">
+                  {`Birth Mahadasha (Shodsottari): ${shodottari().startPlanet} (Balance ${shodottari().balance.years}y ${shodottari().balance.months}m ${shodottari().balance.days}d)`}
+                </p>
               }
             >
               <Show
@@ -203,9 +196,6 @@ export default function DashaCard(props: Props) {
           </div>
         </Show>
         <Show when={system() === 'Shodottari'}>
-          <Show when={!shodottariEligible()}>
-            <p class="analysis-empty">Showing Shodsottari timeline for reference even though eligibility conditions are not met.</p>
-          </Show>
           <div class="yoga-list">
             <For each={shodottari().timeline}>
               {(mahadasha, index) => (
