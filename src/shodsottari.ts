@@ -141,7 +141,7 @@ export function isShodsottariEligible(
  *   balanceYears = (1 − bhayat / NAKSHATRA_SIZE) × dasaYears
  * where bhayat is the degrees already traversed in the Janma Nakshatra.
  */
-export function computeShodasottariDasha(
+export function computeShodsottariDasha(
   birthJd: number,
   moonLongitude: number,
 ): ShodsottariResult {
