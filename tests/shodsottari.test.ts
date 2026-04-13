@@ -16,7 +16,7 @@ describe('shodsottari eligibility', () => {
   });
 });
 
-describe('shodsottari start and timeline', () => {
+describe('shodottari start and timeline', () => {
   it('starts from Sun for Pushya and excludes Rahu', () => {
     const pushyaStart = 7 * (360 / 27);
     expect(getShodsottariStartPlanet(pushyaStart)).toBe('Sun');

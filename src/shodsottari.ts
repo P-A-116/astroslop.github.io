@@ -1,6 +1,6 @@
 import { NAKSHATRA_LIST } from './constants';
 
-export type ShodasottariPlanet =
+export type ShodsottariPlanet =
   | 'Sun'
   | 'Mars'
   | 'Jupiter'
@@ -10,23 +10,23 @@ export type ShodasottariPlanet =
   | 'Mercury'
   | 'Venus';
 
-export interface ShodasottariDuration {
+export interface ShodsottariDuration {
   years: number;
   months: number;
   days: number;
 }
 
-export interface ShodasottariTimelineEntry {
-  planet: ShodasottariPlanet;
+export interface ShodsottariTimelineEntry {
+  planet: ShodsottariPlanet;
   startDate: Date;
   endDate: Date;
 }
 
-export interface ShodasottariResult {
-  startPlanet: ShodasottariPlanet;
-  elapsed: ShodasottariDuration;
-  balance: ShodasottariDuration;
-  timeline: ShodasottariTimelineEntry[];
+export interface ShodsottariResult {
+  startPlanet: ShodsottariPlanet;
+  elapsed: ShodsottariDuration;
+  balance: ShodsottariDuration;
+  timeline: ShodsottariTimelineEntry[];
 }
 
 const EPSILON = 1e-9;
@@ -35,7 +35,7 @@ const NAKSHATRA_SIZE = 360 / 27;
 const UNIX_EPOCH_JD = 2440587.5;
 const PUSHYA_INDEX = NAKSHATRA_LIST.indexOf('Pushya');
 
-export const SHODASOTTARI_ORDER: readonly ShodasottariPlanet[] = [
+export const SHODSOTTARI_ORDER: readonly ShodsottariPlanet[] = [
   'Sun',
   'Mars',
   'Jupiter',
@@ -46,7 +46,7 @@ export const SHODASOTTARI_ORDER: readonly ShodasottariPlanet[] = [
   'Venus',
 ];
 
-const SHODASOTTARI_YEARS: Record<ShodasottariPlanet, number> = {
+const SHODSOTTARI_YEARS: Record<ShodsottariPlanet, number> = {
   Sun: 11,
   Mars: 12,
   Jupiter: 13,
@@ -58,16 +58,16 @@ const SHODASOTTARI_YEARS: Record<ShodasottariPlanet, number> = {
 };
 
 /**
- * Nakshatra lords for the Shodasottari dasha system (distinct from Vimshottari).
+ * Nakshatra lords for the Shodsottari dasha system (distinct from Vimshottari).
  * Rahu is excluded; the 8-planet cycle starts from Sun at Ashwini.
  * Pushya (index 7) maps to Venus, consistent with the BPHS count-from-Pushya rule.
  */
-export const SHODASOTTARI_NAKSHATRA_LORDS = Object.fromEntries(
+export const SHODSOTTARI_NAKSHATRA_LORDS = Object.fromEntries(
   NAKSHATRA_LIST.map((nakshatra, index) => [
     nakshatra,
-    SHODASOTTARI_ORDER[index % SHODASOTTARI_ORDER.length],
+    SHODSOTTARI_ORDER[index % SHODSOTTARI_ORDER.length],
   ]),
-) as Record<typeof NAKSHATRA_LIST[number], ShodasottariPlanet>;
+) as Record<typeof NAKSHATRA_LIST[number], ShodsottariPlanet>;
 
 function normalizeLongitude(longitude: number): number {
   const normalized = ((longitude % 360) + 360) % 360;
@@ -78,7 +78,7 @@ function jdToDate(jd: number): Date {
   return new Date((jd - UNIX_EPOCH_JD) * 86400000);
 }
 
-function yearsToYmd(years: number): ShodasottariDuration {
+function yearsToYmd(years: number): ShodsottariDuration {
   const totalMonths = Math.max(0, years) * 12;
   const wholeYears = Math.floor(totalMonths / 12);
   const remMonths = totalMonths - wholeYears * 12;
@@ -91,15 +91,15 @@ function getNakshatraIndex(moonLongitude: number): number {
   return Math.floor(normalizeLongitude(moonLongitude) / NAKSHATRA_SIZE) % 27;
 }
 
-function buildPlanetSequence(startPlanet: ShodasottariPlanet): ShodasottariPlanet[] {
-  const startIndex = SHODASOTTARI_ORDER.indexOf(startPlanet);
-  return SHODASOTTARI_ORDER.map(
-    (_, offset) => SHODASOTTARI_ORDER[(startIndex + offset) % SHODASOTTARI_ORDER.length],
+function buildPlanetSequence(startPlanet: ShodsottariPlanet): ShodsottariPlanet[] {
+  const startIndex = SHODSOTTARI_ORDER.indexOf(startPlanet);
+  return SHODSOTTARI_ORDER.map(
+    (_, offset) => SHODSOTTARI_ORDER[(startIndex + offset) % SHODSOTTARI_ORDER.length],
   );
 }
 
 /**
- * Derives the Shodasottari dasha start planet from the Janma Nakshatra.
+ * Derives the Shodaottari dasha start planet from the Janma Nakshatra.
  *
  * BPHS rule: count nakshatras from Pushyami to the Janma Nakshatra (inclusive),
  * divide by 8, and the remainder maps to the planet order (1=Sun … 0=Venus).
@@ -109,11 +109,11 @@ function buildPlanetSequence(startPlanet: ShodasottariPlanet): ShodasottariPlane
  *   countFromPushya = (3 − 7 + 27) % 27 + 1 = 24
  *   24 % 8 = 0  →  Venus ✓
  */
-export function getShodasottariStartPlanet(moonLongitude: number): ShodasottariPlanet {
+export function getShodsottariStartPlanet(moonLongitude: number): ShodsottariPlanet {
   const janmaIndex = getNakshatraIndex(moonLongitude);
   const countFromPushya = ((janmaIndex - PUSHYA_INDEX + 27) % 27) + 1;
-  const remainder = countFromPushya % SHODASOTTARI_ORDER.length;
-  return remainder === 0 ? 'Venus' : SHODASOTTARI_ORDER[remainder - 1];
+  const remainder = countFromPushya % SHODSOTTARI_ORDER.length;
+  return remainder === 0 ? 'Venus' : SHODSOTTARI_ORDER[remainder - 1];
 }
 
 /**
@@ -124,7 +124,7 @@ export function getShodasottariStartPlanet(moonLongitude: number): ShodasottariP
  * @param d2AscSign  D2 ascendant sign, 1-indexed (Aries = 1)
  * @param paksha     'Shukla' (bright half) or 'Krishna' (dark half)
  */
-export function isShodasottariEligible(
+export function isShodsottariEligible(
   d2AscSign: number,
   paksha: 'Shukla' | 'Krishna',
 ): boolean {
@@ -135,7 +135,7 @@ export function isShodasottariEligible(
 }
 
 /**
- * Computes the full Shodasottari dasha timeline from birth.
+ * Computes the full Shodsottari dasha timeline from birth.
  *
  * Balance of the first dasha is calculated as:
  *   balanceYears = (1 − bhayat / NAKSHATRA_SIZE) × dasaYears
@@ -144,22 +144,22 @@ export function isShodasottariEligible(
 export function computeShodasottariDasha(
   birthJd: number,
   moonLongitude: number,
-): ShodasottariResult {
-  const startPlanet = getShodasottariStartPlanet(moonLongitude);
+): ShodsottariResult {
+  const startPlanet = getShodsottariStartPlanet(moonLongitude);
   const janmaNakshatraStart = getNakshatraIndex(moonLongitude) * NAKSHATRA_SIZE;
   const bhayat = normalizeLongitude(moonLongitude) - janmaNakshatraStart;
   const elapsedFraction = bhayat / NAKSHATRA_SIZE;
-  const totalYears = SHODASOTTARI_YEARS[startPlanet];
+  const totalYears = SHODSOTTARI_YEARS[startPlanet];
   const elapsedCurrentYears = elapsedFraction * totalYears;
   const balanceYears = Math.max(0, totalYears - elapsedCurrentYears);
 
   const sequence = buildPlanetSequence(startPlanet);
-  const timeline: ShodasottariTimelineEntry[] = [];
+  const timeline: ShodsottariTimelineEntry[] = [];
   let cursorMs = jdToDate(birthJd).getTime();
 
   for (let index = 0; index < sequence.length; index += 1) {
     const planet = sequence[index];
-    const years = index === 0 ? balanceYears : SHODASOTTARI_YEARS[planet];
+    const years = index === 0 ? balanceYears : SHODSOTTARI_YEARS[planet];
     const endMs = cursorMs + years * YEAR_MS;
     timeline.push({
       planet,
