@@ -1,11 +1,3 @@
-declare module 'astronomia/moonposition' {
-  export function position(jde: number): {
-    lon: number;
-    lat: number;
-    range: number;
-  };
-}
-
 import { CalendarGregorianToJD } from 'astronomia/julian';
 import * as solar from 'astronomia/solar';
 import * as moonposition from 'astronomia/moonposition';
