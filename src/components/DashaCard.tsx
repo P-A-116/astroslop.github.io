@@ -274,7 +274,6 @@ export default function DashaCard(props: Props) {
           })),
         }));
       case 'Ashtottari':
-        if (!ashtottariEligible()) return [];
         return normaliseVariantTimeline('ashtottari', ashtottari().timeline);
       case 'Shodsottari':
         return normaliseVariantTimeline('shodsottari', shodsottari().timeline);
@@ -345,9 +344,7 @@ export default function DashaCard(props: Props) {
         return `Birth Mahadasha: ${balance.lord} (${roundYear(balance.balance)} / ${balance.totalYears} years remaining)`;
       }
       case 'Ashtottari':
-        return ashtottariEligible()
-          ? `Birth Mahadasha: ${ashtottari().startPlanet} (Balance ${formatDuration(ashtottari().balance)})`
-          : `Ashtottari not applicable: Rahu is in house ${rahuHouse()} from Lagna (1, 4, 5, 7, 9, 10 are ineligible).`;
+        return `Birth Mahadasha (Ashtottari): ${ashtottari().startPlanet} (Balance ${formatDuration(ashtottari().balance)})`;
       case 'Shodsottari':
         return `Birth Mahadasha (Shodsottari): ${shodsottari().startPlanet} (Balance ${formatDuration(shodsottari().balance)})`;
       case 'Dwadashottari':
