@@ -115,6 +115,10 @@ const ASHTOTTARI_CYCLE_SEGMENTS: readonly {
   { name: 'Mrigashira', planet: 'Venus' },
 ];
 
+// Unlike Vimshottari / Shodsottari, the Ashtottari cycle assigns groups of
+// nakshatras to a planet (not a strict 27-mod-8 rotation) and includes the
+// special Abhijit segment.  The ruler map is therefore derived directly from
+// ASHTOTTARI_CYCLE_SEGMENTS rather than via buildNakshatraLordMap.
 const ASHTOTTARI_NAKSHATRA_RULERS = Object.fromEntries(
   ASHTOTTARI_CYCLE_SEGMENTS
     .filter((entry) => entry.name !== 'Abhijit')

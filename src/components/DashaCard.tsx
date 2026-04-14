@@ -47,6 +47,77 @@ const dateFmt = new Intl.DateTimeFormat('en-GB', {
 const roundYear = (value: number) => value.toFixed(6);
 type DashaSystem = 'Vimshottari' | 'Ashtottari' | 'Shodsottari' | 'Dwadashottari';
 
+// ── Normalised shape shared by all four dasha systems ────────────────────────
+// Each system stores dates in different field names (.start/.end vs
+// .startDate/.endDate) and lords in different field names (.lord vs .planet).
+// Normalising to this single shape lets DashaMahadashaList render all four
+// systems without any per-system branching.
+
+interface NormalisedAntardasha {
+  planet: string;
+  start: Date;
+  end: Date;
+}
+interface NormalisedMahadasha {
+  key: string;           // unique key for the expand/collapse toggle
+  planet: string;
+  start: Date;
+  end: Date;
+  yearLabel: string;
+  antardashas: NormalisedAntardasha[];
+}
+
+interface DashaMahadashaListProps {
+  entries: NormalisedMahadasha[];
+  expandedKey: string | null;
+  onToggle: (key: string) => void;
+}
+
+function DashaMahadashaList(props: DashaMahadashaListProps) {
+  return (
+    <div class="yoga-list">
+      <For each={props.entries}>
+        {(mahadasha) => (
+          <div class="yoga-card">
+            <button
+              type="button"
+              class="dasha-toggle"
+              onClick={() => props.onToggle(mahadasha.key)}
+              aria-expanded={props.expandedKey === mahadasha.key}
+            >
+              <div class="yoga-header">
+                <span class="badge badge-karaka">{`${mahadasha.planet} Mahadasha`}</span>
+                <span class="yoga-houses">{`${dateFmt.format(mahadasha.start)} \u2192 ${dateFmt.format(mahadasha.end)} UTC`}</span>
+                <span class="yoga-planets">{mahadasha.yearLabel}</span>
+                <span
+                  class={`dasha-chevron ${props.expandedKey === mahadasha.key ? 'expanded' : ''}`}
+                  aria-hidden="true"
+                >
+                  ▾
+                </span>
+              </div>
+            </button>
+            <Show when={props.expandedKey === mahadasha.key}>
+              <div class="dasha-antardashas">
+                <For each={mahadasha.antardashas}>
+                  {(antardasha) => (
+                    <div class="arudha-card">
+                      <div class="arudha-label">{antardasha.planet}</div>
+                      <div class="arudha-value dasha-date-range">
+                        {`${dateFmt.format(antardasha.start)} \u2192 ${dateFmt.format(antardasha.end)} UTC`}
+                      </div>
+                    </div>
+                  )}
+                </For>
+              </div>
+            </Show>
+          </div>
+        )}
+      </For>
+    </div>
+  );
+}
+
 export default function DashaCard(props: Props) {
   const [system, setSystem] = createSignal<DashaSystem>('Vimshottari');
   const [expandedMahadasha, setExpandedMahadasha] = createSignal<string | null>(null);
@@ -80,6 +151,70 @@ export default function DashaCard(props: Props) {
   const shodsottariEligible = createMemo(() => isShodsottariEligible(props.d2AscSign, paksha()));
   const dwadashottariEligible = createMemo(() => isDwadashottariEligible(props.d9AscSign));
   const janmaNakshatra = createMemo(() => getDwadashottariStartNakshatra(props.moonLongitude));
+
+  // Normalise whichever system is active into a single NormalisedMahadasha[].
+  const activeMahadashas = createMemo((): NormalisedMahadasha[] => {
+    switch (system()) {
+      case 'Vimshottari':
+        return timeline().map((m, i) => ({
+          key: `vimshottari-${m.lord}-${i}`,
+          planet: m.lord,
+          start: m.start,
+          end: m.end,
+          yearLabel: `Years: ${roundYear(i === 0 ? m.balanceYearsAtBirth : m.totalYears)}`,
+          antardashas: m.antardashas.map((a) => ({ planet: a.lord, start: a.start, end: a.end })),
+        }));
+      case 'Ashtottari':
+        if (!ashtottariEligible()) return [];
+        return ashtottari().timeline.map((m, i) => ({
+          key: `ashtottari-${m.planet}-${i}`,
+          planet: m.planet,
+          start: m.startDate,
+          end: m.endDate,
+          yearLabel: i === 0 ? 'Birth balance' : 'Full mahadasha',
+          antardashas: m.antardashas.map((a) => ({ planet: a.planet, start: a.startDate, end: a.endDate })),
+        }));
+      case 'Shodsottari':
+        return shodsottari().timeline.map((m, i) => ({
+          key: `shodsottari-${m.planet}-${i}`,
+          planet: m.planet,
+          start: m.startDate,
+          end: m.endDate,
+          yearLabel: i === 0 ? 'Birth balance' : 'Full mahadasha',
+          antardashas: m.antardashas.map((a) => ({ planet: a.planet, start: a.startDate, end: a.endDate })),
+        }));
+      case 'Dwadashottari':
+        return dwadashottari().timeline.map((m, i) => ({
+          key: `dwadashottari-${m.planet}-${i}`,
+          planet: m.planet,
+          start: m.startDate,
+          end: m.endDate,
+          yearLabel: i === 0 ? 'Birth balance' : 'Full mahadasha',
+          antardashas: m.antardashas.map((a) => ({ planet: a.planet, start: a.startDate, end: a.endDate })),
+        }));
+    }
+  });
+
+  // Flat summary string for the birth-balance line — avoids a 3-deep nested Show.
+  const birthBalanceSummary = createMemo((): string => {
+    const fmt = (b: { years: number; months: number; days: number }) =>
+      `${b.years}y ${b.months}m ${b.days}d`;
+    switch (system()) {
+      case 'Vimshottari': {
+        const b = birthBalance();
+        return `Birth Mahadasha: ${b.lord} (${roundYear(b.balance)} / ${b.totalYears} years remaining)`;
+      }
+      case 'Ashtottari':
+        return ashtottariEligible()
+          ? `Birth Mahadasha: ${ashtottari().startPlanet} (Balance ${fmt(ashtottari().balance)})`
+          : `Ashtottari not applicable: Rahu is in house ${rahuHouse()} from Lagna (1/4/5/7/9/10 are ineligible).`;
+      case 'Shodsottari':
+        return `Birth Mahadasha (Shodsottari): ${shodsottari().startPlanet} (Balance ${fmt(shodsottari().balance)})`;
+      case 'Dwadashottari':
+        return `Birth Mahadasha (Dwadashottari): ${dwadashottari().startPlanet} (Balance ${fmt(dwadashottari().balance)})`;
+    }
+  });
+
   const toggleMahadasha = (key: string) => {
     setExpandedMahadasha((current) => (current === key ? null : key));
   };
@@ -139,213 +274,16 @@ export default function DashaCard(props: Props) {
             Dwadashottari
           </button>
         </div>
-        <Show
-          when={system() === 'Vimshottari'}
-          fallback={
-            <Show
-              when={system() === 'Ashtottari'}
-              fallback={
-                <Show
-                  when={system() === 'Shodsottari'}
-                  fallback={
-                    <p class="analysis-empty">
-                      {`Birth Mahadasha (Dwadashottari): ${dwadashottari().startPlanet} (Balance ${dwadashottari().balance.years}y ${dwadashottari().balance.months}m ${dwadashottari().balance.days}d)`}
-                    </p>
-                  }
-                >
-                  <p class="analysis-empty">
-                    {`Birth Mahadasha (Shodsottari): ${shodsottari().startPlanet} (Balance ${shodsottari().balance.years}y ${shodsottari().balance.months}m ${shodsottari().balance.days}d)`}
-                  </p>
-                </Show>
-              }
-            >
-              <Show
-                when={ashtottariEligible()}
-                fallback={
-                  <p class="analysis-empty">{`Ashtottari not applicable: Rahu is in house ${rahuHouse()} from Lagna (1/4/5/7/9/10 are ineligible).`}</p>
-                }
-              >
-                <p class="analysis-empty">
-                  {`Birth Mahadasha: ${ashtottari().startPlanet} (Balance ${ashtottari().balance.years}y ${ashtottari().balance.months}m ${ashtottari().balance.days}d)`}
-                </p>
-              </Show>
-            </Show>
-          }
-        >
-          <p class="analysis-empty">{`Birth Mahadasha: ${birthBalance().lord} (${roundYear(birthBalance().balance)} / ${birthBalance().totalYears} years remaining)`}</p>
-        </Show>
+        <p class="analysis-empty">{birthBalanceSummary()}</p>
       </div>
 
       <div class="analysis-section">
         <h3 class="analysis-subtitle">Mahadashas</h3>
-        <Show when={system() === 'Vimshottari'}>
-          <div class="yoga-list">
-            <For each={timeline()}>
-              {(mahadasha, index) => (
-                <div class="yoga-card">
-                  <button
-                    type="button"
-                    class="dasha-toggle"
-                    onClick={() => toggleMahadasha(`${mahadasha.lord}-${index()}`)}
-                    aria-expanded={expandedMahadasha() === `${mahadasha.lord}-${index()}`}
-                  >
-                    <div class="yoga-header">
-                      <span class="badge badge-karaka">{`${mahadasha.lord} Mahadasha`}</span>
-                      <span class="yoga-houses">{`${dateFmt.format(mahadasha.start)} \u2192 ${dateFmt.format(mahadasha.end)} UTC`}</span>
-                      <span class="yoga-planets">{`Years: ${roundYear(index() === 0 ? mahadasha.balanceYearsAtBirth : mahadasha.totalYears)}`}</span>
-                      <span
-                        class={`dasha-chevron ${expandedMahadasha() === `${mahadasha.lord}-${index()}` ? 'expanded' : ''}`}
-                        aria-hidden="true"
-                      >
-                        ▾
-                      </span>
-                    </div>
-                  </button>
-                  <Show when={expandedMahadasha() === `${mahadasha.lord}-${index()}`}>
-                    <div class="dasha-antardashas">
-                      <For each={mahadasha.antardashas}>
-                        {(antardasha) => (
-                          <div class="arudha-card">
-                            <div class="arudha-label">{antardasha.lord}</div>
-                            <div class="arudha-value dasha-date-range">
-                              {`${dateFmt.format(antardasha.start)} \u2192 ${dateFmt.format(antardasha.end)} UTC`}
-                            </div>
-                          </div>
-                        )}
-                      </For>
-                    </div>
-                  </Show>
-                </div>
-              )}
-            </For>
-          </div>
-        </Show>
-        <Show when={system() === 'Ashtottari' && ashtottariEligible()}>
-          <div class="yoga-list">
-            <For each={ashtottari().timeline}>
-              {(mahadasha, index) => (
-                <div class="yoga-card">
-                  <button
-                    type="button"
-                    class="dasha-toggle"
-                    onClick={() => toggleMahadasha(`ashtottari-${mahadasha.planet}-${index()}`)}
-                    aria-expanded={expandedMahadasha() === `ashtottari-${mahadasha.planet}-${index()}`}
-                  >
-                    <div class="yoga-header">
-                      <span class="badge badge-karaka">{`${mahadasha.planet} Mahadasha`}</span>
-                      <span class="yoga-houses">{`${dateFmt.format(mahadasha.startDate)} \u2192 ${dateFmt.format(mahadasha.endDate)} UTC`}</span>
-                      <span class="yoga-planets">{index() === 0 ? 'Birth balance' : 'Full mahadasha'}</span>
-                      <span
-                        class={`dasha-chevron ${expandedMahadasha() === `ashtottari-${mahadasha.planet}-${index()}` ? 'expanded' : ''}`}
-                        aria-hidden="true"
-                      >
-                        ▾
-                      </span>
-                    </div>
-                  </button>
-                  <Show when={expandedMahadasha() === `ashtottari-${mahadasha.planet}-${index()}`}>
-                    <div class="dasha-antardashas">
-                      <For each={mahadasha.antardashas}>
-                        {(antardasha) => (
-                          <div class="arudha-card">
-                            <div class="arudha-label">{antardasha.planet}</div>
-                            <div class="arudha-value dasha-date-range">
-                              {`${dateFmt.format(antardasha.startDate)} \u2192 ${dateFmt.format(antardasha.endDate)} UTC`}
-                            </div>
-                          </div>
-                        )}
-                      </For>
-                    </div>
-                  </Show>
-                </div>
-              )}
-            </For>
-          </div>
-        </Show>
-        <Show when={system() === 'Shodsottari'}>
-          <div class="yoga-list">
-            <For each={shodsottari().timeline}>
-              {(mahadasha, index) => (
-                <div class="yoga-card">
-                  <button
-                    type="button"
-                    class="dasha-toggle"
-                    onClick={() => toggleMahadasha(`shodsottari-${mahadasha.planet}-${index()}`)}
-                    aria-expanded={expandedMahadasha() === `shodsottari-${mahadasha.planet}-${index()}`}
-                  >
-                    <div class="yoga-header">
-                      <span class="badge badge-karaka">{`${mahadasha.planet} Mahadasha`}</span>
-                      <span class="yoga-houses">{`${dateFmt.format(mahadasha.startDate)} \u2192 ${dateFmt.format(mahadasha.endDate)} UTC`}</span>
-                      <span class="yoga-planets">{index() === 0 ? 'Birth balance' : 'Full mahadasha'}</span>
-                      <span
-                        class={`dasha-chevron ${expandedMahadasha() === `shodsottari-${mahadasha.planet}-${index()}` ? 'expanded' : ''}`}
-                        aria-hidden="true"
-                      >
-                        ▾
-                      </span>
-                    </div>
-                  </button>
-                  <Show when={expandedMahadasha() === `shodsottari-${mahadasha.planet}-${index()}`}>
-                    <div class="dasha-antardashas">
-                      <For each={mahadasha.antardashas}>
-                        {(antardasha) => (
-                          <div class="arudha-card">
-                            <div class="arudha-label">{antardasha.planet}</div>
-                            <div class="arudha-value dasha-date-range">
-                              {`${dateFmt.format(antardasha.startDate)} \u2192 ${dateFmt.format(antardasha.endDate)} UTC`}
-                            </div>
-                          </div>
-                        )}
-                      </For>
-                    </div>
-                  </Show>
-                </div>
-              )}
-            </For>
-          </div>
-        </Show>
-        <Show when={system() === 'Dwadashottari'}>
-          <div class="yoga-list">
-            <For each={dwadashottari().timeline}>
-              {(mahadasha, index) => (
-                <div class="yoga-card">
-                  <button
-                    type="button"
-                    class="dasha-toggle"
-                    onClick={() => toggleMahadasha(`dwadashottari-${mahadasha.planet}-${index()}`)}
-                    aria-expanded={expandedMahadasha() === `dwadashottari-${mahadasha.planet}-${index()}`}
-                  >
-                    <div class="yoga-header">
-                      <span class="badge badge-karaka">{`${mahadasha.planet} Mahadasha`}</span>
-                      <span class="yoga-houses">{`${dateFmt.format(mahadasha.startDate)} \u2192 ${dateFmt.format(mahadasha.endDate)} UTC`}</span>
-                      <span class="yoga-planets">{index() === 0 ? 'Birth balance' : 'Full mahadasha'}</span>
-                      <span
-                        class={`dasha-chevron ${expandedMahadasha() === `dwadashottari-${mahadasha.planet}-${index()}` ? 'expanded' : ''}`}
-                        aria-hidden="true"
-                      >
-                        â–¾
-                      </span>
-                    </div>
-                  </button>
-                  <Show when={expandedMahadasha() === `dwadashottari-${mahadasha.planet}-${index()}`}>
-                    <div class="dasha-antardashas">
-                      <For each={mahadasha.antardashas}>
-                        {(antardasha) => (
-                          <div class="arudha-card">
-                            <div class="arudha-label">{antardasha.planet}</div>
-                            <div class="arudha-value dasha-date-range">
-                              {`${dateFmt.format(antardasha.startDate)} \u2192 ${dateFmt.format(antardasha.endDate)} UTC`}
-                            </div>
-                          </div>
-                        )}
-                      </For>
-                    </div>
-                  </Show>
-                </div>
-              )}
-            </For>
-          </div>
-        </Show>
+        <DashaMahadashaList
+          entries={activeMahadashas()}
+          expandedKey={expandedMahadasha()}
+          onToggle={toggleMahadasha}
+        />
       </div>
     </div>
   );

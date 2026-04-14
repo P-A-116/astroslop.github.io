@@ -77,12 +77,27 @@ export const NAKSHATRA_LIST = [
 export type NakshatraName = typeof NAKSHATRA_LIST[number];
 
 const NAKSHATRA_LORD_SEQUENCE: readonly PlanetName[] = planets('Ketu Venus Sun Moon Mars Rahu Jupiter Saturn Mercury');
-export const NAKSHATRA_LORDS = Object.fromEntries(
-  NAKSHATRA_LIST.map((nakshatra, index) => [
-    nakshatra,
-    NAKSHATRA_LORD_SEQUENCE[index % NAKSHATRA_LORD_SEQUENCE.length],
-  ]),
-) as Record<NakshatraName, PlanetName>;
+
+/**
+ * Builds a nakshatra-to-lord lookup for any dasha system.
+ * Each dasha system has its own planet order — pass that order here.
+ * The 27 nakshatras cycle through the given sequence, wrapping via modulo.
+ *
+ * Used by: Vimshottari (constants.ts), Ashtottari (ashtottari.ts),
+ *          Shodsottari and Dwadashottari (dashaVariants.ts).
+ */
+export function buildNakshatraLordMap<T extends string>(
+  lordSequence: readonly T[],
+): Record<NakshatraName, T> {
+  return Object.fromEntries(
+    NAKSHATRA_LIST.map((nakshatra, index) => [
+      nakshatra,
+      lordSequence[index % lordSequence.length],
+    ]),
+  ) as Record<NakshatraName, T>;
+}
+
+export const NAKSHATRA_LORDS = buildNakshatraLordMap(NAKSHATRA_LORD_SEQUENCE);
 
 const PLANET_GLYPHS = ['\u2609', '\u263D', '\u2642', '\u263F', '\u2643', '\u2640', '\u2644', '\u260A', '\u260B'];
 export const PLANET_ICONS = Object.fromEntries(

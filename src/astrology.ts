@@ -11,7 +11,8 @@ import {
   NATURAL_RELATIONSHIPS,
   SHASHTIAMSA_DATA,
 } from './constants';
-import { computeUpagrahas, formatUpagrahas } from './upagrahas';
+// Re-export upagrahas utilities so consumers can import them from the single
+// 'astrology' barrel without reaching into the upagrahas sub-module directly.
 export {
   computeUpagrahas,
   formatLongitudeSignDegreesMinutes,
@@ -19,6 +20,8 @@ export {
   normalizeLongitude,
   verifyUpagrahas,
 } from './upagrahas';
+// Private imports needed by this file's own implementation.
+import { computeUpagrahas, formatUpagrahas } from './upagrahas';
 import { julianDay, computeAllPositions } from './astronomy';
 import type {
   PlanetName,
@@ -413,7 +416,9 @@ export function isCombust(
 ): boolean {
   const entry = COMBUSTION_LIMITS[planet];
   if (!entry) return false;
-  const dist = Math.abs(((planetLon - sunLon + 180) % 360) - 180);
+  // Angular separation in [0, 360), then fold into [0, 180] for a symmetric arc distance.
+  const raw = ((planetLon - sunLon) % 360 + 360) % 360;
+  const dist = raw > 180 ? 360 - raw : raw;
   const limit = motion === 'Retrograde' ? entry.retro : entry.direct;
   return limit !== null && dist < limit;
 }
@@ -460,10 +465,17 @@ export function getCompoundRelationship(
   nat: RelationshipType,
   temp: RelationshipType,
 ): CompoundRelationship {
-  if (nat === 'Friend' && temp === 'Friend') return 'Extreme Friendship';
+  if (nat === 'Friend'  && temp === 'Friend') return 'Extreme Friendship';
+  if (nat === 'Friend'  && temp === 'Neutral') return 'Friendship';
+  if (nat === 'Friend'  && temp === 'Enemy') return 'Neutral';
   if (nat === 'Neutral' && temp === 'Friend') return 'Friendship';
-  if (nat === 'Enemy' && temp === 'Enemy') return 'Extreme Enmity';
+  if (nat === 'Neutral' && temp === 'Neutral') return 'Neutral';
   if (nat === 'Neutral' && temp === 'Enemy') return 'Enmity';
+  if (nat === 'Enemy'   && temp === 'Friend') return 'Neutral';
+  if (nat === 'Enemy'   && temp === 'Neutral') return 'Enmity';
+  if (nat === 'Enemy'   && temp === 'Enemy') return 'Extreme Enmity';
+  // TypeScript exhaustiveness: all 9 combinations are listed above.
+  // This branch is unreachable if RelationshipType remains a 3-value union.
   return 'Neutral';
 }
 
@@ -694,8 +706,13 @@ export function buildChartData({
 export function buildChartDataFromLocalInput({
   date, time, tzOffsetHours, lat, lon,
 }: BuildChartFromLocalParams): { data: ChartData; utcStr: string } {
-  const [yearStr, monthStr, dayStr] = date.split('-');
-  const [hourStr, minuteStr, secondStr = '0'] = time.split(':');
+  const dateParts = date.split('-');
+  const timeParts = time.split(':');
+  if (dateParts.length !== 3) throw new RangeError('Date must be in YYYY-MM-DD format.');
+  if (timeParts.length < 2 || timeParts.length > 3) throw new RangeError('Time must be in HH:MM[:SS] format.');
+
+  const [yearStr, monthStr, dayStr] = dateParts;
+  const [hourStr, minuteStr, secondStr = '0'] = timeParts;
   const year = Number(yearStr), month = Number(monthStr), day = Number(dayStr);
   const hour = Number(hourStr), minute = Number(minuteStr), second = Number(secondStr);
 
@@ -732,6 +749,23 @@ export function getAscSignForChart(data: ChartData, chart: DivisionalChart): num
   return data.ascDivisional[chart];
 }
 
+/**
+ * Returns a longitude suitable for placing the ascendant glyph inside a
+ * divisional chart.
+ *
+ * ⚠️ APPROXIMATION — For any chart other than D1 this value is not a true
+ * ecliptic longitude. It is reconstructed by taking the degree-within-part
+ * (`ascDeg % partSize`) and rescaling it to fill 30° of the divisional sign:
+ *
+ *   result = (divSign − 1) × 30  +  (ascDeg mod partSize) × divisor
+ *
+ * Because the mapping from natal degree to divisional sign is many-to-one
+ * (multiple natal ranges collapse to the same divisional sign), this
+ * reconstruction only preserves relative position *within* the owning part,
+ * not absolute position in the divisional zodiac. Use it for chart rendering
+ * and degree display only; do not use it for sub-varga dasha or nakshatra
+ * calculations at D2+.
+ */
 export function getAscDivisionalLongitude(data: ChartData, chart: DivisionalChart): number {
   if (chart === 'D1') return data.ascSid;
   const { divisor } = DIVISIONAL_META[chart];
@@ -760,6 +794,24 @@ export function getDivisionalCombustion(
   );
 }
 
+/**
+ * Returns per-planet longitudes expressed inside the divisional zodiac, used
+ * for aspect tables, temporary-relationship matrices, and chart rendering.
+ *
+ * ⚠️ APPROXIMATION — For D2 and higher these longitudes are reconstructed,
+ * not computed from first principles. The formula is:
+ *
+ *   result = (divSign − 1) × 30  +  (planet.deg mod partSize) × divisor
+ *
+ * `planet.deg` is the degree within the *natal* D1 sign, not within the
+ * specific divisional part that maps to `divSign`. Because multiple natal
+ * ranges fold to the same divisional sign, a planet near a part boundary in
+ * D1 may land at either end of the reconstructed divisional sign depending on
+ * which side of the boundary it sits. The error grows for high-divisor charts
+ * (D40, D45, D60). Aspect strengths (sphutaDrishti) and temporary
+ * relationships derived from these longitudes should be treated as indicative
+ * rather than precise for charts above D12.
+ */
 export function getDivisionalLongitudes(
   planets: PlanetData[],
   chart: DivisionalChart,

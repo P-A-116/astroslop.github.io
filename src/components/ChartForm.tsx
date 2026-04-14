@@ -19,7 +19,8 @@ interface NominatimResult {
 }
 
 interface TimezoneLookupResult {
-  timezone: string;
+  // timeapi.io GET /api/timezone/coordinate response shape (relevant fields only)
+  timeZone: string;
 }
 
 interface ResolvedTimezone {
@@ -35,31 +36,34 @@ function Field(props: { id: string; label: string; children: JSX.Element }) {
   );
 }
 
-function snapToTzOption(offset: number, options: { value: string; label: string }[]) {
-  let best = options[0];
-  let minDiff = Math.abs(parseFloat(best.value) - offset);
-  for (const opt of options) {
-    const diff = Math.abs(parseFloat(opt.value) - offset);
+function formatTzLabel(value: number) {
+  const offset = Math.abs(value);
+  const hours = Math.floor(offset);
+  const minutes = Math.round((offset - hours) * 60);
+  const sign = value < 0 ? '-' : '+';
+  return `UTC${sign}${hours}${minutes ? `:${String(minutes).padStart(2, '0')}` : ''}`;
+}
+
+const TZ_OPTIONS: { value: number; label: string }[] = (
+  '-12 -11 -10 -9.5 -9 -8 -7 -6 -5 -4.5 -4 -3.5 -3 -2 -1 0 1 2 3 3.5 4 4.5 5 5.5 5.75 6 6.5 7 8 8.75 9 9.5 10 10.5 11 12 12.75 13 14'
+    .split(' ')
+    .map((s) => Number(s))
+).map((value) => ({ value, label: formatTzLabel(value) }));
+
+const TZ_OPTION_VALUES = new Set(TZ_OPTIONS.map((opt) => opt.value));
+
+function snapToTzOption(offset: number): number {
+  let best = TZ_OPTIONS[0].value;
+  let minDiff = Math.abs(best - offset);
+  for (const opt of TZ_OPTIONS) {
+    const diff = Math.abs(opt.value - offset);
     if (diff < minDiff) {
-      best = opt;
+      best = opt.value;
       minDiff = diff;
     }
   }
-  return best.value;
+  return best;
 }
-
-function formatTzLabel(value: string) {
-  const offset = Math.abs(parseFloat(value));
-  const hours = Math.floor(offset);
-  const minutes = Math.round((offset - hours) * 60);
-  return `UTC${value.startsWith('-') ? '-' : '+'}${hours}${minutes ? `:${String(minutes).padStart(2, '0')}` : ''}`;
-}
-
-const TZ_OPTIONS = '-12 -11 -10 -9.5 -9 -8 -7 -6 -5 -4.5 -4 -3.5 -3 -2 -1 0 1 2 3 3.5 4 4.5 5 5.5 5.75 6 6.5 7 8 8.75 9 9.5 10 10.5 11 12 12.75 13 14'
-  .split(' ')
-  .map((value) => ({ value, label: formatTzLabel(value) }));
-
-const TZ_OPTION_VALUES = new Set(TZ_OPTIONS.map((opt) => opt.value));
 
 function getZoneOffsetMinutes(timestamp: number, timeZone: string) {
   const formatter = new Intl.DateTimeFormat('en-US', {
@@ -217,15 +221,17 @@ function createTimezoneResolver() {
     setLookupError('');
 
     try {
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${latNum}&longitude=${lonNum}&current=temperature_2m&timezone=auto&forecast_days=1`;
+      // Dedicated timezone-by-coordinate endpoint — returns only timezone data,
+      // not a weather payload.  No API key required; free tier is generous.
+      const url = `https://timeapi.io/api/timezone/coordinate?latitude=${latNum}&longitude=${lonNum}`;
       const res = await fetch(url, { signal: controller.signal });
       if (!res.ok) throw new Error(`Timezone lookup failed (${res.status})`);
 
       const payload = await res.json() as TimezoneLookupResult;
-      if (!payload.timezone) throw new Error('Timezone lookup returned no timezone');
+      if (!payload.timeZone) throw new Error('Timezone lookup returned no timezone');
 
-      setResolved({ name: payload.timezone });
-      onResolved?.(payload.timezone);
+      setResolved({ name: payload.timeZone });
+      onResolved?.(payload.timeZone);
     } catch (err) {
       if (controller.signal.aborted) return;
       setResolved(null);
@@ -259,7 +265,9 @@ function createTimezoneResolver() {
 export default function ChartForm(props: Props) {
   const [date, setDate] = createSignal('2002-10-06');
   const [time, setTime] = createSignal('20:10:00');
-  const [tz, setTz] = createSignal('3');
+  // `tz` is stored as a number (hours) to match TZ_OPTIONS['value'] — no
+  // parseFloat needed at call sites.
+  const [tz, setTz] = createSignal<number>(3);
   const [lat, setLat] = createSignal('40.3833');
   const [lon, setLon] = createSignal('23.4333');
   const [error, setError] = createSignal('');
@@ -274,11 +282,11 @@ export default function ChartForm(props: Props) {
     tzResolver.cleanup();
   });
 
-  const suggestedTimezoneValue = createMemo(() => {
+  const suggestedTimezoneValue = createMemo((): number | null => {
     const zone = tzResolver.resolved();
     if (!zone) return null;
     try {
-      return snapToTzOption(resolveTimezoneOffsetHours(date(), time(), zone.name), TZ_OPTIONS);
+      return snapToTzOption(resolveTimezoneOffsetHours(date(), time(), zone.name));
     } catch {
       return null;
     }
@@ -292,7 +300,7 @@ export default function ChartForm(props: Props) {
   const timezoneSummary = createMemo(() => {
     const zone = tzResolver.resolved();
     const suggested = suggestedTimezoneValue();
-    if (!zone || !suggested) return '';
+    if (!zone || suggested === null) return '';
     return `${zone.name} (${formatTzLabel(suggested)})`;
   });
 
@@ -302,17 +310,16 @@ export default function ChartForm(props: Props) {
   });
 
   function applyTimezone(tzName: string) {
-    const offsetValue = snapToTzOption(resolveTimezoneOffsetHours(date(), time(), tzName), TZ_OPTIONS);
+    const offsetValue = snapToTzOption(resolveTimezoneOffsetHours(date(), time(), tzName));
     if (!tzTouched()) setTz(offsetValue);
   }
 
   function scheduleTimezoneLookup(forceApply = false) {
     const latNum = parseFloat(lat());
     const lonNum = parseFloat(lon());
-    tzResolver.schedule(latNum, lonNum, forceApply, forceApply ? (tz) => {
-      const offsetValue = snapToTzOption(resolveTimezoneOffsetHours(date(), time(), tz), TZ_OPTIONS);
-      setTz(offsetValue);
-    } : (tz) => applyTimezone(tz));
+    tzResolver.schedule(latNum, lonNum, forceApply, forceApply
+      ? (tzName) => setTz(snapToTzOption(resolveTimezoneOffsetHours(date(), time(), tzName)))
+      : (tzName) => applyTimezone(tzName));
   }
 
   function handleCityInput(value: string) {
@@ -327,9 +334,8 @@ export default function ChartForm(props: Props) {
     setLon(lonNum.toFixed(4));
     setTzTouched(false);
     citySearch.select(result);
-    tzResolver.schedule(latNum, lonNum, true, (tz) => {
-      const offsetValue = snapToTzOption(resolveTimezoneOffsetHours(date(), time(), tz), TZ_OPTIONS);
-      setTz(offsetValue);
+    tzResolver.schedule(latNum, lonNum, true, (tzName) => {
+      setTz(snapToTzOption(resolveTimezoneOffsetHours(date(), time(), tzName)));
     });
   }
 
@@ -338,13 +344,13 @@ export default function ChartForm(props: Props) {
     setError('');
 
     const dateVal = date(), timeVal = time();
-    const tzVal = parseFloat(tz()), latVal = parseFloat(lat()), lonVal = parseFloat(lon());
+    const tzVal = tz(), latVal = parseFloat(lat()), lonVal = parseFloat(lon());
 
     if (!dateVal || !timeVal) { setError('Please enter a valid date and time.'); return; }
     if (!manualMode() && !citySearch.selectedCity()) { setError('Choose a location from the city lookup results, or switch to Manual Coords.'); return; }
     if (Number.isNaN(latVal) || latVal < -90 || latVal > 90) { setError('Latitude must be between -90 and +90.'); return; }
     if (Number.isNaN(lonVal) || lonVal < -180 || lonVal > 180) { setError('Longitude must be between -180 and +180.'); return; }
-    if (Number.isNaN(tzVal) || !TZ_OPTION_VALUES.has(tz())) { setError('Please select a valid UTC offset.'); return; }
+    if (!TZ_OPTION_VALUES.has(tzVal)) { setError('Please select a valid UTC offset.'); return; }
     if (timezoneMismatch()) { setError(`Selected UTC offset does not match the resolved timezone for this location: ${timezoneSummary()}.`); return; }
 
     try {
@@ -408,7 +414,9 @@ export default function ChartForm(props: Props) {
           <Field id="date" label="Date"><input type="date" id="date" name="date" required value={date()} onInput={(e) => setDate(e.currentTarget.value)} /></Field>
           <Field id="time" label="Local Time"><input type="time" id="time" name="time" required step="1" value={time()} onInput={(e) => setTime(e.currentTarget.value)} /></Field>
           <Field id="tz" label="UTC Offset (hours)">
-            <select id="tz" name="tz" value={tz()} onChange={(e) => { setTz(e.currentTarget.value); setTzTouched(true); }}>
+            {/* The select value is a number; reading e.currentTarget.value gives a
+                string, so we convert once here rather than at every downstream call site. */}
+            <select id="tz" name="tz" value={tz()} onChange={(e) => { setTz(Number(e.currentTarget.value)); setTzTouched(true); }}>
               <For each={TZ_OPTIONS}>{(opt) => <option value={opt.value}>{opt.label}</option>}</For>
             </select>
           </Field>

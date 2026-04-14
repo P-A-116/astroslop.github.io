@@ -1,4 +1,4 @@
-import { NAKSHATRA_LIST, type NakshatraName } from './constants';
+import { NAKSHATRA_LIST, buildNakshatraLordMap, type NakshatraName } from './constants';
 
 export type ShodsottariPlanet =
   | 'Sun'
@@ -102,12 +102,7 @@ const SHODSOTTARI_YEARS: Record<ShodsottariPlanet, number> = {
 };
 const SHODSOTTARI_CYCLE_YEARS = 116;
 
-export const SHODSOTTARI_NAKSHATRA_LORDS = Object.fromEntries(
-  NAKSHATRA_LIST.map((nakshatra, index) => [
-    nakshatra,
-    SHODSOTTARI_ORDER[index % SHODSOTTARI_ORDER.length],
-  ]),
-) as Record<typeof NAKSHATRA_LIST[number], ShodsottariPlanet>;
+export const SHODSOTTARI_NAKSHATRA_LORDS = buildNakshatraLordMap(SHODSOTTARI_ORDER);
 
 export const DWADASHOTTARI_ORDER: readonly DwadashottariPlanet[] = [
   'Sun',
