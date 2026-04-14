@@ -4,7 +4,7 @@ import {
   getShodsottariStartPlanet,
   isShodsottariEligible,
   SHODSOTTARI_ORDER,
-} from '../src/shodsottari';
+} from '../src/dashaVariants';
 
 describe('shodsottari eligibility', () => {
   it('requires Cancer D2 with Krishna or Leo D2 with Shukla', () => {

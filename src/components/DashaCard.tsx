@@ -13,15 +13,13 @@ import {
 } from '../ashtottari';
 import {
   computeShodsottariDasha,
-  isShodsottariEligible,
-  type ShodsottariResult,
-} from '../shodsottari';
-import {
   computeDwadashottariDasha,
   getDwadashottariStartNakshatra,
   isDwadashottariEligible,
+  isShodsottariEligible,
   type DwadashottariResult,
-} from '../dwadashottari';
+  type ShodsottariResult,
+} from '../dashaVariants';
 
 interface Props {
   jd: number;

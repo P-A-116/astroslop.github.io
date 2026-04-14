@@ -4,7 +4,7 @@ import {
   DWADASHOTTARI_ORDER,
   getDwadashottariStartPlanet,
   isDwadashottariEligible,
-} from '../src/dwadashottari';
+} from '../src/dashaVariants';
 
 const NAKSHATRA_SIZE = 360 / 27;
 
