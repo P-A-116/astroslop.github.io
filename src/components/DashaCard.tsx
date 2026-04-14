@@ -108,7 +108,7 @@ export default function DashaCard(props: Props) {
           <p class="analysis-empty">
             {dwadashottariEligible()
               ? `Dwadashottari condition: Met (D9 Asc in ${SIGN_NAMES[props.d9AscSign - 1]}). Janma Nakshatra ${janmaNakshatra()} counts to Revati for the opening dasha.`
-              : `Dwadashottari condition: Not met (requires D9 Asc in Taurus or Libra; got ${SIGN_NAMES[props.d9AscSign - 1]}).`}
+              : `Dwadashottari condition: Not met (requires D9 Asc in Taurus or Libra; got ${SIGN_NAMES[props.d9AscSign - 1]}). Showing the computed sequence below for reference.`}
           </p>
         </Show>
         <div class="mode-toggle">
@@ -150,16 +150,9 @@ export default function DashaCard(props: Props) {
                 <Show
                   when={system() === 'Shodsottari'}
                   fallback={
-                    <Show
-                      when={dwadashottariEligible()}
-                      fallback={
-                        <p class="analysis-empty">{`Dwadashottari not applicable: D9 Asc is ${SIGN_NAMES[props.d9AscSign - 1]}, but Taurus or Libra is required.`}</p>
-                      }
-                    >
-                      <p class="analysis-empty">
-                        {`Birth Mahadasha (Dwadashottari): ${dwadashottari().startPlanet} (Balance ${dwadashottari().balance.years}y ${dwadashottari().balance.months}m ${dwadashottari().balance.days}d)`}
-                      </p>
-                    </Show>
+                    <p class="analysis-empty">
+                      {`Birth Mahadasha (Dwadashottari): ${dwadashottari().startPlanet} (Balance ${dwadashottari().balance.years}y ${dwadashottari().balance.months}m ${dwadashottari().balance.days}d)`}
+                    </p>
                   }
                 >
                   <p class="analysis-empty">
@@ -313,7 +306,7 @@ export default function DashaCard(props: Props) {
             </For>
           </div>
         </Show>
-        <Show when={system() === 'Dwadashottari' && dwadashottariEligible()}>
+        <Show when={system() === 'Dwadashottari'}>
           <div class="yoga-list">
             <For each={dwadashottari().timeline}>
               {(mahadasha, index) => (
