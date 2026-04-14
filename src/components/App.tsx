@@ -157,16 +157,12 @@ export default function App() {
                 <section class="card fade-in" id="dasha-section" style="animation-delay: 0.26s">
                   <h2 class="section-title">Dasha</h2>
                   <DashaCard
-                    jd={view().data.jd}
+                    data={view().data}
                     moonLongitude={view().longitudes.Moon}
                     selectedChart={view().chart}
                     ascSign={view().ascSign}
-                    rahuSign={view().signs.Rahu}
+                    signs={view().signs}
                     sunLongitude={view().longitudes.Sun}
-                    geoLatitude={view().data.lat}
-                    geoLongitude={view().data.lon}
-                    d2AscSign={view().data.ascDivisional.D2}
-                    d9AscSign={view().data.ascDivisional.D9}
                   />
                 </section>
               </div>

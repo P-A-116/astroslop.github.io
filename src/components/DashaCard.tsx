@@ -1,7 +1,12 @@
 import { For, Show, createMemo, createSignal } from 'solid-js';
-import type { DashaTimeline, DivisionalChart } from '../types';
-import { SIGN_NAMES } from '../constants';
-import { generateDashaTimelineFromMoonLongitude, getMahadashaBalance } from '../astrology';
+import type { ChartData, DashaTimeline, DivisionalChart, PlanetName } from '../types';
+import { SIGN_LORDS, SIGN_NAMES } from '../constants';
+import {
+  generateDashaTimelineFromMoonLongitude,
+  getMahadashaBalance,
+  houseToSign,
+  signToHouse,
+} from '../astrology';
 import {
   computeAshtottariDasha,
   getPakshaFromLongitudes,
@@ -12,26 +17,40 @@ import {
   type AshtottariResult,
 } from '../ashtottari';
 import {
-  computeShodsottariDasha,
+  computeChaturasitiDasha,
   computeDwadashottariDasha,
-  getDwadashottariStartNakshatra,
+  computeDwisaptatiDasha,
+  computePanchottariDasha,
+  computeShastihayaniDasha,
+  computeShatTrimshatDasha,
+  computeShatabdikaDasha,
+  computeShodsottariDasha,
+  getVariantJanmaNakshatra,
+  isChaturasitiEligible,
   isDwadashottariEligible,
+  isDwisaptatiEligible,
+  isPanchottariEligible,
+  isShastihayaniEligible,
+  isShatTrimshatEligible,
+  isShatabdikaEligible,
   isShodsottariEligible,
+  type ChaturasitiResult,
   type DwadashottariResult,
+  type DwisaptatiResult,
+  type PanchottariResult,
+  type ShastihayaniResult,
+  type ShatTrimshatResult,
+  type ShatabdikaResult,
   type ShodsottariResult,
 } from '../dashaVariants';
 
 interface Props {
-  jd: number;
+  data: ChartData;
   moonLongitude: number;
   selectedChart: DivisionalChart;
   ascSign: number;
-  rahuSign: number;
+  signs: Record<PlanetName, number>;
   sunLongitude: number;
-  geoLatitude: number;
-  geoLongitude: number;
-  d2AscSign: number;
-  d9AscSign: number;
 }
 
 const dateFmt = new Intl.DateTimeFormat('en-GB', {
@@ -45,21 +64,30 @@ const dateFmt = new Intl.DateTimeFormat('en-GB', {
 });
 
 const roundYear = (value: number) => value.toFixed(6);
-type DashaSystem = 'Vimshottari' | 'Ashtottari' | 'Shodsottari' | 'Dwadashottari';
 
-// ── Normalised shape shared by all four dasha systems ────────────────────────
-// Each system stores dates in different field names (.start/.end vs
-// .startDate/.endDate) and lords in different field names (.lord vs .planet).
-// Normalising to this single shape lets DashaMahadashaList render all four
-// systems without any per-system branching.
+const DASHA_SYSTEMS = [
+  { key: 'Vimshottari', label: 'Vimshottari' },
+  { key: 'Ashtottari', label: 'Ashtottari' },
+  { key: 'Shodsottari', label: 'Shodsottari' },
+  { key: 'Dwadashottari', label: 'Dwadashottari' },
+  { key: 'Panchottari', label: 'Panchottari' },
+  { key: 'Shatabdika', label: 'Shatabdika' },
+  { key: 'Chaturasiti', label: 'Chaturasiti' },
+  { key: 'Dwisaptati', label: 'Dwisaptati' },
+  { key: 'Shastihayani', label: 'Shastihayani' },
+  { key: 'ShatTrimshat', label: 'Shat-trimshat' },
+] as const;
+
+type DashaSystem = (typeof DASHA_SYSTEMS)[number]['key'];
 
 interface NormalisedAntardasha {
   planet: string;
   start: Date;
   end: Date;
 }
+
 interface NormalisedMahadasha {
-  key: string;           // unique key for the expand/collapse toggle
+  key: string;
   planet: string;
   start: Date;
   end: Date;
@@ -71,6 +99,36 @@ interface DashaMahadashaListProps {
   entries: NormalisedMahadasha[];
   expandedKey: string | null;
   onToggle: (key: string) => void;
+}
+
+type VariantTimelineLike = {
+  planet: string;
+  startDate: Date;
+  endDate: Date;
+  antardashas: {
+    planet: string;
+    startDate: Date;
+    endDate: Date;
+  }[];
+}[];
+
+function normaliseVariantTimeline(prefix: string, timeline: VariantTimelineLike): NormalisedMahadasha[] {
+  return timeline.map((mahadasha, index) => ({
+    key: `${prefix}-${mahadasha.planet}-${index}`,
+    planet: mahadasha.planet,
+    start: mahadasha.startDate,
+    end: mahadasha.endDate,
+    yearLabel: index === 0 ? 'Birth balance' : 'Full mahadasha',
+    antardashas: mahadasha.antardashas.map((antardasha) => ({
+      planet: antardasha.planet,
+      start: antardasha.startDate,
+      end: antardasha.endDate,
+    })),
+  }));
+}
+
+function formatDuration(balance: { years: number; months: number; days: number }) {
+  return `${balance.years}y ${balance.months}m ${balance.days}d`;
 }
 
 function DashaMahadashaList(props: DashaMahadashaListProps) {
@@ -93,7 +151,7 @@ function DashaMahadashaList(props: DashaMahadashaListProps) {
                   class={`dasha-chevron ${props.expandedKey === mahadasha.key ? 'expanded' : ''}`}
                   aria-hidden="true"
                 >
-                  ▾
+                  &#9662;
                 </span>
               </div>
             </button>
@@ -121,97 +179,191 @@ function DashaMahadashaList(props: DashaMahadashaListProps) {
 export default function DashaCard(props: Props) {
   const [system, setSystem] = createSignal<DashaSystem>('Vimshottari');
   const [expandedMahadasha, setExpandedMahadasha] = createSignal<string | null>(null);
+
+  const selectSystem = (next: DashaSystem) => {
+    setSystem(next);
+    setExpandedMahadasha(null);
+  };
+
   const timeline = createMemo<DashaTimeline>(() =>
-    generateDashaTimelineFromMoonLongitude(props.jd, props.moonLongitude),
+    generateDashaTimelineFromMoonLongitude(props.data.jd, props.moonLongitude),
   );
   const birthBalance = createMemo(() => getMahadashaBalance(props.moonLongitude));
   const ashtottari = createMemo<AshtottariResult>(() =>
-    computeAshtottariDasha(props.jd, props.moonLongitude),
+    computeAshtottariDasha(props.data.jd, props.moonLongitude),
   );
   const shodsottari = createMemo<ShodsottariResult>(() =>
-    computeShodsottariDasha(props.jd, props.moonLongitude),
+    computeShodsottariDasha(props.data.jd, props.moonLongitude),
   );
   const dwadashottari = createMemo<DwadashottariResult>(() =>
-    computeDwadashottariDasha(props.jd, props.moonLongitude),
+    computeDwadashottariDasha(props.data.jd, props.moonLongitude),
   );
-  const rahuHouse = createMemo(() => getRahuHouseFromAsc(props.ascSign, props.rahuSign));
+  const panchottari = createMemo<PanchottariResult>(() =>
+    computePanchottariDasha(props.data.jd, props.moonLongitude),
+  );
+  const shatabdika = createMemo<ShatabdikaResult>(() =>
+    computeShatabdikaDasha(props.data.jd, props.moonLongitude),
+  );
+  const chaturasiti = createMemo<ChaturasitiResult>(() =>
+    computeChaturasitiDasha(props.data.jd, props.moonLongitude),
+  );
+  const dwisaptati = createMemo<DwisaptatiResult>(() =>
+    computeDwisaptatiDasha(props.data.jd, props.moonLongitude),
+  );
+  const shastihayani = createMemo<ShastihayaniResult>(() =>
+    computeShastihayaniDasha(props.data.jd, props.moonLongitude),
+  );
+  const shatTrimshat = createMemo<ShatTrimshatResult>(() =>
+    computeShatTrimshatDasha(props.data.jd, props.moonLongitude),
+  );
+
+  const rahuHouse = createMemo(() => getRahuHouseFromAsc(props.ascSign, props.signs.Rahu));
   const paksha = createMemo(() => getPakshaFromLongitudes(props.sunLongitude, props.moonLongitude));
-  const dayBirth = createMemo(() => isDayBirth(props.jd, props.geoLatitude, props.geoLongitude));
+  const dayBirth = createMemo(() => isDayBirth(props.data.jd, props.data.lat, props.data.lon));
   const houseEligible = createMemo(() => isAshtottariEligibleByHouse(rahuHouse()));
   const pakshaTimeEligible = createMemo(() =>
     isAshtottariEligibleByPakshaAndTime(
-      props.jd,
-      props.geoLatitude,
-      props.geoLongitude,
+      props.data.jd,
+      props.data.lat,
+      props.data.lon,
       props.sunLongitude,
       props.moonLongitude,
     ),
   );
   const ashtottariEligible = createMemo(() => houseEligible() && pakshaTimeEligible());
-  const shodsottariEligible = createMemo(() => isShodsottariEligible(props.d2AscSign, paksha()));
-  const dwadashottariEligible = createMemo(() => isDwadashottariEligible(props.d9AscSign));
-  const janmaNakshatra = createMemo(() => getDwadashottariStartNakshatra(props.moonLongitude));
+  const shodsottariEligible = createMemo(() =>
+    isShodsottariEligible(props.data.ascDivisional.D2, paksha()),
+  );
+  const dwadashottariEligible = createMemo(() =>
+    isDwadashottariEligible(props.data.ascDivisional.D9),
+  );
+  const panchottariEligible = createMemo(() =>
+    isPanchottariEligible(props.data.ascSign, props.data.ascDivisional.D12),
+  );
+  const shatabdikaEligible = createMemo(() =>
+    isShatabdikaEligible(props.data.ascSign, props.data.ascDivisional.D9),
+  );
 
-  // Normalise whichever system is active into a single NormalisedMahadasha[].
+  const janmaNakshatra = createMemo(() => getVariantJanmaNakshatra(props.moonLongitude));
+  const tenthSign = createMemo(() => houseToSign(10, props.ascSign));
+  const tenthLord = createMemo<PlanetName>(() => SIGN_LORDS[tenthSign() - 1]);
+  const tenthLordHouse = createMemo(() => signToHouse(props.signs[tenthLord()], props.ascSign));
+  const chaturasitiEligible = createMemo(() => isChaturasitiEligible(tenthLordHouse()));
+  const lagnaLord = createMemo<PlanetName>(() => SIGN_LORDS[props.ascSign - 1]);
+  const lagnaLordHouse = createMemo(() => signToHouse(props.signs[lagnaLord()], props.ascSign));
+  const dwisaptatiEligible = createMemo(() => isDwisaptatiEligible(lagnaLordHouse()));
+  const sunHouse = createMemo(() => signToHouse(props.signs.Sun, props.ascSign));
+  const shastihayaniEligible = createMemo(() => isShastihayaniEligible(sunHouse()));
+  const shatTrimshatEligible = createMemo(() =>
+    isShatTrimshatEligible(props.data.ascDivisional.D2, dayBirth()),
+  );
+
   const activeMahadashas = createMemo((): NormalisedMahadasha[] => {
     switch (system()) {
       case 'Vimshottari':
-        return timeline().map((m, i) => ({
-          key: `vimshottari-${m.lord}-${i}`,
-          planet: m.lord,
-          start: m.start,
-          end: m.end,
-          yearLabel: `Years: ${roundYear(i === 0 ? m.balanceYearsAtBirth : m.totalYears)}`,
-          antardashas: m.antardashas.map((a) => ({ planet: a.lord, start: a.start, end: a.end })),
+        return timeline().map((mahadasha, index) => ({
+          key: `vimshottari-${mahadasha.lord}-${index}`,
+          planet: mahadasha.lord,
+          start: mahadasha.start,
+          end: mahadasha.end,
+          yearLabel: `Years: ${roundYear(index === 0 ? mahadasha.balanceYearsAtBirth : mahadasha.totalYears)}`,
+          antardashas: mahadasha.antardashas.map((antardasha) => ({
+            planet: antardasha.lord,
+            start: antardasha.start,
+            end: antardasha.end,
+          })),
         }));
       case 'Ashtottari':
         if (!ashtottariEligible()) return [];
-        return ashtottari().timeline.map((m, i) => ({
-          key: `ashtottari-${m.planet}-${i}`,
-          planet: m.planet,
-          start: m.startDate,
-          end: m.endDate,
-          yearLabel: i === 0 ? 'Birth balance' : 'Full mahadasha',
-          antardashas: m.antardashas.map((a) => ({ planet: a.planet, start: a.startDate, end: a.endDate })),
-        }));
+        return normaliseVariantTimeline('ashtottari', ashtottari().timeline);
       case 'Shodsottari':
-        return shodsottari().timeline.map((m, i) => ({
-          key: `shodsottari-${m.planet}-${i}`,
-          planet: m.planet,
-          start: m.startDate,
-          end: m.endDate,
-          yearLabel: i === 0 ? 'Birth balance' : 'Full mahadasha',
-          antardashas: m.antardashas.map((a) => ({ planet: a.planet, start: a.startDate, end: a.endDate })),
-        }));
+        return normaliseVariantTimeline('shodsottari', shodsottari().timeline);
       case 'Dwadashottari':
-        return dwadashottari().timeline.map((m, i) => ({
-          key: `dwadashottari-${m.planet}-${i}`,
-          planet: m.planet,
-          start: m.startDate,
-          end: m.endDate,
-          yearLabel: i === 0 ? 'Birth balance' : 'Full mahadasha',
-          antardashas: m.antardashas.map((a) => ({ planet: a.planet, start: a.startDate, end: a.endDate })),
-        }));
+        return normaliseVariantTimeline('dwadashottari', dwadashottari().timeline);
+      case 'Panchottari':
+        return normaliseVariantTimeline('panchottari', panchottari().timeline);
+      case 'Shatabdika':
+        return normaliseVariantTimeline('shatabdika', shatabdika().timeline);
+      case 'Chaturasiti':
+        return normaliseVariantTimeline('chaturasiti', chaturasiti().timeline);
+      case 'Dwisaptati':
+        return normaliseVariantTimeline('dwisaptati', dwisaptati().timeline);
+      case 'Shastihayani':
+        return normaliseVariantTimeline('shastihayani', shastihayani().timeline);
+      case 'ShatTrimshat':
+        return normaliseVariantTimeline('shat-trimshat', shatTrimshat().timeline);
     }
   });
 
-  // Flat summary string for the birth-balance line — avoids a 3-deep nested Show.
+  const systemNotice = createMemo((): string | null => {
+    switch (system()) {
+      case 'Vimshottari':
+        return null;
+      case 'Ashtottari':
+        return ashtottariEligible()
+          ? `Ashtottari condition: Met (Rahu house ${rahuHouse()} from Lagna; ${dayBirth() ? 'day' : 'night'} birth in ${paksha()} paksha).`
+          : `Ashtottari condition: Not met (${!houseEligible() ? `Rahu in blocked house ${rahuHouse()} (1, 4, 5, 7, 9, 10)` : `requires day+Krishna or night+Shukla; got ${dayBirth() ? 'day' : 'night'}+${paksha()}`}).`;
+      case 'Shodsottari':
+        return shodsottariEligible()
+          ? `Shodsottari condition: Met (D2 Asc in ${SIGN_NAMES[props.data.ascDivisional.D2 - 1]} with ${paksha()} Paksha).`
+          : `Shodsottari condition: Not met (requires D2 Asc in Cancer with Krishna Paksha, or D2 Asc in Leo with Shukla Paksha; got ${SIGN_NAMES[props.data.ascDivisional.D2 - 1]} with ${paksha()} Paksha). Showing the computed sequence below for reference.`;
+      case 'Dwadashottari':
+        return dwadashottariEligible()
+          ? `Dwadashottari condition: Met (D9 Asc in ${SIGN_NAMES[props.data.ascDivisional.D9 - 1]}). Janma Nakshatra ${janmaNakshatra()} counts to Revati for the opening dasha.`
+          : `Dwadashottari condition: Not met (requires D9 Asc in Taurus or Libra; got ${SIGN_NAMES[props.data.ascDivisional.D9 - 1]}). Showing the computed sequence below for reference.`;
+      case 'Panchottari':
+        return panchottariEligible()
+          ? `Panchottari condition: Met (D1 Asc ${SIGN_NAMES[props.data.ascSign - 1]} and D12 Asc ${SIGN_NAMES[props.data.ascDivisional.D12 - 1]}). Janma Nakshatra ${janmaNakshatra()} counts from Anuradha by 7 for the opening dasha.`
+          : `Panchottari condition: Not met (requires Cancer Ascendant with Cancer D12; got D1 ${SIGN_NAMES[props.data.ascSign - 1]} and D12 ${SIGN_NAMES[props.data.ascDivisional.D12 - 1]}). Showing the computed sequence below for reference.`;
+      case 'Shatabdika':
+        return shatabdikaEligible()
+          ? `Shatabdika condition: Met (Vargottama Lagna: D1 and D9 are both ${SIGN_NAMES[props.data.ascSign - 1]}). Janma Nakshatra ${janmaNakshatra()} counts from Revati by 7 for the opening dasha.`
+          : `Shatabdika condition: Not met (requires D1 Lagna = D9 Lagna; got D1 ${SIGN_NAMES[props.data.ascSign - 1]} and D9 ${SIGN_NAMES[props.data.ascDivisional.D9 - 1]}). Showing the computed sequence below for reference.`;
+      case 'Chaturasiti':
+        return chaturasitiEligible()
+          ? `Chaturasiti Sama condition: Met (${tenthLord()} rules the 10th house and is placed in house 10 in ${props.selectedChart}). Janma Nakshatra ${janmaNakshatra()} counts from Swati by 7 for the opening dasha.`
+          : `Chaturasiti Sama condition: Not met (${tenthLord()}, lord of the 10th house, is in house ${tenthLordHouse()} in ${props.selectedChart}; it must be in house 10). Showing the computed sequence below for reference.`;
+      case 'Dwisaptati':
+        return dwisaptatiEligible()
+          ? `Dwisaptati Sama condition: Met (${lagnaLord()}, lord of Lagna, is in house ${lagnaLordHouse()} in ${props.selectedChart}). Janma Nakshatra ${janmaNakshatra()} counts from Mula by 8 for the opening dasha.`
+          : `Dwisaptati Sama condition: Not met (${lagnaLord()}, lord of Lagna, is in house ${lagnaLordHouse()} in ${props.selectedChart}; it must be in house 1 or 7). Showing the computed sequence below for reference.`;
+      case 'Shastihayani':
+        return shastihayaniEligible()
+          ? `Shastihayani condition: Met (Sun is in house 1 in ${props.selectedChart}). Janma Nakshatra ${janmaNakshatra()} counts from Ardra by 8 for the opening dasha. The supplied year pattern sums to 69 years (13,13,13,6,6,6,6,6), and the timeline follows that configured total.`
+          : `Shastihayani condition: Not met (Sun is in house ${sunHouse()} in ${props.selectedChart}; it must be in house 1). The supplied year pattern sums to 69 years (13,13,13,6,6,6,6,6), and the timeline follows that configured total.`;
+      case 'ShatTrimshat':
+        return shatTrimshatEligible()
+          ? `Shat-trimshat Sama condition: Met (${dayBirth() ? 'day' : 'night'} birth with D2 Asc in ${SIGN_NAMES[props.data.ascDivisional.D2 - 1]}). Janma Nakshatra ${janmaNakshatra()} counts from Shravana by 8 for the opening dasha.`
+          : `Shat-trimshat Sama condition: Not met (requires day birth with Leo D2, or night birth with Cancer D2; got ${dayBirth() ? 'day' : 'night'} birth with D2 ${SIGN_NAMES[props.data.ascDivisional.D2 - 1]}). Showing the computed sequence below for reference.`;
+    }
+  });
+
   const birthBalanceSummary = createMemo((): string => {
-    const fmt = (b: { years: number; months: number; days: number }) =>
-      `${b.years}y ${b.months}m ${b.days}d`;
     switch (system()) {
       case 'Vimshottari': {
-        const b = birthBalance();
-        return `Birth Mahadasha: ${b.lord} (${roundYear(b.balance)} / ${b.totalYears} years remaining)`;
+        const balance = birthBalance();
+        return `Birth Mahadasha: ${balance.lord} (${roundYear(balance.balance)} / ${balance.totalYears} years remaining)`;
       }
       case 'Ashtottari':
         return ashtottariEligible()
-          ? `Birth Mahadasha: ${ashtottari().startPlanet} (Balance ${fmt(ashtottari().balance)})`
-          : `Ashtottari not applicable: Rahu is in house ${rahuHouse()} from Lagna (1/4/5/7/9/10 are ineligible).`;
+          ? `Birth Mahadasha: ${ashtottari().startPlanet} (Balance ${formatDuration(ashtottari().balance)})`
+          : `Ashtottari not applicable: Rahu is in house ${rahuHouse()} from Lagna (1, 4, 5, 7, 9, 10 are ineligible).`;
       case 'Shodsottari':
-        return `Birth Mahadasha (Shodsottari): ${shodsottari().startPlanet} (Balance ${fmt(shodsottari().balance)})`;
+        return `Birth Mahadasha (Shodsottari): ${shodsottari().startPlanet} (Balance ${formatDuration(shodsottari().balance)})`;
       case 'Dwadashottari':
-        return `Birth Mahadasha (Dwadashottari): ${dwadashottari().startPlanet} (Balance ${fmt(dwadashottari().balance)})`;
+        return `Birth Mahadasha (Dwadashottari): ${dwadashottari().startPlanet} (Balance ${formatDuration(dwadashottari().balance)})`;
+      case 'Panchottari':
+        return `Birth Mahadasha (Panchottari): ${panchottari().startPlanet} (Balance ${formatDuration(panchottari().balance)})`;
+      case 'Shatabdika':
+        return `Birth Mahadasha (Shatabdika): ${shatabdika().startPlanet} (Balance ${formatDuration(shatabdika().balance)})`;
+      case 'Chaturasiti':
+        return `Birth Mahadasha (Chaturasiti Sama): ${chaturasiti().startPlanet} (Balance ${formatDuration(chaturasiti().balance)})`;
+      case 'Dwisaptati':
+        return `Birth Mahadasha (Dwisaptati Sama): ${dwisaptati().startPlanet} (Balance ${formatDuration(dwisaptati().balance)})`;
+      case 'Shastihayani':
+        return `Birth Mahadasha (Shastihayani): ${shastihayani().startPlanet} (Balance ${formatDuration(shastihayani().balance)})`;
+      case 'ShatTrimshat':
+        return `Birth Mahadasha (Shat-trimshat Sama): ${shatTrimshat().startPlanet} (Balance ${formatDuration(shatTrimshat().balance)})`;
     }
   });
 
@@ -223,56 +375,21 @@ export default function DashaCard(props: Props) {
     <div class="dasha-tab">
       <div class="analysis-section">
         <h3 class="analysis-subtitle">{`Dasha System (${props.selectedChart})`}</h3>
-        <Show when={system() === 'Ashtottari'}>
-          <p class="analysis-empty">
-            {ashtottariEligible()
-              ? `Ashtottari condition: Met (Rahu house ${rahuHouse()} from Lagna; ${dayBirth() ? 'day' : 'night'} birth in ${paksha()} paksha).`
-              : `Ashtottari condition: Not met (${!houseEligible() ? `Rahu in blocked house ${rahuHouse()} (1, 4, 5, 7, 9, 10)` : `requires day+Krishna or night+Shukla; got ${dayBirth() ? 'day' : 'night'}+${paksha()}`}).`}
-          </p>
-        </Show>
-        <Show when={system() === 'Shodsottari'}>
-          <p class="analysis-empty">
-            {shodsottariEligible()
-              ? `Shodsottari condition: Met (D2 Asc sign ${props.d2AscSign} with ${paksha()} Paksha).`
-              : `Shodsottari condition: Not met (requires D2 Asc in Cancer with Krishna Paksha, or D2 Asc in Leo with Shukla Paksha; got D2 sign ${props.d2AscSign} with ${paksha()} Paksha).`}
-          </p>
-        </Show>
-        <Show when={system() === 'Dwadashottari'}>
-          <p class="analysis-empty">
-            {dwadashottariEligible()
-              ? `Dwadashottari condition: Met (D9 Asc in ${SIGN_NAMES[props.d9AscSign - 1]}). Janma Nakshatra ${janmaNakshatra()} counts to Revati for the opening dasha.`
-              : `Dwadashottari condition: Not met (requires D9 Asc in Taurus or Libra; got ${SIGN_NAMES[props.d9AscSign - 1]}). Showing the computed sequence below for reference.`}
-          </p>
+        <Show when={systemNotice()}>
+          {(notice) => <p class="analysis-empty">{notice()}</p>}
         </Show>
         <div class="mode-toggle">
-          <button
-            type="button"
-            class={`toggle-btn ${system() === 'Vimshottari' ? 'active' : ''}`}
-            onClick={() => setSystem('Vimshottari')}
-          >
-            Vimshottari
-          </button>
-          <button
-            type="button"
-            class={`toggle-btn ${system() === 'Ashtottari' ? 'active' : ''}`}
-            onClick={() => setSystem('Ashtottari')}
-          >
-            Ashtottari
-          </button>
-          <button
-            type="button"
-            class={`toggle-btn ${system() === 'Shodsottari' ? 'active' : ''}`}
-            onClick={() => setSystem('Shodsottari')}
-          >
-            Shodsottari
-          </button>
-          <button
-            type="button"
-            class={`toggle-btn ${system() === 'Dwadashottari' ? 'active' : ''}`}
-            onClick={() => setSystem('Dwadashottari')}
-          >
-            Dwadashottari
-          </button>
+          <For each={DASHA_SYSTEMS}>
+            {(entry) => (
+              <button
+                type="button"
+                class={`toggle-btn ${system() === entry.key ? 'active' : ''}`}
+                onClick={() => selectSystem(entry.key)}
+              >
+                {entry.label}
+              </button>
+            )}
+          </For>
         </div>
         <p class="analysis-empty">{birthBalanceSummary()}</p>
       </div>

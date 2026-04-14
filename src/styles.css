@@ -829,6 +829,7 @@ body {
 
 .mode-toggle {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
   margin-bottom: 1.25rem;
 }
@@ -1144,4 +1145,3 @@ section .vedic-chart {
 .vedic-chart .chart-border {
   stroke: rgba(255, 255, 255, 0.25) !important;
 }
-
