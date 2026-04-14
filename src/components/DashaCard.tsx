@@ -1,5 +1,6 @@
 import { For, Show, createMemo, createSignal } from 'solid-js';
 import type { DashaTimeline, DivisionalChart } from '../types';
+import { SIGN_NAMES } from '../constants';
 import { generateDashaTimelineFromMoonLongitude, getMahadashaBalance } from '../astrology';
 import {
   computeAshtottariDasha,
@@ -15,6 +16,12 @@ import {
   isShodsottariEligible,
   type ShodsottariResult,
 } from '../shodsottari';
+import {
+  computeDwadashottariDasha,
+  getDwadashottariStartNakshatra,
+  isDwadashottariEligible,
+  type DwadashottariResult,
+} from '../dwadashottari';
 
 interface Props {
   jd: number;
@@ -26,6 +33,7 @@ interface Props {
   geoLatitude: number;
   geoLongitude: number;
   d2AscSign: number;
+  d9AscSign: number;
 }
 
 const dateFmt = new Intl.DateTimeFormat('en-GB', {
@@ -39,7 +47,7 @@ const dateFmt = new Intl.DateTimeFormat('en-GB', {
 });
 
 const roundYear = (value: number) => value.toFixed(6);
-type DashaSystem = 'Vimshottari' | 'Ashtottari' | 'Shodsottari';
+type DashaSystem = 'Vimshottari' | 'Ashtottari' | 'Shodsottari' | 'Dwadashottari';
 
 export default function DashaCard(props: Props) {
   const [system, setSystem] = createSignal<DashaSystem>('Vimshottari');
@@ -53,6 +61,9 @@ export default function DashaCard(props: Props) {
   );
   const shodsottari = createMemo<ShodsottariResult>(() =>
     computeShodsottariDasha(props.jd, props.moonLongitude),
+  );
+  const dwadashottari = createMemo<DwadashottariResult>(() =>
+    computeDwadashottariDasha(props.jd, props.moonLongitude),
   );
   const rahuHouse = createMemo(() => getRahuHouseFromAsc(props.ascSign, props.rahuSign));
   const paksha = createMemo(() => getPakshaFromLongitudes(props.sunLongitude, props.moonLongitude));
@@ -69,6 +80,8 @@ export default function DashaCard(props: Props) {
   );
   const ashtottariEligible = createMemo(() => houseEligible() && pakshaTimeEligible());
   const shodsottariEligible = createMemo(() => isShodsottariEligible(props.d2AscSign, paksha()));
+  const dwadashottariEligible = createMemo(() => isDwadashottariEligible(props.d9AscSign));
+  const janmaNakshatra = createMemo(() => getDwadashottariStartNakshatra(props.moonLongitude));
   const toggleMahadasha = (key: string) => {
     setExpandedMahadasha((current) => (current === key ? null : key));
   };
@@ -89,6 +102,13 @@ export default function DashaCard(props: Props) {
             {shodsottariEligible()
               ? `Shodsottari condition: Met (D2 Asc sign ${props.d2AscSign} with ${paksha()} Paksha).`
               : `Shodsottari condition: Not met (requires D2 Asc in Cancer with Krishna Paksha, or D2 Asc in Leo with Shukla Paksha; got D2 sign ${props.d2AscSign} with ${paksha()} Paksha).`}
+          </p>
+        </Show>
+        <Show when={system() === 'Dwadashottari'}>
+          <p class="analysis-empty">
+            {dwadashottariEligible()
+              ? `Dwadashottari condition: Met (D9 Asc in ${SIGN_NAMES[props.d9AscSign - 1]}). Janma Nakshatra ${janmaNakshatra()} counts to Revati for the opening dasha.`
+              : `Dwadashottari condition: Not met (requires D9 Asc in Taurus or Libra; got ${SIGN_NAMES[props.d9AscSign - 1]}).`}
           </p>
         </Show>
         <div class="mode-toggle">
@@ -113,6 +133,13 @@ export default function DashaCard(props: Props) {
           >
             Shodsottari
           </button>
+          <button
+            type="button"
+            class={`toggle-btn ${system() === 'Dwadashottari' ? 'active' : ''}`}
+            onClick={() => setSystem('Dwadashottari')}
+          >
+            Dwadashottari
+          </button>
         </div>
         <Show
           when={system() === 'Vimshottari'}
@@ -120,9 +147,25 @@ export default function DashaCard(props: Props) {
             <Show
               when={system() === 'Ashtottari'}
               fallback={
-                <p class="analysis-empty">
-                  {`Birth Mahadasha (Shodsottari): ${shodsottari().startPlanet} (Balance ${shodsottari().balance.years}y ${shodsottari().balance.months}m ${shodsottari().balance.days}d)`}
-                </p>
+                <Show
+                  when={system() === 'Shodsottari'}
+                  fallback={
+                    <Show
+                      when={dwadashottariEligible()}
+                      fallback={
+                        <p class="analysis-empty">{`Dwadashottari not applicable: D9 Asc is ${SIGN_NAMES[props.d9AscSign - 1]}, but Taurus or Libra is required.`}</p>
+                      }
+                    >
+                      <p class="analysis-empty">
+                        {`Birth Mahadasha (Dwadashottari): ${dwadashottari().startPlanet} (Balance ${dwadashottari().balance.years}y ${dwadashottari().balance.months}m ${dwadashottari().balance.days}d)`}
+                      </p>
+                    </Show>
+                  }
+                >
+                  <p class="analysis-empty">
+                    {`Birth Mahadasha (Shodsottari): ${shodsottari().startPlanet} (Balance ${shodsottari().balance.years}y ${shodsottari().balance.months}m ${shodsottari().balance.days}d)`}
+                  </p>
+                </Show>
               }
             >
               <Show
@@ -252,6 +295,48 @@ export default function DashaCard(props: Props) {
                     </div>
                   </button>
                   <Show when={expandedMahadasha() === `shodsottari-${mahadasha.planet}-${index()}`}>
+                    <div class="dasha-antardashas">
+                      <For each={mahadasha.antardashas}>
+                        {(antardasha) => (
+                          <div class="arudha-card">
+                            <div class="arudha-label">{antardasha.planet}</div>
+                            <div class="arudha-value dasha-date-range">
+                              {`${dateFmt.format(antardasha.startDate)} \u2192 ${dateFmt.format(antardasha.endDate)} UTC`}
+                            </div>
+                          </div>
+                        )}
+                      </For>
+                    </div>
+                  </Show>
+                </div>
+              )}
+            </For>
+          </div>
+        </Show>
+        <Show when={system() === 'Dwadashottari' && dwadashottariEligible()}>
+          <div class="yoga-list">
+            <For each={dwadashottari().timeline}>
+              {(mahadasha, index) => (
+                <div class="yoga-card">
+                  <button
+                    type="button"
+                    class="dasha-toggle"
+                    onClick={() => toggleMahadasha(`dwadashottari-${mahadasha.planet}-${index()}`)}
+                    aria-expanded={expandedMahadasha() === `dwadashottari-${mahadasha.planet}-${index()}`}
+                  >
+                    <div class="yoga-header">
+                      <span class="badge badge-karaka">{`${mahadasha.planet} Mahadasha`}</span>
+                      <span class="yoga-houses">{`${dateFmt.format(mahadasha.startDate)} \u2192 ${dateFmt.format(mahadasha.endDate)} UTC`}</span>
+                      <span class="yoga-planets">{index() === 0 ? 'Birth balance' : 'Full mahadasha'}</span>
+                      <span
+                        class={`dasha-chevron ${expandedMahadasha() === `dwadashottari-${mahadasha.planet}-${index()}` ? 'expanded' : ''}`}
+                        aria-hidden="true"
+                      >
+                        â–¾
+                      </span>
+                    </div>
+                  </button>
+                  <Show when={expandedMahadasha() === `dwadashottari-${mahadasha.planet}-${index()}`}>
                     <div class="dasha-antardashas">
                       <For each={mahadasha.antardashas}>
                         {(antardasha) => (
