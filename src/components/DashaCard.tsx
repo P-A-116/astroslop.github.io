@@ -274,6 +274,7 @@ export default function DashaCard(props: Props) {
           })),
         }));
       case 'Ashtottari':
+        if (!ashtottariEligible()) return [];
         return normaliseVariantTimeline('ashtottari', ashtottari().timeline);
       case 'Shodsottari':
         return normaliseVariantTimeline('shodsottari', shodsottari().timeline);
@@ -344,7 +345,9 @@ export default function DashaCard(props: Props) {
         return `Birth Mahadasha: ${balance.lord} (${roundYear(balance.balance)} / ${balance.totalYears} years remaining)`;
       }
       case 'Ashtottari':
-        return `Birth Mahadasha (Ashtottari): ${ashtottari().startPlanet} (Balance ${formatDuration(ashtottari().balance)})`;
+        return ashtottariEligible()
+          ? `Birth Mahadasha: ${ashtottari().startPlanet} (Balance ${formatDuration(ashtottari().balance)})`
+          : `Ashtottari not applicable: Rahu is in house ${rahuHouse()} from Lagna (1, 4, 5, 7, 9, 10 are ineligible).`;
       case 'Shodsottari':
         return `Birth Mahadasha (Shodsottari): ${shodsottari().startPlanet} (Balance ${formatDuration(shodsottari().balance)})`;
       case 'Dwadashottari':
@@ -375,18 +378,27 @@ export default function DashaCard(props: Props) {
         <Show when={systemNotice()}>
           {(notice) => <p class="analysis-empty">{notice()}</p>}
         </Show>
-        <div class="mode-toggle">
-          <For each={DASHA_SYSTEMS}>
-            {(entry) => (
-              <button
-                type="button"
-                class={`toggle-btn ${system() === entry.key ? 'active' : ''}`}
-                onClick={() => selectSystem(entry.key)}
-              >
-                {entry.label}
-              </button>
-            )}
-          </For>
+        <div class="mode-toggle-dasha">
+          <button
+            type="button"
+            class={`toggle-btn toggle-btn-vimshottari ${system() === 'Vimshottari' ? 'active' : ''}`}
+            onClick={() => selectSystem('Vimshottari')}
+          >
+            Vimshottari
+          </button>
+          <div class="mode-toggle-dasha-grid">
+            <For each={DASHA_SYSTEMS.filter(e => e.key !== 'Vimshottari')}>
+              {(entry) => (
+                <button
+                  type="button"
+                  class={`toggle-btn ${system() === entry.key ? 'active' : ''}`}
+                  onClick={() => selectSystem(entry.key)}
+                >
+                  {entry.label}
+                </button>
+              )}
+            </For>
+          </div>
         </div>
         <p class="analysis-empty">{birthBalanceSummary()}</p>
       </div>

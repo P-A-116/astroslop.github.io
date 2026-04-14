@@ -834,6 +834,23 @@ body {
   margin-bottom: 1.25rem;
 }
 
+.mode-toggle-dasha {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.toggle-btn-vimshottari {
+  width: 100%;
+  text-align: center;
+}
+
+.mode-toggle-dasha-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
 .toggle-btn {
   background: var(--bg-card2);
   border-radius: 8px;
