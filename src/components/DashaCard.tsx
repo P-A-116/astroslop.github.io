@@ -330,7 +330,7 @@ export default function DashaCard(props: Props) {
       case 'Shastihayani':
         return shastihayaniEligible()
           ? `Shastihayani condition: Met (Sun is in house 1 in ${props.selectedChart}). Janma Nakshatra ${janmaNakshatra()} counts from Ardra by 8 for the opening dasha. The supplied year pattern sums to 69 years (13,13,13,6,6,6,6,6), and the timeline follows that configured total.`
-          : `Shastihayani condition: Not met (Sun is in house ${sunHouse()} in ${props.selectedChart}; it must be in house 1). The supplied year pattern sums to 69 years (13,13,13,6,6,6,6,6), and the timeline follows that configured total.`;
+          : `Shastihayani condition: Not met (Sun is in house ${sunHouse()} in ${props.selectedChart}; it must be in house 1)..`;
       case 'ShatTrimshat':
         return shatTrimshatEligible()
           ? `Shat-trimshat Sama condition: Met (${dayBirth() ? 'day' : 'night'} birth with D2 Asc in ${SIGN_NAMES[props.data.ascDivisional.D2 - 1]}). Janma Nakshatra ${janmaNakshatra()} counts from Shravana by 8 for the opening dasha.`
