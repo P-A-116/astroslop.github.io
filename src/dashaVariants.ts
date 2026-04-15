@@ -223,14 +223,14 @@ export const SHASTIHAYANI_ORDER: readonly ShastihayaniPlanet[] = [
 ];
 
 export const SHASTIHAYANI_YEARS: Record<ShastihayaniPlanet, number> = {
-  Jupiter: 10,
-  Sun: 10,
-  Mars: 10,
-  Moon: 7,
-  Mercury: 7,
+  Jupiter: 13,
+  Sun: 13,
+  Mars: 13,
+  Moon: 6,
+  Mercury: 6,
   Venus: 6,
   Saturn: 6,
-  Rahu: 4,
+  Rahu: 6,
 };
 
 export const SHAT_TRIMSHAT_ORDER: readonly ShatTrimshatPlanet[] = [
