@@ -223,14 +223,14 @@ export const SHASTIHAYANI_ORDER: readonly ShastihayaniPlanet[] = [
 ];
 
 export const SHASTIHAYANI_YEARS: Record<ShastihayaniPlanet, number> = {
-  Jupiter: 13,
-  Sun: 13,
-  Mars: 13,
-  Moon: 6,
-  Mercury: 6,
+  Jupiter: 10,
+  Sun: 10,
+  Mars: 10,
+  Moon: 7,
+  Mercury: 7,
   Venus: 6,
   Saturn: 6,
-  Rahu: 6,
+  Rahu: 4,
 };
 
 export const SHAT_TRIMSHAT_ORDER: readonly ShatTrimshatPlanet[] = [
@@ -265,7 +265,10 @@ function jdToDate(jd: number): Date {
 }
 
 function yearsToYmd(years: number): VariantDashaDuration {
-  const totalMonths = Math.max(0, years) * 12;
+  const rawMonths = Math.max(0, years) * 12;
+  // Round to 9 decimal places to eliminate floating-point noise (e.g. 41.9999999999
+  // when the true value is 42) without the overcounting risk of adding a flat EPSILON.
+  const totalMonths = Math.round(rawMonths * 1e9) / 1e9;
   const wholeYears = Math.floor(totalMonths / 12);
   const remMonths = totalMonths - wholeYears * 12;
   const wholeMonths = Math.floor(remMonths);
