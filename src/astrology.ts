@@ -307,7 +307,7 @@ export function formatDms(degFloat: number): string {
 
 export function getNakshatraName(longitude: number): NakshatraName {
   const normalized = ((longitude % 360) + 360) % 360;
-  return NAKSHATRA_LIST[Math.floor(normalized / (40 / 3))];
+  return NAKSHATRA_LIST[Math.min(26, Math.floor(normalized / NAKSHATRA_SIZE))];
 }
 
 export function getNakshatraIndex(moonLongitude: number): number {
@@ -401,10 +401,11 @@ export function generateDashaTimelineFromMoonLongitude(
 
 export function getNakshatraPada(longitude: number): NakshatraPada {
   const normalized = ((longitude % 360) + 360) % 360;
-  const index = Math.floor(normalized / (40 / 3));
+  const index = Math.min(26, Math.floor(normalized / NAKSHATRA_SIZE));
+  const padaSize = NAKSHATRA_SIZE / 4;
   return {
-    nakshatra: NAKSHATRA_LIST[index % 27],
-    pada: Math.floor((normalized % (40 / 3)) / (10 / 3)) + 1,
+    nakshatra: NAKSHATRA_LIST[index],
+    pada: Math.min(4, Math.floor((normalized % NAKSHATRA_SIZE) / padaSize) + 1),
   };
 }
 

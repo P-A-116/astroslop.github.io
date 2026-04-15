@@ -347,7 +347,9 @@ export default function DashaCard(props: Props) {
       case 'Ashtottari':
         return ashtottariEligible()
           ? `Birth Mahadasha: ${ashtottari().startPlanet} (Balance ${formatDuration(ashtottari().balance)})`
-          : `Ashtottari not applicable: Rahu is in house ${rahuHouse()} from Lagna (1, 4, 5, 7, 9, 10 are ineligible).`;
+          : !houseEligible()
+            ? `Ashtottari not applicable: Rahu is in house ${rahuHouse()} from Lagna (houses 1, 4, 5, 7, 9, 10 are ineligible).`
+            : `Ashtottari not applicable: requires day birth in Krishna paksha or night birth in Shukla paksha; got ${dayBirth() ? 'day' : 'night'} birth in ${paksha()} paksha.`;
       case 'Shodsottari':
         return `Birth Mahadasha (Shodsottari): ${shodsottari().startPlanet} (Balance ${formatDuration(shodsottari().balance)})`;
       case 'Dwadashottari':

@@ -56,7 +56,7 @@ export function trueChitrapakshaAyanamsa(jd: number): number {
   const meanLahiri = lahiriAyanamsa(jd);
   const [deltaPsi] = nutation.nutation(jd);
   const meanObliquity = nutation.meanObliquity(jd);
-  const correctionDeg = (deltaPsi * Math.cos(meanObliquity)) * DEG;
+  const correctionDeg = deltaPsi * Math.cos(meanObliquity) / 3600;
   return meanLahiri + correctionDeg;
 }
 

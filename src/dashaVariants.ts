@@ -265,7 +265,7 @@ function jdToDate(jd: number): Date {
 }
 
 function yearsToYmd(years: number): VariantDashaDuration {
-  const totalMonths = Math.max(0, years) * 12 + EPSILON;
+  const totalMonths = Math.max(0, years) * 12;
   const wholeYears = Math.floor(totalMonths / 12);
   const remMonths = totalMonths - wholeYears * 12;
   const wholeMonths = Math.floor(remMonths);
