@@ -74,7 +74,13 @@ export type ShatTrimshatPlanet = 'Moon' | 'Sun' | 'Jupiter' | 'Mars' | 'Mercury'
 export type ShatTrimshatResult = VariantDashaResult<ShatTrimshatPlanet>;
 
 const EPSILON = 1e-9;
-const YEAR_MS = 365.2425 * 86400000;
+/**
+ * Julian year in days (365.25). All variant dasha period lengths are expressed
+ * in Julian years; the cursor is kept in JD space throughout and converted to
+ * a Date only at the final step, eliminating accumulated millisecond rounding
+ * error across multi-decade timelines.
+ */
+const JULIAN_YEAR_DAYS = 365.25;
 const NAKSHATRA_SIZE = 360 / 27;
 const UNIX_EPOCH_JD = 2440587.5;
 const PUSHYA_INDEX = NAKSHATRA_LIST.indexOf('Pushya');
@@ -260,6 +266,7 @@ function normalizeLongitude(longitude: number): number {
   return Math.abs(normalized - 360) < EPSILON ? 0 : normalized;
 }
 
+/** Convert a Julian Day Number to a UTC Date. */
 function jdToDate(jd: number): Date {
   return new Date((jd - UNIX_EPOCH_JD) * 86400000);
 }
@@ -327,8 +334,13 @@ function getCycleYears<TPlanet extends string>(
   return order.reduce((sum, planet) => sum + yearsByPlanet[planet], 0);
 }
 
+/**
+ * Build antardasha entries for a given mahadasha period, operating entirely in
+ * JD space. Each sub-period is added as fractional days so no millisecond
+ * rounding error accumulates across the antardasha chain.
+ */
 function buildAntardashas<TPlanet extends string>(
-  startMs: number,
+  startJd: number,
   mahadashaYears: number,
   mahadashaPlanet: TPlanet,
   order: readonly TPlanet[],
@@ -337,22 +349,27 @@ function buildAntardashas<TPlanet extends string>(
 ): VariantDashaAntardashaEntry<TPlanet>[] {
   const antardashas: VariantDashaAntardashaEntry<TPlanet>[] = [];
   const sequence = buildSequence(order, mahadashaPlanet);
-  let cursorMs = startMs;
+  let cursorJd = startJd;
 
   for (const antardashaPlanet of sequence) {
     const years = (mahadashaYears * yearsByPlanet[antardashaPlanet]) / cycleYears;
-    const endMs = cursorMs + years * YEAR_MS;
+    const endJd = cursorJd + years * JULIAN_YEAR_DAYS;
     antardashas.push({
       planet: antardashaPlanet,
-      startDate: new Date(Math.round(cursorMs)),
-      endDate: new Date(Math.round(endMs)),
+      startDate: jdToDate(cursorJd),
+      endDate: jdToDate(endJd),
     });
-    cursorMs = endMs;
+    cursorJd = endJd;
   }
 
   return antardashas;
 }
 
+/**
+ * Core variant dasha engine. All period boundaries are computed in JD space;
+ * Dates are produced only at the final step so that leap-year smearing and
+ * millisecond rounding cannot accumulate across a full 9-cycle timeline.
+ */
 function computeVariantDasha<TPlanet extends string>(
   birthJd: number,
   moonLongitude: number,
@@ -371,19 +388,19 @@ function computeVariantDasha<TPlanet extends string>(
 
   const sequence = buildSequence(order, startPlanet);
   const timeline: VariantDashaTimelineEntry<TPlanet>[] = [];
-  let cursorMs = jdToDate(birthJd).getTime();
+  let cursorJd = birthJd;
 
   for (let index = 0; index < sequence.length; index += 1) {
     const planet = sequence[index];
     const years = index === 0 ? balanceYears : yearsByPlanet[planet];
-    const endMs = cursorMs + years * YEAR_MS;
+    const endJd = cursorJd + years * JULIAN_YEAR_DAYS;
     timeline.push({
       planet,
-      startDate: new Date(Math.round(cursorMs)),
-      endDate: new Date(Math.round(endMs)),
-      antardashas: buildAntardashas(cursorMs, years, planet, order, yearsByPlanet, cycleYears),
+      startDate: jdToDate(cursorJd),
+      endDate: jdToDate(endJd),
+      antardashas: buildAntardashas(cursorJd, years, planet, order, yearsByPlanet, cycleYears),
     });
-    cursorMs = endMs;
+    cursorJd = endJd;
   }
 
   return {

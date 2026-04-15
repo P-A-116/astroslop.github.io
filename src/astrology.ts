@@ -122,7 +122,14 @@ const EPSILON = 1e-9;
 const NAKSHATRA_SIZE = 360 / 27;
 const UNIX_EPOCH_JD = 2440587.5;
 const MS_PER_DAY = 86400000;
-const YEAR_MS = 365.2425 * MS_PER_DAY;
+/**
+ * Julian year in days (365.25), the standard used by traditional Vedic dasha
+ * software. All dasha period lengths are expressed in Julian years; keeping
+ * the cursor in JD space and converting to a Date only at the final step
+ * eliminates the accumulated rounding error that arises from integer
+ * millisecond arithmetic over multi-decade timelines.
+ */
+const JULIAN_YEAR_DAYS = 365.25;
 const VIMSHOTTARI_ORDER = ['Ketu', 'Venus', 'Sun', 'Moon', 'Mars', 'Rahu', 'Jupiter', 'Saturn', 'Mercury'] as const satisfies readonly PlanetName[];
 const VIMSHOTTARI_DASHA_YEARS = {
   Ketu: 7,
@@ -339,6 +346,7 @@ export function getMahadashaBalance(
   return { lord, balance: proportionLeft * totalYears, totalYears };
 }
 
+/** Convert a Julian Day Number to a UTC Date. */
 function jdToUtcDate(jd: number): Date {
   return new Date((jd - UNIX_EPOCH_JD) * MS_PER_DAY);
 }
@@ -348,19 +356,25 @@ function getVimshottariSequenceFrom(lord: PlanetName): PlanetName[] {
   return VIMSHOTTARI_ORDER.map((_, offset) => VIMSHOTTARI_ORDER[(startIndex + offset) % VIMSHOTTARI_ORDER.length]);
 }
 
-function buildAntardashas(startMs: number, mahadashaYears: number, mahadashaLord: PlanetName): DashaAntardashaEntry[] {
+/**
+ * Build Vimshottari antardashas for a given mahadasha, operating entirely in
+ * JD space. The `startJd` cursor is a floating-point Julian Day Number; each
+ * sub-period is added as fractional days so no millisecond rounding error
+ * accumulates across the 9-antardasha chain.
+ */
+function buildAntardashas(startJd: number, mahadashaYears: number, mahadashaLord: PlanetName): DashaAntardashaEntry[] {
   const antardashas: DashaAntardashaEntry[] = [];
   const sequence = getVimshottariSequenceFrom(mahadashaLord);
-  let cursorMs = startMs;
+  let cursorJd = startJd;
   for (const antardashaLord of sequence) {
     const years = (mahadashaYears * VIMSHOTTARI_DASHA_YEARS[antardashaLord]) / VIMSHOTTARI_CYCLE_YEARS;
-    const endMs = cursorMs + years * YEAR_MS;
+    const endJd = cursorJd + years * JULIAN_YEAR_DAYS;
     antardashas.push({
-      start: new Date(Math.round(cursorMs)),
-      end: new Date(Math.round(endMs)),
+      start: jdToUtcDate(cursorJd),
+      end: jdToUtcDate(endJd),
       lord: antardashaLord,
     });
-    cursorMs = endMs;
+    cursorJd = endJd;
   }
   return antardashas;
 }
@@ -371,30 +385,34 @@ export function generateDashaTimeline(birthData: ChartData): DashaTimeline {
   return generateDashaTimelineFromMoonLongitude(birthData.jd, moon.lon);
 }
 
+/**
+ * Generate the full Vimshottari dasha timeline, keeping all intermediate
+ * date arithmetic in Julian Day Number space. Dates are derived from JD only
+ * at the point of display, preventing accumulated leap-year/rounding drift.
+ */
 export function generateDashaTimelineFromMoonLongitude(
   birthJd: number,
   moonLongitude: number,
 ): DashaTimeline {
   const { lord: birthMahadashaLord, balance } = getMahadashaBalance(moonLongitude);
   const sequence = getVimshottariSequenceFrom(birthMahadashaLord);
-  const birthMs = jdToUtcDate(birthJd).getTime();
   const timeline: DashaMahadashaEntry[] = [];
 
-  let cursorMs = birthMs;
+  let cursorJd = birthJd;
   for (let index = 0; index < sequence.length; index += 1) {
     const lord = sequence[index];
     const totalYears = VIMSHOTTARI_DASHA_YEARS[lord];
     const years = index === 0 ? balance : totalYears;
-    const endMs = cursorMs + years * YEAR_MS;
+    const endJd = cursorJd + years * JULIAN_YEAR_DAYS;
     timeline.push({
-      start: new Date(Math.round(cursorMs)),
-      end: new Date(Math.round(endMs)),
+      start: jdToUtcDate(cursorJd),
+      end: jdToUtcDate(endJd),
       lord,
       totalYears,
       balanceYearsAtBirth: years,
-      antardashas: buildAntardashas(cursorMs, years, lord),
+      antardashas: buildAntardashas(cursorJd, years, lord),
     });
-    cursorMs = endMs;
+    cursorJd = endJd;
   }
   return timeline;
 }

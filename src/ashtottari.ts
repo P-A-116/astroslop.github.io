@@ -44,7 +44,13 @@ interface SegmentDefinition {
 }
 
 const EPSILON = 1e-9;
-const YEAR_MS = 365.2425 * 86400000;
+/**
+ * Julian year in days (365.25). All Ashtottari period lengths are expressed
+ * in Julian years; the cursor is kept in JD space throughout and converted to
+ * a Date only at the final step, preventing accumulated millisecond rounding
+ * error across multi-decade timelines.
+ */
+const JULIAN_YEAR_DAYS = 365.25;
 const DEG = 180 / Math.PI;
 const RAD = Math.PI / 180;
 const NAKSHATRA_SIZE = 360 / 27;
@@ -213,23 +219,28 @@ function buildPlanetSequence(start: AshtottariPlanet): AshtottariPlanet[] {
   return ASHTOTTARI_PLANET_ORDER.map((_, offset) => ASHTOTTARI_PLANET_ORDER[(startIndex + offset) % ASHTOTTARI_PLANET_ORDER.length]);
 }
 
+/**
+ * Build Ashtottari antardasha entries in JD space. The cursor is a
+ * floating-point Julian Day Number; Dates are derived only at the end of
+ * each period so that no millisecond rounding error accumulates.
+ */
 function buildAntardashas(
-  startMs: number,
+  startJd: number,
   mahadashaYears: number,
   mahadashaPlanet: AshtottariPlanet,
 ): AshtottariAntardashaEntry[] {
   const antardashas: AshtottariAntardashaEntry[] = [];
   const sequence = buildPlanetSequence(mahadashaPlanet);
-  let cursorMs = startMs;
+  let cursorJd = startJd;
   for (const antardashaPlanet of sequence) {
     const years = (mahadashaYears * ASHTOTTARI_DASHA_YEARS[antardashaPlanet]) / ASHTOTTARI_CYCLE_YEARS;
-    const endMs = cursorMs + years * YEAR_MS;
+    const endJd = cursorJd + years * JULIAN_YEAR_DAYS;
     antardashas.push({
       planet: antardashaPlanet,
-      startDate: new Date(Math.round(cursorMs)),
-      endDate: new Date(Math.round(endMs)),
+      startDate: jdToDate(cursorJd),
+      endDate: jdToDate(endJd),
     });
-    cursorMs = endMs;
+    cursorJd = endJd;
   }
   return antardashas;
 }
@@ -314,6 +325,11 @@ export function isAshtottariEligibleByPakshaAndTime(
   return (dayBirth && paksha === 'Krishna') || (!dayBirth && paksha === 'Shukla');
 }
 
+/**
+ * Compute the full Ashtottari dasha timeline. All period boundaries are
+ * calculated in JD space; Dates are produced only at the final step so that
+ * leap-year smearing and millisecond rounding cannot accumulate.
+ */
 export function computeAshtottariDasha(birthJd: number, moonLongitude: number): AshtottariResult {
   const segment = findSegment(moonLongitude);
   const portionYears = segmentPortionYears(segment.planet);
@@ -327,18 +343,18 @@ export function computeAshtottariDasha(birthJd: number, moonLongitude: number): 
 
   const timeline: AshtottariTimelineEntry[] = [];
   const sequence = buildPlanetSequence(segment.planet);
-  let cursorMs = jdToDate(birthJd).getTime();
+  let cursorJd = birthJd;
   for (let index = 0; index < sequence.length; index += 1) {
     const planet = sequence[index];
     const years = index === 0 ? totalBalanceYears : ASHTOTTARI_DASHA_YEARS[planet];
-    const endMs = cursorMs + years * YEAR_MS;
+    const endJd = cursorJd + years * JULIAN_YEAR_DAYS;
     timeline.push({
       planet,
-      startDate: new Date(Math.round(cursorMs)),
-      endDate: new Date(Math.round(endMs)),
-      antardashas: buildAntardashas(cursorMs, years, planet),
+      startDate: jdToDate(cursorJd),
+      endDate: jdToDate(endJd),
+      antardashas: buildAntardashas(cursorJd, years, planet),
     });
-    cursorMs = endMs;
+    cursorJd = endJd;
   }
 
   return {
