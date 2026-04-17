@@ -6,11 +6,11 @@ import { findParivartanaYogas } from '../analysis';
 
 const YOGA_INTERPRETATIONS = {
   Dainya:
-    'The man born in Dainya Yoga will be a fool, will be reviling others and commit sinful actions. He will always be tormented by his enemies, will be unsteady in mind. Interruptions will arise to all his undertakings.',
+    'Negative Connotations.',
   Khala:
-    'The man born in Khala Yoga will at one time go astray, while at another time gentle in speech. Sometimes he will regain all kinds of prosperity, while at other times he will have to endure much distress, poverty, misery and the like.',
+    'Neutral Connotations.',
   Maha:
-    'The person born in Maha Yoga will be repository of the blessings of the Deva Sri and will be a lord and wealthy. He will wear cloths of variegated colour and bedeck himself with gold ornaments. He will receive rich presents from his sovereign and certain powers (authority) also will be conferred on him. He will command vehicles, wealth and children.',
+    'Positive Connotations.',
 };
 
 interface Props {
